@@ -28,3 +28,14 @@ env/
 Thumbs.db
 
 db.sqlite3
+
+# Static coletado e artefatos de teste
+staticfiles/
+tests/**/artifacts/
+
+# Certificados HTTPS locais (gerados por setup_ssl.bat)
+certs/
+
+# Editores
+.vscode/
+.idea/

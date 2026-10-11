@@ -14,8 +14,8 @@ if "%NOME%"=="" (
 )
 
 if exist venv\Scripts\python.exe (
-  venv\Scripts\python.exe novo_cliente.py "%NOME%"
+  venv\Scripts\python.exe scripts\novo_cliente.py "%NOME%"
 ) else (
-  python novo_cliente.py "%NOME%"
+  python scripts\novo_cliente.py "%NOME%"
 )
 pause

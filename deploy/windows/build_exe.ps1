@@ -47,7 +47,7 @@ New-Item -ItemType Directory -Force -Path "$DIST_DIR\media\products" | Out-Null
 New-Item -ItemType Directory -Force -Path "$DIST_DIR\media\settings" | Out-Null
 
 # Copy README and documentation to dist
-Copy-Item -Path "deploy\windows\README_EXECUTABLE.md" -Destination "$DIST_DIR\README.md" -Force
+Copy-Item -Path "docs\deploy-windows.md" -Destination "$DIST_DIR\README.md" -Force
 if (Test-Path "docs") {
     Copy-Item -Path "docs" -Destination "$DIST_DIR\docs" -Recurse -Force
 }

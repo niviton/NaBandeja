@@ -1,6 +1,6 @@
 """
 Script para criar dados iniciais do sistema.
-Execute com: python manage.py shell < initial_data.py
+Execute com: python manage.py shell < scripts/initial_data.py
 Ou copie e cole no shell do Django.
 """
 

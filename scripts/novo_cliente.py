@@ -6,8 +6,8 @@ main. A branch nasce com banco limpo, sem fotos/ícones de outros clientes, e
 com o nome da loja já configurado.
 
 Uso:
-    python novo_cliente.py "Pizzaria do João"
-    python novo_cliente.py "Pizzaria do João" --slogan "A melhor pizza do bairro" --cor "#16a34a"
+    python scripts/novo_cliente.py "Pizzaria do João"
+    python scripts/novo_cliente.py "Pizzaria do João" --slogan "A melhor pizza do bairro" --cor "#16a34a"
 
 Depois, para levar melhorias da main para um cliente:
     git switch cliente/<slug>
@@ -24,7 +24,7 @@ import sys
 import unicodedata
 from pathlib import Path
 
-PROJECT_DIR = Path(__file__).resolve().parent
+PROJECT_DIR = Path(__file__).resolve().parents[1]
 
 # Arquivos de um cliente que não devem ir para outro cliente
 CLIENT_MEDIA_DIRS = ['media/products', 'media/settings']

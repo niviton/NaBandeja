@@ -1,0 +1,16 @@
+# Normaliza quebras de linha no repositório
+* text=auto
+
+# Scripts do Windows precisam de CRLF
+*.bat  text eol=crlf
+*.cmd  text eol=crlf
+*.ps1  text eol=crlf
+
+# Arquivos binários
+*.sqlite3 binary
+*.ico     binary
+*.png     binary
+*.jpg     binary
+*.jpeg    binary
+*.jfif    binary
+*.webp    binary
