@@ -70,6 +70,7 @@ O passo a passo completo está em [docs/clientes.md](docs/clientes.md).
 | [Backup](docs/backup.md) | Backups automáticos de SQLite e PostgreSQL |
 | [Tempo real](docs/tempo-real.md) | WebSocket, eventos e PWA |
 | [Segurança](docs/seguranca.md) | Variáveis de ambiente e checklist de produção |
+| [Melhorias](docs/melhorias.md) | Checklist do que melhorar (roadmap) |
 
 ## Estrutura do projeto
 
