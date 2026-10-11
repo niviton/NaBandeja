@@ -1,0 +1,21 @@
+{
+  "name": "{{ app_settings.store_name|default:'NaBandeja'|escapejs }}",
+  "short_name": "{{ app_settings.store_name|default:'NaBandeja'|truncatechars:12|escapejs }}",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "{{ app_settings.background_color|default:'#f8f9fa'|escapejs }}",
+  "theme_color": "{{ app_settings.primary_color|default:'#ef4444'|escapejs }}",
+  "description": "NaBandeja - sistema de gestão para restaurantes",
+  "icons": [
+    {
+      "src": "/static/pwa/icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/static/pwa/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}
