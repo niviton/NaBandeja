@@ -1,0 +1,67 @@
+{% extends 'app/base_app.html' %}
+
+{% block title %}Cozinha - {{ app_settings.store_name }}{% endblock %}
+{% block body_class %}bg-slate-900 min-h-screen text-slate-100{% endblock %}
+
+{% block content %}
+<div class="max-w-[1800px] mx-auto p-3 sm:p-5">
+    <div class="flex flex-wrap items-center gap-3 mb-4">
+        <h1 class="text-2xl font-black flex-1">Cozinha</h1>
+        <label class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-800 text-sm font-bold cursor-pointer">
+            <input type="checkbox" id="soundToggle" class="w-4 h-4" checked> <i class="bi bi-volume-up"></i> Som
+        </label>
+        <label class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-800 text-sm font-bold cursor-pointer" title="Imprime a comanda de cada pedido novo neste computador">
+            <input type="checkbox" id="printToggle" class="w-4 h-4" {% if auto_print %}checked{% endif %}> <i class="bi bi-printer"></i> Imprimir automático
+        </label>
+    </div>
+
+    <div id="kitchen-board"
+         hx-get="{% url 'kitchen_board' %}"
+         hx-trigger="nb:event from:body delay:500ms"
+         hx-swap="innerHTML">
+        {% include 'app/_cozinha_board.html' %}
+    </div>
+</div>
+<iframe id="printFrame" title="Impressão da comanda" class="hidden"></iframe>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const sound = document.getElementById('soundToggle');
+    const autoPrint = document.getElementById('printToggle');
+    const frame = document.getElementById('printFrame');
+    const store = (key, value) => { try { localStorage.setItem(key, value); } catch (err) { /* sem storage */ } };
+    const load = (key) => { try { return localStorage.getItem(key); } catch (err) { return null; } };
+
+    if (load('nb.kitchen.sound') !== null) sound.checked = load('nb.kitchen.sound') === '1';
+    if (load('nb.kitchen.print') !== null) autoPrint.checked = load('nb.kitchen.print') === '1';
+    sound.addEventListener('change', () => store('nb.kitchen.sound', sound.checked ? '1' : '0'));
+    autoPrint.addEventListener('change', () => store('nb.kitchen.print', autoPrint.checked ? '1' : '0'));
+
+    // Vários eventos chegam por pedido (um por item): espera 1,5 s e imprime uma vez.
+    const pending = new Map();
+    const queue = [];
+    function printNext() {
+        if (!queue.length || frame.dataset.busy) return;
+        frame.dataset.busy = '1';
+        frame.src = `{% url 'kitchen_ticket' 0 %}`.replace('/0/', `/${queue.shift()}/`) + '?auto=1&marcar=1';
+        setTimeout(() => { delete frame.dataset.busy; printNext(); }, 4000);
+    }
+
+    document.body.addEventListener('nb:event', (event) => {
+        const data = event.detail || {};
+        if (!data.order || data.order.status !== 'cozinha') return;
+        if (!['order.created', 'order.items_changed', 'order.status_changed'].includes(data.type)) return;
+        if (data.type === 'order.created' && sound.checked) NB.beep('new');
+        if (!autoPrint.checked) return;
+        clearTimeout(pending.get(data.order.id));
+        pending.set(data.order.id, setTimeout(() => {
+            pending.delete(data.order.id);
+            queue.push(data.order.id);
+            printNext();
+        }, 1500));
+    });
+});
+</script>
+{% endblock %}

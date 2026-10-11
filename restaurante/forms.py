@@ -29,7 +29,7 @@ class CategoryForm(forms.ModelForm):
     """Formulário de categoria"""
     class Meta:
         model = Category
-        fields = ['name']
+        fields = ['name', 'icon', 'order', 'is_active']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
         }
@@ -39,11 +39,12 @@ class ProductForm(forms.ModelForm):
     """Formulário de produto"""
     class Meta:
         model = Product
-        fields = ['name', 'category', 'price', 'stock', 'use_ingredient_stock', 'icon', 'image', 'is_active']
+        fields = ['name', 'category', 'price', 'cost_price', 'stock', 'use_ingredient_stock', 'icon', 'image', 'is_active']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
             'category': forms.Select(attrs={'class': 'form-control'}),
             'price': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'cost_price': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0'}),
             'stock': forms.NumberInput(attrs={'class': 'form-control', 'min': '0'}),
             'use_ingredient_stock': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'icon': forms.TextInput(attrs={'class': 'form-control', 'maxlength': '10'}),
@@ -88,6 +89,13 @@ class AppSettingsForm(forms.ModelForm):
             'pix_name',
             'pix_city',
             'show_pix_on_receipt',
+            'quick_notes',
+            'kitchen_late_minutes',
+            'kitchen_auto_print',
+            'public_menu_enabled',
+            'online_orders_enabled',
+            'whatsapp_number',
+            'min_delivery_order',
         ]
         widgets = {
             'store_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nome do estabelecimento'}),

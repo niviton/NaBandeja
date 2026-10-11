@@ -1,0 +1,59 @@
+<div class="grid gap-4 xl:grid-cols-[minmax(0,3fr)_minmax(0,1fr)]">
+    <section>
+        <h2 class="text-sm font-black uppercase tracking-wider text-amber-300 mb-3">
+            <i class="bi bi-fire me-1"></i>Preparar ({{ orders_cozinha|length }})
+        </h2>
+        {% if orders_cozinha %}
+        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {% for order in orders_cozinha %}
+            <article data-late-card class="rounded-2xl bg-white text-slate-900 overflow-hidden ring-red-500">
+                <header class="px-4 py-3 flex items-center gap-2 {% if order.order_type == 'delivery' %}bg-sky-100{% else %}bg-amber-100{% endif %}">
+                    <span class="text-xl font-black flex-1 truncate">{{ order.display_name }}</span>
+                    <span class="text-xs font-bold text-slate-500">#{{ order.id }}</span>
+                    <span class="px-2 py-1 rounded-lg bg-white/80 text-sm font-black tabular-nums" data-since="{{ order.updated_at.isoformat }}" data-late-after="{{ late_minutes }}"></span>
+                </header>
+                <ul class="px-4 py-3 space-y-2">
+                    {% for item in order.pending_items %}
+                    <li>
+                        <span class="text-lg font-black">{{ item.pending_quantity }}×</span>
+                        <span class="text-lg font-bold">{{ item.name }}</span>
+                        {% if item.notes %}<span class="block ml-7 px-2 py-1 rounded-lg bg-amber-100 text-amber-900 text-sm font-black uppercase">{{ item.notes }}</span>{% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% if order.observacoes %}
+                <p class="mx-4 mb-3 px-3 py-2 rounded-xl bg-slate-100 text-sm font-semibold"><i class="bi bi-chat-left-text me-1"></i>{{ order.observacoes }}</p>
+                {% endif %}
+                <footer class="px-4 pb-4 flex gap-2">
+                    <form hx-post="{% url 'mark_order_ready' order.id %}" hx-target="#kitchen-board" class="flex-1">
+                        <button class="w-full py-3 rounded-xl bg-emerald-600 text-white font-black text-lg hover:bg-emerald-700"><i class="bi bi-check2-all me-1"></i>Pronto</button>
+                    </form>
+                    <a href="{% url 'kitchen_ticket' order.id %}?todos=1" target="_blank" class="px-4 py-3 rounded-xl bg-slate-100 text-slate-700" title="Imprimir comanda"><i class="bi bi-printer"></i></a>
+                </footer>
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="rounded-2xl border-2 border-dashed border-slate-700 p-10 text-center text-slate-400">
+            <i class="bi bi-cup-hot text-4xl"></i>
+            <p class="mt-2 font-bold">Nenhum pedido para preparar</p>
+        </div>
+        {% endif %}
+    </section>
+
+    <section>
+        <h2 class="text-sm font-black uppercase tracking-wider text-emerald-300 mb-3">
+            <i class="bi bi-bell me-1"></i>Prontos aguardando garçom ({{ orders_pronto|length }})
+        </h2>
+        <div class="space-y-2">
+            {% for order in orders_pronto %}
+            <div class="rounded-xl bg-emerald-900/40 border border-emerald-700 px-4 py-3 flex items-center gap-2">
+                <span class="font-black flex-1 truncate">{{ order.display_name }}</span>
+                <span class="text-xs text-emerald-200" data-since="{{ order.updated_at.isoformat }}"></span>
+            </div>
+            {% empty %}
+            <p class="text-sm text-slate-500">Nada esperando.</p>
+            {% endfor %}
+        </div>
+    </section>
+</div>

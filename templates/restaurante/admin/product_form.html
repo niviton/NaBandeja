@@ -60,6 +60,14 @@
                 </div>
 
                 <div>
+                    <label class="text-xs font-bold text-slate-400 uppercase tracking-widest block mb-2">Custo por unidade (R$)</label>
+                    <input type="number" name="cost_price" step="0.01" min="0"
+                        value="{% if form.is_bound %}{{ form.data.cost_price }}{% else %}{{ product.cost_price|unlocalize|default:'0' }}{% endif %}"
+                        class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-800 placeholder:text-slate-400 focus:ring-2 focus:ring-red-500/50 focus:border-red-500 outline-none transition-all font-medium" placeholder="0.00">
+                    <p class="text-xs text-slate-400 mt-2">Usado no relatório de lucro. Com receita, o custo vem dos ingredientes.</p>
+                </div>
+
+                <div>
                     <label class="text-xs font-bold text-slate-400 uppercase tracking-widest block mb-2">Estoque Manual</label>
                     <input
                         id="manualStockInput"

@@ -10,16 +10,22 @@ class CartError(Exception):
 
 
 class SessionCart:
-    def __init__(self, session):
+    """
+    Carrinho na sessão. `key` separa carrinhos (ex.: 'mesa-5', 'pedido-12',
+    'novo-delivery'), então o garçom pode montar pedidos de mesas diferentes.
+    """
+
+    def __init__(self, session, key=None):
         self.session = session
-        self.items = list(session.get(SESSION_KEY, []))
+        self.session_key = f'{SESSION_KEY}:{key}' if key else SESSION_KEY
+        self.items = list(session.get(self.session_key, []))
         # Carrinhos antigos não tinham cart_key/notes.
         for item in self.items:
             item.setdefault('cart_key', str(item['id']))
             item.setdefault('notes', '')
 
     def _save(self):
-        self.session[SESSION_KEY] = self.items
+        self.session[self.session_key] = self.items
         self.session.modified = True
 
     def _find(self, cart_key):
@@ -95,6 +101,10 @@ class SessionCart:
 
     def as_json(self):
         return {'success': True, 'cart': self.items, 'total': self.total}
+
+    @property
+    def count(self):
+        return sum(item['qty'] for item in self.items)
 
     def __bool__(self):
         return bool(self.items)

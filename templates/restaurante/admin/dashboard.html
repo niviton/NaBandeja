@@ -61,6 +61,30 @@
         </div>
     </div>
 
+    {% if calls or pending_online or overdue_expenses %}
+    <div class="grid gap-3 md:grid-cols-3 mb-6">
+        {% if calls %}
+        <a href="{% url 'waiter_view' %}" class="rounded-2xl border-2 border-amber-300 bg-amber-50 p-4 font-bold text-amber-900">
+            <i class="bi bi-bell-fill me-1"></i>{{ calls|length }} chamado(s) de mesa: {% for call in calls %}{{ call.table.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
+        </a>
+        {% endif %}
+        {% if pending_online %}
+        <a href="{% url 'admin_online_orders' %}" class="rounded-2xl border-2 border-sky-300 bg-sky-50 p-4 font-bold text-sky-900">
+            <i class="bi bi-globe2 me-1"></i>{{ pending_online }} pedido(s) online aguardando
+        </a>
+        {% endif %}
+        {% if overdue_expenses %}
+        <a href="{% url 'expenses' %}" class="rounded-2xl border-2 border-red-300 bg-red-50 p-4 font-bold text-red-900">
+            <i class="bi bi-wallet2 me-1"></i>{{ overdue_expenses|length }} conta(s) vencendo hoje ou vencidas
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <div class="mb-6">
+        {% include 'restaurante/admin/_cash_card.html' %}
+    </div>
+
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Pedidos Ativos -->
         <div class="bg-[var(--admin-card)] rounded-3xl p-6 border border-[var(--admin-line)] shadow-[0_20px_50px_-36px_rgba(66,47,28,0.55)]">
@@ -82,19 +106,19 @@
                         {% endif %}
                     </div>
                     <div class="flex-1">
-                        <p class="font-bold text-slate-800">{{ order.cliente }}</p>
+                        <p class="font-bold text-slate-800">{{ order.display_name }}</p>
                         {% if order.platform_name %}
                         <span class="inline-flex items-center gap-1 mt-1 px-2 py-1 rounded-full bg-indigo-100 text-indigo-700 text-[10px] font-black uppercase tracking-wide">
                             <i class="bi bi-phone text-[10px]"></i>{{ order.platform_name }}
                         </span>
                         {% endif %}
-                        <p class="text-sm text-slate-400">{{ order.items.count }} itens • R$ {{ order.total }}</p>
+                        <p class="text-sm text-slate-400">{{ order.items.count }} itens • R$ {{ order.amount_due|floatformat:2 }}</p>
                         <p class="text-xs font-semibold text-slate-400 mt-1">
                             Tempo: <span class="order-elapsed-time" data-order-created-at="{{ order.created_at|date:'c' }}">agora</span>
                         </p>
                         <div class="flex gap-2 mt-2">
-                            <a href="{% url 'manage_order' order.id %}" class="px-3 py-1 bg-slate-900 text-white rounded-lg text-xs font-bold hover:bg-slate-700 transition-all">
-                                <i class="bi bi-pencil-square me-1"></i>Alterar
+                            <a href="{% url 'order_workspace' order.id %}" class="px-3 py-1 bg-slate-900 text-white rounded-lg text-xs font-bold hover:bg-slate-700 transition-all">
+                                <i class="bi bi-pencil-square me-1"></i>Abrir
                             </a>
                             <a href="{% url 'close_order' order.id %}" class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-lg text-xs font-bold hover:bg-emerald-200 transition-all">
                                 <i class="bi bi-cash-stack me-1"></i>Fechar

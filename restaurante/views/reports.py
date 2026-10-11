@@ -8,6 +8,7 @@ from django.utils import timezone
 from ..models import AppSettings
 from ..permissions import manager_required
 from ..services import reports
+from ..services.excel import sales_workbook
 from ..services.pdf import build_sales_export_rows, render_sales_pdf
 
 PAGE_SIZES = [15, 30, 50]
@@ -39,6 +40,11 @@ def admin_reports(request):
     history = reports.history_orders(period, search)
 
     export = (request.GET.get('export') or '').lower()
+    if export == 'xlsx':
+        content = sales_workbook(AppSettings.get_settings().store_name, period.label, summary, history)
+        response = HttpResponse(content, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = f'attachment; filename="vendas_{period.filter_type}_{period.start:%Y%m%d}.xlsx"'
+        return response
     if export in ('csv', 'pdf'):
         rows = build_sales_export_rows(history)
         if export == 'csv':
@@ -84,6 +90,7 @@ def admin_reports(request):
         'top_products': summary['by_product'][:10],
         'product_quantities': summary['by_product'],
         'payment_summary': summary['by_payment'],
+        'summary': summary,
         'sales_history': Paginator(history, page_size).get_page(request.GET.get('page')),
         'history_search': search,
         'history_total': history.count(),

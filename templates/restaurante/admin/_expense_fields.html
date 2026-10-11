@@ -1,0 +1,20 @@
+{% for field in form %}
+<div>
+    <label for="{{ field.id_for_label }}" class="block text-xs font-bold uppercase tracking-wider text-[var(--admin-muted)] mb-1">{{ field.label }}</label>
+    {% if field.name == 'category' %}
+    <select name="category" id="{{ field.id_for_label }}" class="w-full px-3 py-2.5 rounded-xl border border-[var(--admin-line)] bg-white">
+        {% for value, label in field.field.choices %}<option value="{{ value }}" {% if field.value == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+    {% elif field.name == 'notes' %}
+    <textarea name="notes" id="{{ field.id_for_label }}" rows="2" class="w-full px-3 py-2.5 rounded-xl border border-[var(--admin-line)] bg-white">{{ field.value|default_if_none:'' }}</textarea>
+    {% else %}
+    <input name="{{ field.html_name }}" id="{{ field.id_for_label }}"
+        type="{% if field.name == 'due_date' or field.name == 'paid_at' %}date{% elif field.name == 'amount' %}number{% else %}text{% endif %}"
+        {% if field.name == 'amount' %}step="0.01" min="0.01"{% endif %}
+        value="{% if field.name == 'due_date' or field.name == 'paid_at' %}{{ field.value|date:'Y-m-d'|default:field.value|default_if_none:'' }}{% else %}{{ field.value|default_if_none:'' }}{% endif %}"
+        {% if field.field.required %}required{% endif %}
+        class="w-full px-3 py-2.5 rounded-xl border border-[var(--admin-line)] bg-white">
+    {% endif %}
+    {% for error in field.errors %}<p class="text-xs text-red-600 mt-1">{{ error }}</p>{% endfor %}
+</div>
+{% endfor %}

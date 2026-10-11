@@ -1,0 +1,99 @@
+{% if order %}
+<div class="rounded-3xl bg-white border border-slate-200 shadow-sm overflow-hidden">
+    <div class="px-5 py-4 flex items-center gap-3 border-b border-slate-100
+        {% if order.bill_requested_at %}bg-violet-50{% elif order.status == 'pronto' and not order.served_at %}bg-emerald-50{% elif order.status == 'cozinha' %}bg-amber-50{% else %}bg-slate-50{% endif %}">
+        <div class="flex-1 min-w-0">
+            <p class="font-black text-slate-800">Conta aberta · #{{ order.id }}</p>
+            <p class="text-xs font-semibold text-slate-500">
+                {% if order.bill_requested_at %}<span class="text-violet-700">Conta pedida</span>
+                {% elif order.status == 'pronto' and not order.served_at %}<span class="text-emerald-700">Pronto para servir</span>
+                {% elif order.status == 'cozinha' %}<span class="text-amber-700">Na cozinha</span>
+                {% else %}Servido{% endif %}
+                · aberta há <span data-since="{{ order.created_at.isoformat }}"></span>
+                {% if order.waiter %}· {{ order.waiter.first_name|default:order.waiter.username }}{% endif %}
+            </p>
+        </div>
+        {% if order.status == 'pronto' and not order.served_at %}
+        <button hx-post="{% url 'mark_served' order.id %}" hx-target="#order-panel"
+            class="px-3 py-2 rounded-xl bg-emerald-600 text-white text-sm font-bold"><i class="bi bi-check2-all me-1"></i>Servido</button>
+        {% endif %}
+    </div>
+
+    <ul class="divide-y divide-slate-100 max-h-[40vh] overflow-y-auto">
+        {% for item in order.items.all %}
+        <li class="px-5 py-3 flex items-center gap-3">
+            <span class="flex-1 min-w-0">
+                <span class="block font-bold text-sm">{{ item.quantity }}× {{ item.name }}</span>
+                {% if item.notes %}<span class="block text-xs font-bold text-amber-700">{{ item.notes }}</span>{% endif %}
+                {% if item.pending_quantity %}<span class="block text-[11px] font-bold text-amber-600"><i class="bi bi-fire"></i> {{ item.pending_quantity }} na cozinha</span>{% endif %}
+            </span>
+            <span class="text-sm font-bold whitespace-nowrap">R$ {{ item.subtotal|floatformat:2 }}</span>
+            <span class="flex items-center gap-1">
+                <button hx-post="{% url 'change_order_item_qty' order.id item.id %}" hx-vals='{"action": "remove"}' hx-target="#order-panel"
+                    {% if item.pending_quantity == 0 and user.role != 'gerente' %}disabled title="Já preparado: peça ao gerente"{% endif %}
+                    class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-red-100 hover:text-red-600 disabled:opacity-30"><i class="bi bi-dash"></i></button>
+                <button hx-post="{% url 'change_order_item_qty' order.id item.id %}" hx-vals='{"action": "add"}' hx-target="#order-panel"
+                    class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-emerald-100 hover:text-emerald-700"><i class="bi bi-plus"></i></button>
+            </span>
+        </li>
+        {% endfor %}
+    </ul>
+
+    <dl class="px-5 py-4 space-y-1 text-sm border-t border-slate-100">
+        <div class="flex justify-between"><dt class="text-slate-500">Itens</dt><dd class="font-bold">R$ {{ order.total|floatformat:2 }}</dd></div>
+        {% if order.discount %}
+        <div class="flex justify-between text-emerald-700"><dt>Desconto ({{ order.discount_reason }})</dt><dd class="font-bold">− R$ {{ order.discount|floatformat:2 }}</dd></div>
+        {% endif %}
+        {% if order.delivery_fee %}
+        <div class="flex justify-between"><dt class="text-slate-500">Taxa de entrega</dt><dd class="font-bold">R$ {{ order.delivery_fee|floatformat:2 }}</dd></div>
+        {% endif %}
+        {% if order.amount_paid %}
+        <div class="flex justify-between text-sky-700"><dt>Já pago</dt><dd class="font-bold">R$ {{ order.amount_paid|floatformat:2 }}</dd></div>
+        {% endif %}
+        <div class="flex justify-between text-lg pt-1"><dt class="font-black">Total</dt><dd class="font-black">R$ {{ order.amount_remaining|floatformat:2 }}</dd></div>
+    </dl>
+
+    <div class="px-5 pb-5 grid grid-cols-2 gap-2">
+        <a href="{% url 'close_order' order.id %}" class="col-span-2 py-3.5 rounded-2xl bg-slate-900 text-white font-black text-center hover:bg-slate-800">
+            <i class="bi bi-cash-coin me-1"></i>Fechar conta
+        </a>
+        {% if not order.bill_requested_at %}
+        <button hx-post="{% url 'request_bill' order.id %}" hx-target="#order-panel"
+            class="py-2.5 rounded-xl bg-violet-50 border border-violet-200 text-violet-800 font-bold text-sm"><i class="bi bi-receipt me-1"></i>Pediu a conta</button>
+        {% endif %}
+        <a href="{% url 'print_order' order.id %}" target="_blank"
+            class="py-2.5 rounded-xl bg-slate-100 text-slate-700 font-bold text-sm text-center"><i class="bi bi-printer me-1"></i>Imprimir conta</a>
+
+        {% if order.order_type == 'dine-in' %}
+        <details class="col-span-2 rounded-xl border border-slate-200">
+            <summary class="cursor-pointer px-3 py-2.5 font-bold text-sm text-slate-700"><i class="bi bi-arrow-left-right me-1"></i>Transferir / juntar mesa</summary>
+            <form hx-post="{% url 'transfer_order' order.id %}" class="p-3 pt-0 flex gap-2">
+                <input name="mesa" list="tablesList" required placeholder="Mesa de destino" class="flex-1 min-w-0 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-sm outline-none">
+                <datalist id="tablesList">{% for table in tables %}{% if table.name != order.mesa %}<option value="{{ table.name }}">{% endif %}{% endfor %}</datalist>
+                <button class="px-3 py-2 rounded-xl bg-slate-900 text-white text-sm font-bold">Mover</button>
+            </form>
+            <p class="px-3 pb-3 text-[11px] text-slate-500">Se a mesa de destino já tiver conta aberta, os itens são juntados nela.</p>
+        </details>
+        {% endif %}
+
+        {% if user.role == 'gerente' %}
+        <details class="col-span-2 rounded-xl border border-slate-200">
+            <summary class="cursor-pointer px-3 py-2.5 font-bold text-sm text-slate-700"><i class="bi bi-percent me-1"></i>Desconto / cortesia</summary>
+            <form hx-post="{% url 'apply_discount' order.id %}" hx-target="#order-panel" class="p-3 pt-0 grid grid-cols-2 gap-2">
+                <input name="value" inputmode="decimal" placeholder="R$ (ex.: 10,00)" class="px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-sm outline-none">
+                <input name="percent" inputmode="decimal" placeholder="ou % (100 = cortesia)" class="px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-sm outline-none">
+                <input name="reason" required placeholder="Motivo (obrigatório)" class="col-span-2 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-sm outline-none">
+                <button class="col-span-2 py-2 rounded-xl bg-emerald-600 text-white text-sm font-bold">Aplicar desconto</button>
+            </form>
+            {% if order.discount %}
+            <form hx-post="{% url 'remove_discount' order.id %}" hx-target="#order-panel" class="px-3 pb-3">
+                <button class="text-xs font-bold text-red-600">Remover desconto</button>
+            </form>
+            {% endif %}
+        </details>
+        <button hx-post="{% url 'cancel_order' order.id %}" hx-confirm="Cancelar o pedido #{{ order.id }}? Os itens não preparados voltam ao estoque."
+            class="col-span-2 py-2 text-sm font-bold text-red-600 hover:bg-red-50 rounded-xl"><i class="bi bi-x-circle me-1"></i>Cancelar pedido</button>
+        {% endif %}
+    </div>
+</div>
+{% endif %}

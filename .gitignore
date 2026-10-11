@@ -47,3 +47,4 @@ backups/logs/
 
 # Ferramentas locais (ex.: tailwindcss.exe)
 tools/
+backups/auto/

@@ -5,7 +5,7 @@ from decimal import Decimal, InvalidOperation
 from django.db.models import Count, Sum
 from django.utils import timezone
 
-from ..models import CashSession, Order
+from ..models import CashSession, Order, Payment
 
 
 class CashError(Exception):
@@ -22,23 +22,22 @@ def parse_amount(raw):
     return value.quantize(Decimal('0.01'))
 
 
-def orders_in_session(session, until=None):
-    """Pedidos pagos durante o turno (pela data de fechamento da conta)."""
-    return Order.objects.filter(
-        status='finalizado',
-        closed_at__gte=session.opened_at,
-        closed_at__lte=until or session.closed_at or timezone.now(),
+def payments_in_session(session, until=None):
+    """Pagamentos recebidos durante o turno (contas divididas contam por parte)."""
+    return Payment.objects.filter(
+        created_at__gte=session.opened_at,
+        created_at__lte=until or session.closed_at or timezone.now(),
     )
 
 
 def summary(session, until=None):
     """Totais do turno por forma de pagamento e quanto deve haver na gaveta."""
-    orders = orders_in_session(session, until)
+    payments = payments_in_session(session, until)
     by_method = {
-        row['payment_method']: {'total': row['total'] or Decimal('0'), 'count': row['count']}
-        for row in orders.values('payment_method').annotate(total=Sum('total'), count=Count('id'))
+        row['method']: {'total': row['total'] or Decimal('0'), 'count': row['count']}
+        for row in payments.values('method').annotate(total=Sum('amount'), count=Count('id'))
     }
-    labels = dict(Order.PAYMENT_CHOICES)
+    labels = {key: label for key, label in Order.PAYMENT_CHOICES if key != 'misto'}
     methods = [
         {'method': key, 'label': labels[key], **by_method.get(key, {'total': Decimal('0'), 'count': 0})}
         for key in labels
@@ -47,7 +46,7 @@ def summary(session, until=None):
     return {
         'methods': methods,
         'total_sales': sum((m['total'] for m in methods), Decimal('0')),
-        'orders_count': sum(m['count'] for m in methods),
+        'orders_count': payments.values('order').distinct().count(),
         'cash_sales': cash_sales,
         # Só dinheiro em espécie fica na gaveta; PIX e cartão vão para o banco.
         'expected_in_drawer': session.opening_amount + cash_sales,

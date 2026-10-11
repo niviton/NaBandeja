@@ -1,0 +1,74 @@
+{% extends 'restaurante/admin/base_admin.html' %}
+
+{% block title %}Contas a pagar - {{ app_settings.store_name }}{% endblock %}
+
+{% block admin_content %}
+<div class="max-w-6xl mx-auto">
+    <div class="flex flex-wrap items-end gap-3 mb-6">
+        <div class="flex-1 min-w-[240px]">
+            <h1 class="admin-brand-title text-4xl text-[var(--admin-text)]">Contas a pagar</h1>
+            <p class="text-[var(--admin-muted)]">Fornecedores, aluguel, luz... e o resultado do mês.</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <a href="?status={{ status }}&mes={{ prev_month|date:'Y-m' }}" class="w-10 h-10 rounded-xl bg-white border border-[var(--admin-line)] flex items-center justify-center"><i class="bi bi-chevron-left"></i></a>
+            <span class="font-black capitalize">{{ month|date:"F/Y" }}</span>
+            <a href="?status={{ status }}&mes={{ next_month|date:'Y-m' }}" class="w-10 h-10 rounded-xl bg-white border border-[var(--admin-line)] flex items-center justify-center"><i class="bi bi-chevron-right"></i></a>
+        </div>
+    </div>
+
+    <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 mb-6">
+        <div class="rounded-3xl p-5 bg-[var(--admin-card)] border border-[var(--admin-line)]">
+            <p class="text-xs font-bold uppercase tracking-wider text-[var(--admin-muted)]">Vendas do mês</p>
+            <p class="text-2xl font-black text-emerald-700">R$ {{ revenue|floatformat:2 }}</p>
+        </div>
+        <div class="rounded-3xl p-5 bg-[var(--admin-card)] border border-[var(--admin-line)]">
+            <p class="text-xs font-bold uppercase tracking-wider text-[var(--admin-muted)]">Contas pagas no mês</p>
+            <p class="text-2xl font-black text-red-700">R$ {{ paid|floatformat:2 }}</p>
+        </div>
+        <div class="rounded-3xl p-5 {% if balance >= 0 %}bg-emerald-50 border-emerald-200{% else %}bg-red-50 border-red-200{% endif %} border">
+            <p class="text-xs font-bold uppercase tracking-wider text-[var(--admin-muted)]">Saldo do mês</p>
+            <p class="text-2xl font-black">R$ {{ balance|floatformat:2 }}</p>
+        </div>
+        <div class="rounded-3xl p-5 bg-[var(--admin-card)] border border-[var(--admin-line)]">
+            <p class="text-xs font-bold uppercase tracking-wider text-[var(--admin-muted)]">Em aberto (todas)</p>
+            <p class="text-2xl font-black">R$ {{ open_total|floatformat:2 }}</p>
+            {% if overdue_count %}<p class="text-xs font-bold text-red-600">{{ overdue_count }} vencida(s): R$ {{ overdue_total|floatformat:2 }}</p>{% endif %}
+        </div>
+    </div>
+
+    <div class="grid gap-6 lg:grid-cols-[1fr_340px] items-start">
+        <section class="rounded-3xl bg-[var(--admin-card)] border border-[var(--admin-line)] overflow-hidden">
+            <div class="flex gap-1 p-3 border-b border-[var(--admin-line)]">
+                {% for key, label in status_tabs %}
+                <a href="?status={{ key }}&mes={{ month|date:'Y-m' }}" class="px-3 py-2 rounded-xl text-sm font-bold {% if status == key %}bg-slate-900 text-white{% else %}text-[var(--admin-muted)]{% endif %}">{{ label }}</a>
+                {% endfor %}
+            </div>
+            <ul class="divide-y divide-[var(--admin-line)]">
+                {% for expense in expenses %}
+                <li class="px-4 py-3 flex flex-wrap items-center gap-3">
+                    <span class="flex-1 min-w-[180px]">
+                        <a href="{% url 'expense_edit' expense.id %}" class="font-bold hover:underline">{{ expense.description }}</a>
+                        <span class="block text-xs text-[var(--admin-muted)]">{{ expense.get_category_display }} · vence {{ expense.due_date|date:"d/m/Y" }}{% if expense.paid_at %} · paga em {{ expense.paid_at|date:"d/m" }}{% endif %}</span>
+                    </span>
+                    {% if expense.is_overdue %}<span class="px-2 py-1 rounded-lg bg-red-100 text-red-700 text-xs font-black">VENCIDA</span>{% endif %}
+                    <span class="font-black">R$ {{ expense.amount|floatformat:2 }}</span>
+                    <form method="post" action="{% url 'expense_pay' expense.id %}">
+                        {% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
+                        <button class="px-3 py-1.5 rounded-lg text-xs font-bold {% if expense.paid_at %}bg-slate-100{% else %}bg-emerald-600 text-white{% endif %}">{% if expense.paid_at %}Desfazer{% else %}Paguei{% endif %}</button>
+                    </form>
+                </li>
+                {% empty %}
+                <li class="px-4 py-10 text-center text-[var(--admin-muted)]">Nada por aqui.</li>
+                {% endfor %}
+            </ul>
+        </section>
+
+        <form method="post" action="{% url 'expense_create' %}" class="rounded-3xl bg-[var(--admin-card)] border border-[var(--admin-line)] p-5 space-y-3">
+            {% csrf_token %}
+            <h2 class="font-black">Nova conta</h2>
+            {% include 'restaurante/admin/_expense_fields.html' %}
+            <button class="w-full py-3 rounded-xl bg-[var(--admin-accent)] text-white font-bold">Adicionar</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

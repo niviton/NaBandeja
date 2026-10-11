@@ -1,7 +1,7 @@
 from django.urls import path
 from django.views.generic import RedirectView
 
-from .views import auth, cart, catalog, manager, orders, pwa, reports
+from .views import auth, catalog, finance, manager, operations, orders, public, pwa, reports, system
 
 urlpatterns = [
     # PWA
@@ -15,29 +15,68 @@ urlpatterns = [
     path('logout/', auth.logout_view, name='logout'),
     path('dashboard/', auth.dashboard, name='dashboard'),
 
-    # Garçom
+    # Salão e pedidos (garçom/gerente)
     path('garcom/', orders.waiter_view, name='waiter_view'),
-    path('order/submit/', orders.submit_order, name='submit_order'),
+    path('salao/painel/', orders.salao_board, name='salao_board'),
+    path('salao/mesa/<str:mesa>/atender/', orders.resolve_table_calls, name='resolve_table_calls'),
+    path('pedido/mesa/<str:mesa>/', orders.table_order, name='table_order'),
+    path('pedido/novo/<str:kind>/', orders.new_order, name='new_order'),
+    path('pedido/<int:order_id>/', orders.order_workspace, name='order_workspace'),
+    path('pedido/painel/<str:key>/', orders.order_panel, name='order_panel'),
+    path('carrinho/<str:key>/add/<int:product_id>/', orders.cart_add, name='cart_add'),
+    path('carrinho/<str:key>/alterar/', orders.cart_change, name='cart_change'),
+    path('carrinho/<str:key>/limpar/', orders.cart_clear, name='cart_clear'),
+    path('carrinho/<str:key>/enviar/', orders.cart_send, name='cart_send'),
 
-    # Pedidos
     path('order/<int:order_id>/manage/', orders.manage_order, name='manage_order'),
     path('order/<int:order_id>/update/', orders.update_order_info, name='update_order_info'),
-    path('order/<int:order_id>/item/add/<int:product_id>/', orders.add_product_to_order, name='add_product_to_order'),
     path('order/<int:order_id>/item/<int:item_id>/change/', orders.change_order_item_qty, name='change_order_item_qty'),
-    path('order/<int:order_id>/close/', orders.close_order, name='close_order'),
+    path('order/<int:order_id>/pedir-conta/', orders.request_bill, name='request_bill'),
+    path('order/<int:order_id>/servido/', orders.mark_served, name='mark_served'),
+    path('order/<int:order_id>/transferir/', orders.transfer_order, name='transfer_order'),
+    path('order/<int:order_id>/desconto/', orders.apply_discount, name='apply_discount'),
+    path('order/<int:order_id>/desconto/remover/', orders.remove_discount, name='remove_discount'),
     path('order/<int:order_id>/cancel/', orders.cancel_order, name='cancel_order'),
+    path('order/<int:order_id>/close/', orders.close_order, name='close_order'),
+    path('order/<int:order_id>/pagamento/', orders.add_payment, name='add_payment'),
+    path('order/<int:order_id>/pix/', orders.pix_amount, name='pix_amount'),
+    path('order/<int:order_id>/pago/', orders.order_paid, name='order_paid'),
+    path('pagamento/<int:payment_id>/estornar/', orders.remove_payment, name='remove_payment'),
     path('order/<int:order_id>/print/', orders.print_order, name='print_order'),
 
     # Cozinha
     path('cozinha/', orders.kitchen_view, name='kitchen_view'),
+    path('cozinha/painel/', orders.kitchen_board, name='kitchen_board'),
     path('order/ready/<int:order_id>/', orders.mark_order_ready, name='mark_order_ready'),
+    path('order/<int:order_id>/comanda/', orders.kitchen_ticket, name='kitchen_ticket'),
 
     # Gerente
     path('admin-panel/', manager.admin_dashboard, name='admin_dashboard'),
     path('admin-panel/cash/open/', manager.open_cash_session, name='open_cash_session'),
     path('admin-panel/cash/close/', manager.close_cash_session, name='close_cash_session'),
     path('admin-panel/store/toggle/', manager.toggle_store_status, name='toggle_store_status'),
-    path('admin-panel/online/', manager.admin_online_orders, name='admin_online_orders'),
+    path('admin-panel/online/', operations.admin_online_orders, name='admin_online_orders'),
+    path('admin-panel/online/<int:order_id>/<str:decision>/', operations.online_order_decide, name='online_order_decide'),
+    path('admin-panel/entregas/', operations.delivery_zones, name='delivery_zones'),
+    path('admin-panel/entregas/nova/', operations.delivery_zone_save, name='delivery_zone_create'),
+    path('admin-panel/entregas/<int:zone_id>/', operations.delivery_zone_save, name='delivery_zone_edit'),
+    path('admin-panel/entregas/<int:zone_id>/excluir/', operations.delivery_zone_delete, name='delivery_zone_delete'),
+    path('admin-panel/mesas/', operations.admin_tables, name='admin_tables'),
+    path('admin-panel/mesas/criar/', operations.tables_quick_create, name='tables_quick_create'),
+    path('admin-panel/mesas/<int:table_id>/', operations.table_save, name='table_edit'),
+    path('admin-panel/mesas/<int:table_id>/novo-qr/', operations.table_new_qr, name='table_new_qr'),
+    path('admin-panel/mesas/qr/', operations.tables_qr_sheet, name='tables_qr_sheet'),
+    path('admin-panel/contas/', finance.expenses, name='expenses'),
+    path('admin-panel/contas/nova/', finance.expense_edit, name='expense_create'),
+    path('admin-panel/contas/<int:expense_id>/', finance.expense_edit, name='expense_edit'),
+    path('admin-panel/contas/<int:expense_id>/pagar/', finance.expense_pay, name='expense_pay'),
+    path('admin-panel/contas/<int:expense_id>/excluir/', finance.expense_delete, name='expense_delete'),
+    path('admin-panel/sistema/', system.system_status, name='system_status'),
+    path('admin-panel/sistema/backup/', system.backup_now, name='backup_now'),
+    path('admin-panel/sistema/backup/baixar/', system.backup_download, name='backup_download'),
+    path('admin-panel/sistema/licenca/', system.license_install, name='license_install'),
+    path('admin-panel/configuracao-inicial/pular/', system.setup_skip, name='setup_skip'),
+    path('admin-panel/configuracao-inicial/<str:step>/', system.setup_wizard, name='setup_wizard'),
     path('admin-panel/settings/', manager.admin_settings, name='admin_settings'),
     path('admin-panel/users/', manager.admin_users, name='admin_users'),
     path('admin-panel/user/new/', manager.user_create, name='user_create'),
@@ -58,10 +97,13 @@ urlpatterns = [
     path('admin-panel/ingredient/<int:ingredient_id>/edit/', catalog.ingredient_edit, name='ingredient_edit'),
     path('admin-panel/ingredient/<int:ingredient_id>/delete/', catalog.ingredient_delete, name='ingredient_delete'),
 
-    # API do carrinho (AJAX)
-    path('api/cart/', cart.api_get_cart, name='api_get_cart'),
-    path('api/cart/add/<int:product_id>/', cart.api_add_to_cart, name='api_add_to_cart'),
-    path('api/cart/remove/<int:product_id>/', cart.api_remove_from_cart, name='api_remove_from_cart'),
-    path('api/cart/change/', cart.api_change_cart_item, name='api_change_cart_item'),
-    path('api/cart/clear/', cart.api_clear_cart, name='api_clear_cart'),
+    # Público (sem login): cardápio da mesa (QR Code) e pedido online
+    path('cardapio/', public.public_menu, name='public_menu'),
+    path('m/<str:token>/', public.table_menu, name='table_menu'),
+    path('m/<str:token>/chamar/<str:kind>/', public.table_call, name='table_call'),
+    path('pedir/', public.online_order, name='online_order'),
+    path('pedir/add/<int:product_id>/', public.online_cart_add, name='online_cart_add'),
+    path('pedir/alterar/', public.online_cart_change, name='online_cart_change'),
+    path('pedir/enviar/', public.online_checkout, name='online_checkout'),
+    path('pedir/enviado/<int:order_id>/', public.online_order_sent, name='online_order_sent'),
 ]

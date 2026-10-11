@@ -1,0 +1,114 @@
+{% extends 'app/base_app.html' %}
+
+{% block title %}{{ target.title }} - {{ app_settings.store_name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-[1600px] mx-auto p-3 sm:p-6">
+    <div class="flex items-center gap-3 mb-4">
+        <a href="{% url 'waiter_view' %}" class="w-11 h-11 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50" title="Voltar ao salão">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+        <div class="min-w-0">
+            <h1 class="text-2xl font-black text-slate-800 truncate">{{ target.title }}</h1>
+            <p class="text-sm text-slate-500">{% if order %}Conta aberta · pedido #{{ order.id }}{% elif target.kind == 'mesa' %}Mesa livre: os itens enviados abrem a conta{% else %}Monte o pedido e envie para a cozinha{% endif %}</p>
+        </div>
+    </div>
+
+    <div class="grid gap-5 lg:grid-cols-[minmax(0,1fr)_420px] items-start">
+        {# ------------------------------------------------ cardápio #}
+        <section class="min-w-0">
+            <div class="sticky top-[4.5rem] z-20 bg-slate-100/95 backdrop-blur pb-3">
+                <div class="relative">
+                    <i class="bi bi-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    <input id="menuSearch" type="search" placeholder="Buscar no cardápio..." autocomplete="off"
+                        class="w-full pl-11 pr-4 py-3 rounded-2xl bg-white border border-slate-200 font-medium outline-none focus:ring-2 focus:ring-slate-900/20">
+                </div>
+                <div class="flex gap-2 overflow-x-auto mt-3 pb-1 custom-scrollbar">
+                    {% for category in categories %}
+                    <a href="#cat-{{ category.id }}" class="whitespace-nowrap px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-600 hover:bg-slate-900 hover:text-white">{{ category.icon }} {{ category.name }}</a>
+                    {% endfor %}
+                </div>
+            </div>
+
+            {% for category in categories %}
+            <div id="cat-{{ category.id }}" class="scroll-mt-40 mb-6" data-menu-section>
+                <h2 class="font-black text-slate-700 mb-3">{{ category.icon }} {{ category.name }}</h2>
+                <div class="grid gap-2 sm:gap-3 grid-cols-2 sm:grid-cols-3 xl:grid-cols-4">
+                    {% for product in category.products.all %}
+                    {% with stock=product.available_stock %}
+                    <button type="button" data-menu-item="{{ product.name|lower }}"
+                        {% if stock > 0 %}hx-post="{% url 'cart_add' target.key product.id %}" hx-target="#cart" hx-swap="innerHTML"{% else %}disabled{% endif %}
+                        class="group text-left rounded-2xl border p-3 flex gap-3 items-center transition active:scale-[0.97] {% if stock > 0 %}bg-white border-slate-200 hover:border-slate-400 hover:shadow-sm{% else %}bg-slate-50 border-slate-200 opacity-50 cursor-not-allowed{% endif %}">
+                        <span class="w-12 h-12 shrink-0 rounded-xl overflow-hidden bg-slate-100 flex items-center justify-center text-2xl">
+                            {% if product.image %}<img src="{{ product.image.url }}" alt="" class="w-full h-full object-cover" loading="lazy">{% else %}{{ product.icon|default:'🍽️' }}{% endif %}
+                        </span>
+                        <span class="min-w-0 flex-1">
+                            <span class="block font-bold text-sm leading-tight line-clamp-2">{{ product.name }}</span>
+                            <span class="flex items-center justify-between gap-1 mt-1">
+                                <span class="font-black text-slate-900 text-sm">R$ {{ product.price|floatformat:2 }}</span>
+                                {% if stock <= 0 %}<span class="text-[10px] font-black uppercase text-red-600">Esgotado</span>
+                                {% elif stock <= 5 %}<span class="text-[10px] font-bold text-amber-700">resta {{ stock }}</span>{% endif %}
+                            </span>
+                        </span>
+                    </button>
+                    {% endwith %}
+                    {% endfor %}
+                </div>
+            </div>
+            {% empty %}
+            <div class="rounded-2xl bg-white border border-slate-200 p-8 text-center text-slate-500">Nenhum produto disponível no cardápio.</div>
+            {% endfor %}
+        </section>
+
+        {# ------------------------------------------------ conta + carrinho #}
+        <aside id="orderColumn" class="space-y-4 lg:sticky lg:top-[4.5rem]">
+            {% if order %}
+            <div id="order-panel"
+                 hx-get="{% url 'order_panel' target.key %}"
+                 hx-trigger="nb:event[detail.type == 'poll' || (detail.order && detail.order.id == {{ order.id }})] from:body delay:300ms"
+                 hx-swap="innerHTML">
+                {% include 'app/_order_panel.html' %}
+            </div>
+            {% endif %}
+
+            <div id="cart" class="rounded-3xl bg-white border border-slate-200 shadow-sm">
+                {% include 'app/_cart.html' %}
+            </div>
+        </aside>
+    </div>
+</div>
+
+<a href="#orderColumn" id="cartFab" class="lg:hidden fixed bottom-4 right-4 z-30 px-5 py-3 rounded-2xl bg-slate-900 text-white font-bold shadow-2xl">
+    <i class="bi bi-receipt me-1"></i>Ver pedido
+</a>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const search = document.getElementById('menuSearch');
+    const normalize = (text) => text.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+    search.addEventListener('input', () => {
+        const term = normalize(search.value.trim());
+        document.querySelectorAll('[data-menu-section]').forEach((section) => {
+            let visible = 0;
+            section.querySelectorAll('[data-menu-item]').forEach((item) => {
+                const match = !term || normalize(item.dataset.menuItem).includes(term);
+                item.classList.toggle('hidden', !match);
+                visible += match ? 1 : 0;
+            });
+            section.classList.toggle('hidden', visible === 0);
+        });
+    });
+});
+
+// Acrescenta uma observação rápida ao campo do item no carrinho.
+function addQuickNote(button) {
+    const input = button.closest('form').querySelector('input[name="notes"]');
+    const note = button.dataset.note;
+    const parts = input.value.split(',').map((part) => part.trim()).filter(Boolean);
+    if (!parts.includes(note)) parts.push(note);
+    input.value = parts.join(', ');
+}
+</script>
+{% endblock %}

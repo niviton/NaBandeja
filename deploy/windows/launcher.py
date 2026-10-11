@@ -67,6 +67,17 @@ def update_desktop_shortcut():
         print(f'Aviso: não foi possível atualizar o atalho ({exc}).')
 
 
+def backup_loop(interval_minutes):
+    """Backup automático do banco enquanto o sistema estiver aberto."""
+    from restaurante.services.backup import run_backup
+    while True:
+        try:
+            run_backup()
+        except Exception as exc:
+            print(f'Aviso: backup automático falhou ({exc}).')
+        time.sleep(interval_minutes * 60)
+
+
 def main():
     sys.stdout.reconfigure(line_buffering=True)
     initial_password = ensure_env_file(DATA_DIR)
@@ -81,6 +92,9 @@ def main():
     print('Preparando banco de dados...')
     call_command('migrate', interactive=False, verbosity=0)
     call_command('ensure_initial_access')
+    interval = int(os.getenv('BACKUP_INTERVAL_MINUTES', '60'))
+    if interval > 0:
+        threading.Thread(target=backup_loop, args=(interval,), daemon=True).start()
     if os.getenv('NABANDEJA_SKIP_SHORTCUT', '').lower() not in ('1', 'true'):
         threading.Thread(target=update_desktop_shortcut, daemon=True).start()
 

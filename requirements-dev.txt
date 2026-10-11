@@ -2,3 +2,4 @@
 -r requirements.txt
 selenium==4.51.0
 coverage==7.10.7
+pyflakes==4.0.3

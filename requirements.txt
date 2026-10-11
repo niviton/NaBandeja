@@ -8,4 +8,5 @@ python-dotenv==1.2.4
 django-allauth[socialaccount]==65.19.7   # login com Google
 pillow==12.3.0
 qrcode==8.2
+openpyxl==3.1.5        # exportação para Excel
 psycopg2-binary==2.9.13   # só usado com DB_ENGINE=postgres

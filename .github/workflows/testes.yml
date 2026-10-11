@@ -17,6 +17,8 @@ jobs:
           python-version: "3.12"
           cache: pip
       - run: pip install -r requirements-dev.txt
+      - name: Lint
+        run: python -m pyflakes restaurante nabandeja_project scripts
       - name: Verificar configuracao e migracoes
         run: |
           python manage.py check

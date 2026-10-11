@@ -1,0 +1,71 @@
+{% extends 'restaurante/admin/base_admin.html' %}
+
+{% block title %}Sistema - {{ app_settings.store_name }}{% endblock %}
+
+{% block admin_content %}
+<div class="max-w-5xl mx-auto">
+    <h1 class="admin-brand-title text-4xl text-[var(--admin-text)]">Sistema</h1>
+    <p class="text-[var(--admin-muted)] mb-6">Informações para suporte, backup e licença.</p>
+
+    <div class="grid gap-4 md:grid-cols-2">
+        <section class="rounded-3xl bg-[var(--admin-card)] border border-[var(--admin-line)] p-5">
+            <h2 class="font-black mb-3"><i class="bi bi-info-circle me-1"></i>Visão geral</h2>
+            <dl class="text-sm space-y-2">
+                <div class="flex justify-between"><dt class="text-[var(--admin-muted)]">Versão do NaBandeja</dt><dd class="font-bold">{{ version }}</dd></div>
+                <div class="flex justify-between"><dt class="text-[var(--admin-muted)]">Tempo real</dt><dd class="font-bold">{% if realtime %}ativo (WebSocket){% else %}desligado (polling){% endif %}</dd></div>
+                <div class="flex justify-between"><dt class="text-[var(--admin-muted)]">Banco de dados</dt><dd class="font-bold">{% if db_size_mb is not None %}SQLite · {{ db_size_mb }} MB{% else %}PostgreSQL{% endif %}</dd></div>
+                <div class="flex justify-between"><dt class="text-[var(--admin-muted)]">Espaço livre no disco</dt><dd class="font-bold {% if disk_free_gb and disk_free_gb < 2 %}text-red-600{% endif %}">{{ disk_free_gb|default:'?' }} GB</dd></div>
+                <div class="flex justify-between"><dt class="text-[var(--admin-muted)]">Python</dt><dd class="font-bold">{{ python }}</dd></div>
+            </dl>
+            <h3 class="font-black mt-5 mb-2 text-sm">Endereços de acesso</h3>
+            <ul class="text-sm space-y-1">
+                {% for label, url in links.items %}<li>{{ label }}: <span class="font-mono font-bold">{{ url }}</span></li>{% endfor %}
+            </ul>
+        </section>
+
+        <section class="rounded-3xl bg-[var(--admin-card)] border border-[var(--admin-line)] p-5">
+            <h2 class="font-black mb-3"><i class="bi bi-shield-check me-1"></i>Backup</h2>
+            {% if last_backup %}
+            <p class="text-sm">Último backup automático: <b>{{ last_backup|date:"d/m/Y H:i" }}</b></p>
+            <p class="text-xs text-[var(--admin-muted)]">{{ last_backup_name }} · cópias em backups/auto/ (as 48 mais recentes)</p>
+            {% else %}
+            <p class="text-sm font-bold text-amber-700">Nenhum backup automático ainda.</p>
+            {% endif %}
+            <div class="mt-4 flex flex-wrap gap-2">
+                <form method="post" action="{% url 'backup_now' %}">{% csrf_token %}<button class="px-4 py-2.5 rounded-xl bg-slate-900 text-white font-bold text-sm">Fazer backup agora</button></form>
+                {% if last_backup %}<a href="{% url 'backup_download' %}" class="px-4 py-2.5 rounded-xl bg-white border border-[var(--admin-line)] font-bold text-sm">Baixar último backup</a>{% endif %}
+            </div>
+            <p class="mt-3 text-xs text-[var(--admin-muted)]">Guarde uma cópia fora deste computador (pendrive, Google Drive). Veja docs/backup.md.</p>
+        </section>
+
+        <section class="rounded-3xl bg-[var(--admin-card)] border border-[var(--admin-line)] p-5">
+            <h2 class="font-black mb-3"><i class="bi bi-key me-1"></i>Licença</h2>
+            {% if license.state == 'sem_licenca' %}
+            <p class="text-sm">Nenhuma licença instalada.</p>
+            {% elif license.state == 'invalida' %}
+            <p class="text-sm font-bold text-red-600">Licença inválida.</p>
+            {% else %}
+            <p class="text-sm">Cliente: <b>{{ license.client }}</b></p>
+            <p class="text-sm">Válida até: <b class="{% if license.show_warning %}text-red-600{% endif %}">{{ license.expires|date:"d/m/Y" }}</b>{% if license.days_left >= 0 %} ({{ license.days_left }} dias){% endif %}</p>
+            {% endif %}
+            {% if license.message %}<p class="mt-2 text-sm font-bold text-amber-800">{{ license.message }}</p>{% endif %}
+            <form method="post" action="{% url 'license_install' %}" class="mt-4 space-y-2">
+                {% csrf_token %}
+                <textarea name="license_key" rows="3" required placeholder="Cole aqui a licença recebida do suporte" class="w-full px-3 py-2 rounded-xl border border-[var(--admin-line)] font-mono text-xs"></textarea>
+                <button class="px-4 py-2.5 rounded-xl bg-[var(--admin-accent)] text-white font-bold text-sm">Instalar licença</button>
+            </form>
+        </section>
+
+        <section class="rounded-3xl bg-[var(--admin-card)] border border-[var(--admin-line)] p-5">
+            <h2 class="font-black mb-3"><i class="bi bi-bug me-1"></i>Últimos erros</h2>
+            {% if errors %}
+            <pre class="text-[11px] leading-relaxed bg-slate-900 text-slate-100 rounded-xl p-3 overflow-x-auto max-h-64">{% for line in errors %}{{ line }}
+{% endfor %}</pre>
+            <p class="mt-2 text-xs text-[var(--admin-muted)]">Arquivo completo: logs/nabandeja.log</p>
+            {% else %}
+            <p class="text-sm text-emerald-700 font-bold"><i class="bi bi-check-circle"></i> Nenhum erro registrado.</p>
+            {% endif %}
+        </section>
+    </div>
+</div>
+{% endblock %}

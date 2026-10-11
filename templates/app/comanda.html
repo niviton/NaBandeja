@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Comanda #{{ order.id }}</title>
+<style>
+    @page { margin: 2mm; }
+    body { font-family: 'Courier New', monospace; width: 72mm; margin: 0 auto; color: #000; font-size: 13px; }
+    h1 { font-size: 22px; margin: 4px 0; text-align: center; }
+    .meta { text-align: center; font-size: 11px; border-bottom: 1px dashed #000; padding-bottom: 4px; }
+    ul { list-style: none; padding: 0; margin: 6px 0; }
+    li { font-size: 16px; font-weight: bold; padding: 3px 0; border-bottom: 1px dotted #999; }
+    .notes { display: block; font-size: 13px; text-transform: uppercase; padding-left: 18px; }
+    .obs { border: 1px solid #000; padding: 4px; font-size: 12px; }
+    .empty { text-align: center; padding: 12px; }
+    @media screen { body { margin-top: 12px; } }
+</style>
+</head>
+<body>
+    <h1>{{ order.display_name }}</h1>
+    <div class="meta">Pedido #{{ order.id }} · {% now "d/m H:i" %}{% if order.waiter %} · {{ order.waiter.first_name|default:order.waiter.username }}{% endif %}</div>
+    {% if lines %}
+    <ul>
+        {% for item, quantity in lines %}
+        <li>{{ quantity }}x {{ item.name }}{% if item.notes %}<span class="notes">&gt;&gt; {{ item.notes }}</span>{% endif %}</li>
+        {% endfor %}
+    </ul>
+    {% if order.observacoes %}<div class="obs">OBS: {{ order.observacoes }}</div>{% endif %}
+    {% if order.order_type == 'delivery' %}<div class="obs">DELIVERY · {{ order.address }}</div>{% endif %}
+    {% else %}
+    <p class="empty">Nenhum item novo para imprimir.</p>
+    {% endif %}
+    {% if auto and lines %}<script>window.addEventListener('load', () => window.print());</script>{% endif %}
+</body>
+</html>

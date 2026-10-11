@@ -12,7 +12,8 @@ class ProductFormTests(TestCase):
         self.category = Category.objects.create(name='Lanches')
 
     def post(self, url, **extra):
-        data = {'name': 'X-Salada', 'category': self.category.pk, 'price': '22.50', 'stock': '10', 'icon': '🍔'}
+        data = {'name': 'X-Salada', 'category': self.category.pk, 'price': '22.50', 'cost_price': '8.00',
+                'stock': '10', 'icon': '🍔'}
         data.update(extra)
         return self.client.post(url, data)
 

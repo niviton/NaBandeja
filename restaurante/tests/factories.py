@@ -39,7 +39,9 @@ def product_with_recipe(name='Suco', price='8.00', ingredient_stock='1000', per_
 
 
 def open_store():
+    """Loja aberta e já configurada (pula o assistente de primeiro uso)."""
     store = AppSettings.get_settings()
     store.is_store_open = True
+    store.setup_completed = True
     store.save()
     return store

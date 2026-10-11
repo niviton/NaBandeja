@@ -219,6 +219,27 @@
             </div>
         </div>
 
+<div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div class="rounded-3xl p-5 bg-[var(--admin-card)] border border-[var(--admin-line)]">
+            <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Custo dos produtos</p>
+            <p class="text-2xl font-black mt-1">R$ {{ summary.items_cost|floatformat:2 }}</p>
+        </div>
+        <div class="rounded-3xl p-5 bg-[var(--admin-card)] border border-[var(--admin-line)]">
+            <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Descontos dados</p>
+            <p class="text-2xl font-black mt-1">R$ {{ summary.discounts|floatformat:2 }}</p>
+        </div>
+        <div class="rounded-3xl p-5 bg-emerald-50 border border-emerald-200">
+            <p class="text-xs font-bold uppercase tracking-wider text-emerald-700">Lucro bruto</p>
+            <p class="text-2xl font-black mt-1 text-emerald-800">R$ {{ summary.gross_profit|floatformat:2 }}</p>
+            <p class="text-[11px] text-emerald-700">vendas − descontos − custo dos produtos</p>
+        </div>
+        <div class="rounded-3xl p-5 bg-[var(--admin-card)] border border-[var(--admin-line)]">
+            <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Taxas de entrega</p>
+            <p class="text-2xl font-black mt-1">R$ {{ summary.delivery_fees|floatformat:2 }}</p>
+            {% if summary.products_without_cost %}<p class="text-[11px] text-amber-700 mt-1">{{ summary.products_without_cost }} produto(s) sem custo cadastrado</p>{% endif %}
+        </div>
+    </div>
+
     <div class="mt-8 bg-[var(--admin-card)] rounded-3xl p-6 border border-[var(--admin-line)] shadow-[0_20px_50px_-36px_rgba(66,47,28,0.55)]">
         <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
             <div class="flex items-center gap-3">
@@ -240,6 +261,10 @@
                         <th class="px-4 py-3 font-bold uppercase tracking-wide text-[11px]">Produto</th>
                         <th class="px-4 py-3 font-bold uppercase tracking-wide text-[11px]">Quantidade Vendida</th>
                         <th class="px-4 py-3 font-bold uppercase tracking-wide text-[11px]">Pedidos Com Esse Item</th>
+                        <th class="px-4 py-3 font-bold uppercase tracking-wide text-[11px] text-right">Faturamento</th>
+                        <th class="px-4 py-3 font-bold uppercase tracking-wide text-[11px] text-right">Custo</th>
+                        <th class="px-4 py-3 font-bold uppercase tracking-wide text-[11px] text-right">Lucro</th>
+                        <th class="px-4 py-3 font-bold uppercase tracking-wide text-[11px] text-right">Margem</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -250,10 +275,18 @@
                         </td>
                         <td class="px-4 py-3 text-slate-900 font-black">{{ product.total_qty }}x</td>
                         <td class="px-4 py-3 text-slate-600 font-semibold">{{ product.orders_count }}</td>
+                        <td class="px-4 py-3 text-right font-semibold">R$ {{ product.total_revenue|floatformat:2 }}</td>
+                        {% if product.has_cost %}
+                        <td class="px-4 py-3 text-right text-slate-500">R$ {{ product.total_cost|floatformat:2 }}</td>
+                        <td class="px-4 py-3 text-right font-black {% if product.profit < 0 %}text-red-600{% else %}text-emerald-700{% endif %}">R$ {{ product.profit|floatformat:2 }}</td>
+                        <td class="px-4 py-3 text-right font-bold">{{ product.margin|floatformat:0 }}%</td>
+                        {% else %}
+                        <td colspan="3" class="px-4 py-3 text-right text-xs text-slate-400">cadastre o custo do produto</td>
+                        {% endif %}
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="3" class="px-4 py-10 text-center text-slate-400 font-medium">Nenhum item vendido no periodo selecionado.</td>
+                        <td colspan="7" class="px-4 py-10 text-center text-slate-400 font-medium">Nenhum item vendido no periodo selecionado.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -314,6 +347,10 @@
                     </select>
                 </form>
 
+                <a href="?{{ base_query_string }}{% if base_query_string %}&{% endif %}export=xlsx" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold bg-green-700 text-white hover:bg-green-800 transition-colors">
+                    <i class="bi bi-file-earmark-excel"></i>
+                    Exportar Excel
+                </a>
                 <a href="?{{ base_query_string }}{% if base_query_string %}&{% endif %}export=csv" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors">
                     <i class="bi bi-file-earmark-spreadsheet"></i>
                     Exportar CSV

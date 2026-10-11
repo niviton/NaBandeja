@@ -2,6 +2,26 @@
 
 Mudanças relevantes do NaBandeja. O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [2.2.0] - 2026-10-11
+
+### Adicionado
+- **Salão com mapa de mesas** (cores por situação), carrinho por mesa, observações rápidas por item, pedir a conta, servido, transferir/juntar mesas.
+- **Fechar conta**: dividir por pessoas, várias formas de pagamento, troco, PIX do valor de cada parte, estorno (gerente).
+- **Desconto e cortesia** com motivo (gerente).
+- **Cozinha**: cronômetro e atraso configurável, som, impressão automática da comanda só com itens novos.
+- **Cardápio digital pelo QR Code da mesa** (chamar garçom, pedir a conta) e folha de QR Codes para imprimir.
+- **Pedido online** com bairros/taxa de entrega, pedido mínimo, confirmação pelo gerente e link do WhatsApp.
+- **Lucro** nos relatórios (custo congelado na venda) e exportação para **Excel**.
+- **Contas a pagar** e saldo do mês; **caixa** com tela própria no Painel.
+- **Sistema**: status, backup automático a cada hora (e manual/download), licença por cliente assinada (Ed25519).
+- **Assistente de primeiro uso** e menu do painel responsivo.
+- `SQLITE_PATH` para usar o banco em outro local.
+
+### Alterado
+- Caixa e relatórios passam a somar **pagamentos** (contas divididas contam certo).
+- Telas da equipe refeitas com htmx (fragmentos HTML do servidor) e `static/js/nabandeja.js`.
+- Avisos na tela não interpretam HTML (fecha brecha de injeção).
+
 ## [2.1.0] - 2026-10-11
 
 ### Adicionado

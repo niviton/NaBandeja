@@ -24,6 +24,7 @@ def home_for(user):
 def wants_json(request):
     return (
         request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+        or request.headers.get('HX-Request') == 'true'
         or 'application/json' in request.headers.get('Accept', '')
         or request.path.startswith('/api/')
     )

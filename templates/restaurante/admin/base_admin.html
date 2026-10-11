@@ -111,46 +111,16 @@
 {% endblock %}
 
 {% block content %}
-<div class="admin-shell flex min-h-[calc(100vh-5rem)] admin-ui-font">
-    <nav class="admin-sidebar w-72 flex flex-col p-6 gap-2 shadow-[8px_0_22px_-16px_rgba(73,49,33,0.3)]">
-        <div class="mb-6 px-3">
-            <p class="text-xs font-extrabold text-[var(--admin-muted)] uppercase tracking-[0.18em]">Menu Principal</p>
-        </div>
-
-        <a href="{% url 'admin_dashboard' %}" class="admin-link {% if active_menu == 'dashboard' %}active{% endif %} flex items-center gap-4 px-4 py-3 rounded-2xl font-extrabold text-sm transition-all">
-            <i class="bi bi-grid-1x2 text-lg"></i>
-            Dashboard
+<div class="admin-shell lg:flex min-h-[calc(100vh-5rem)] admin-ui-font">
+    <nav class="admin-sidebar hidden lg:flex w-64 shrink-0 flex-col p-5 gap-1 shadow-[8px_0_22px_-16px_rgba(73,49,33,0.3)]">
+        <p class="mb-3 px-3 text-xs font-extrabold text-[var(--admin-muted)] uppercase tracking-[0.18em]">Menu</p>
+        {% include 'restaurante/admin/_nav_links.html' %}
+        <a href="{% url 'waiter_view' %}" class="mt-4 flex items-center gap-3 px-4 py-2.5 rounded-2xl font-extrabold text-sm bg-slate-900 text-white">
+            <i class="bi bi-grid-3x3-gap text-lg"></i>Ir para o salão
         </a>
-
-        <a href="{% url 'admin_reports' %}" class="admin-link {% if active_menu == 'reports' %}active{% endif %} flex items-center gap-4 px-4 py-3 rounded-2xl font-extrabold text-sm transition-all">
-            <i class="bi bi-bar-chart text-lg"></i>
-            Relatórios
-        </a>
-
-        <a href="{% url 'admin_menu' %}" class="admin-link {% if active_menu == 'menu' %}active{% endif %} flex items-center gap-4 px-4 py-3 rounded-2xl font-extrabold text-sm transition-all">
-            <i class="bi bi-bag text-lg"></i>
-            Cardápio
-        </a>
-
-        <a href="{% url 'admin_ingredients' %}" class="admin-link {% if active_menu == 'ingredients' %}active{% endif %} flex items-center gap-4 px-4 py-3 rounded-2xl font-extrabold text-sm transition-all">
-            <i class="bi bi-box-seam text-lg"></i>
-            Ingredientes
-        </a>
-
-        <a href="{% url 'admin_users' %}" class="admin-link {% if active_menu == 'users' %}active{% endif %} flex items-center gap-4 px-4 py-3 rounded-2xl font-extrabold text-sm transition-all">
-            <i class="bi bi-people text-lg"></i>
-            Equipe
-        </a>
-
-        <a href="{% url 'admin_online_orders' %}" class="admin-link {% if active_menu == 'online' %}active{% endif %} flex items-center gap-4 px-4 py-3 rounded-2xl font-extrabold text-sm transition-all">
-            <i class="bi bi-phone text-lg"></i>
-            Pedidos Online
-        </a>
-
-        <a href="{% url 'admin_settings' %}" class="admin-link {% if active_menu == 'settings' %}active{% endif %} flex items-center gap-4 px-4 py-3 rounded-2xl font-extrabold text-sm transition-all">
-            <i class="bi bi-gear text-lg"></i>
-            Configurações
-        </a>
+    </nav>
+    <nav class="lg:hidden flex gap-1 overflow-x-auto px-3 py-2 border-b border-[var(--admin-line)] bg-[var(--admin-card)]">
+        {% include 'restaurante/admin/_nav_links.html' %}
     </nav>
 
     <main class="admin-main flex-1 p-6 lg:p-8 overflow-y-auto">

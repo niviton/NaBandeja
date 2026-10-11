@@ -1,3 +1,5 @@
+from importlib import import_module
+
 from django.apps import AppConfig
 
 
@@ -7,4 +9,4 @@ class RestauranteConfig(AppConfig):
     verbose_name = 'Gestão do Restaurante'
 
     def ready(self):
-        from . import signals  # noqa: F401
+        import_module(f'{self.name}.signals')  # registra os avisos de tempo real

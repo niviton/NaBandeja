@@ -8,7 +8,7 @@ from django.db.models import Avg, Count, DecimalField, ExpressionWrapper, F, Sum
 from django.db.models.functions import TruncDay
 from django.utils import timezone
 
-from ..models import Order, OrderItem
+from ..models import Order, OrderItem, Payment
 
 FILTER_TYPES = ('day', 'month', 'year', 'range')
 
@@ -103,34 +103,67 @@ def history_orders(period, search=''):
     return qs
 
 
-LINE_TOTAL = ExpressionWrapper(F('quantity') * F('unit_price'), output_field=DecimalField(max_digits=12, decimal_places=2))
+MONEY = DecimalField(max_digits=12, decimal_places=2)
+LINE_TOTAL = ExpressionWrapper(F('quantity') * F('unit_price'), output_field=MONEY)
+LINE_COST = ExpressionWrapper(F('quantity') * F('unit_cost'), output_field=MONEY)
 
 
 def sales_summary(orders):
-    totals = orders.aggregate(revenue=Sum('total'), count=Count('id'), avg=Avg('total'))
+    """
+    Faturamento = soma dos pagamentos (já desconta descontos e inclui taxas de
+    entrega). Produtos e lucro vêm dos itens vendidos.
+    """
+    payments = Payment.objects.filter(order__in=orders)
+    revenue = payments.aggregate(total=Sum('amount'))['total'] or Decimal('0')
+    count = orders.count()
     items = OrderItem.objects.filter(order__in=orders)
     labels = dict(Order.PAYMENT_CHOICES)
+
+    by_product = list(
+        items.values('product_name', 'product__icon')
+        .annotate(
+            total_qty=Sum('quantity'),
+            total_revenue=Sum(LINE_TOTAL),
+            total_cost=Sum(LINE_COST),
+            orders_count=Count('order', distinct=True),
+        )
+        .order_by('-total_qty', 'product_name')
+    )
+    items_revenue = Decimal('0')
+    items_cost = Decimal('0')
+    for row in by_product:
+        row['total_revenue'] = row['total_revenue'] or Decimal('0')
+        row['has_cost'] = row['total_cost'] is not None and row['total_cost'] > 0
+        row['total_cost'] = row['total_cost'] or Decimal('0')
+        row['profit'] = row['total_revenue'] - row['total_cost']
+        row['margin'] = (row['profit'] / row['total_revenue'] * 100) if row['total_revenue'] and row['has_cost'] else None
+        items_revenue += row['total_revenue']
+        items_cost += row['total_cost']
+
+    discounts = orders.aggregate(total=Sum('discount'))['total'] or Decimal('0')
+    delivery_fees = orders.aggregate(total=Sum('delivery_fee'))['total'] or Decimal('0')
     return {
-        'revenue': totals['revenue'] or Decimal('0'),
-        'orders': totals['count'],
-        'avg_ticket': totals['avg'] or Decimal('0'),
+        'revenue': revenue,
+        'orders': count,
+        'avg_ticket': (revenue / count) if count else Decimal('0'),
         'items_sold': items.aggregate(total=Sum('quantity'))['total'] or 0,
+        'discounts': discounts,
+        'delivery_fees': delivery_fees,
+        'items_cost': items_cost,
+        'gross_profit': items_revenue - discounts - items_cost,
+        'products_without_cost': sum(1 for row in by_product if not row['has_cost']),
         'by_waiter': list(
             orders.values('waiter__username')
             .annotate(total_sales=Sum('total'), orders_count=Count('id'), avg_ticket=Avg('total'))
             .order_by('-total_sales')
         ),
         'by_day': list(
-            orders.annotate(day=TruncDay('closed_at')).values('day')
-            .annotate(total=Sum('total'), count=Count('id')).order_by('day')
+            payments.annotate(day=TruncDay('order__closed_at')).values('day')
+            .annotate(total=Sum('amount'), count=Count('order', distinct=True)).order_by('day')
         ),
-        'by_product': list(
-            items.values('product_name', 'product__icon')
-            .annotate(total_qty=Sum('quantity'), total_revenue=Sum(LINE_TOTAL), orders_count=Count('order', distinct=True))
-            .order_by('-total_qty', 'product_name')
-        ),
+        'by_product': by_product,
         'by_payment': [
-            {'method': labels.get(row['payment_method'], 'Não definido'), 'total': row['total'], 'count': row['count']}
-            for row in orders.values('payment_method').annotate(total=Sum('total'), count=Count('id')).order_by('-total')
+            {'method': labels.get(row['method'], row['method']), 'total': row['total'], 'count': row['count']}
+            for row in payments.values('method').annotate(total=Sum('amount'), count=Count('id')).order_by('-total')
         ],
     }

@@ -1,0 +1,57 @@
+{% extends 'public/base_public.html' %}
+
+{% block title %}Cardápio - {{ store.store_name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 pb-32">
+    {% if table %}
+    <div class="mt-4 rounded-2xl bg-slate-900 text-white p-4 flex items-center gap-3">
+        <span class="text-3xl font-black">{{ table.name }}</span>
+        <span class="text-sm leading-tight">Você está na <b>mesa {{ table.name }}</b>.<br>Precisa de algo? Use os botões abaixo.</span>
+    </div>
+    {% endif %}
+
+    <nav class="sticky top-0 z-20 bg-stone-50/95 backdrop-blur py-3 flex gap-2 overflow-x-auto">
+        {% for category in categories %}
+        <a href="#c{{ category.id }}" class="whitespace-nowrap px-3 py-1.5 rounded-full bg-white border border-stone-200 text-sm font-bold">{{ category.icon }} {{ category.name }}</a>
+        {% endfor %}
+    </nav>
+
+    {% for category in categories %}
+    <section id="c{{ category.id }}" class="scroll-mt-16 mt-4">
+        <h2 class="text-lg font-black mb-2">{{ category.icon }} {{ category.name }}</h2>
+        <div class="space-y-2">
+            {% for product in category.products.all %}
+            <div class="rounded-2xl bg-white border border-stone-200 p-3 flex gap-3 items-center {% if product.available_stock <= 0 %}opacity-50{% endif %}">
+                <span class="w-16 h-16 shrink-0 rounded-xl overflow-hidden bg-stone-100 flex items-center justify-center text-3xl">
+                    {% if product.image %}<img src="{{ product.image.url }}" alt="" class="w-full h-full object-cover" loading="lazy">{% else %}{{ product.icon|default:'🍽️' }}{% endif %}
+                </span>
+                <span class="flex-1 min-w-0">
+                    <span class="block font-bold">{{ product.name }}</span>
+                    {% if product.available_stock <= 0 %}<span class="text-xs font-black uppercase text-red-600">Esgotado</span>{% endif %}
+                </span>
+                <span class="font-black whitespace-nowrap">R$ {{ product.price|floatformat:2 }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% empty %}
+    <p class="mt-10 text-center text-slate-500">Cardápio em atualização.</p>
+    {% endfor %}
+
+    {% if online_enabled and not table %}
+    <a href="{% url 'online_order' %}" class="mt-8 block text-center py-4 rounded-2xl bg-emerald-600 text-white font-black">Pedir para entrega</a>
+    {% endif %}
+</div>
+
+{% if table %}
+<div id="callBar" class="fixed bottom-0 inset-x-0 z-30 bg-white border-t border-stone-200 p-3">
+    <div class="max-w-3xl mx-auto grid grid-cols-2 gap-2">
+        <button hx-post="{% url 'table_call' table.public_token 'garcom' %}" hx-target="#callBar" hx-swap="innerHTML"
+            class="py-4 rounded-2xl bg-slate-900 text-white font-black"><i class="bi bi-bell me-1"></i>Chamar garçom</button>
+        <button hx-post="{% url 'table_call' table.public_token 'conta' %}" hx-target="#callBar" hx-swap="innerHTML" hx-confirm="Pedir a conta da mesa {{ table.name }}?"
+            class="py-4 rounded-2xl bg-violet-600 text-white font-black"><i class="bi bi-receipt me-1"></i>Pedir a conta</button>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

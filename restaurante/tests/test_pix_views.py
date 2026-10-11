@@ -26,11 +26,15 @@ class PixReceiptTests(TestCase):
         self.assertContains(response, '<svg')
         self.assertContains(response, 'R$ 51,80')
 
-    def test_fechar_conta_mostra_pix_copia_e_cola(self):
+    def test_fechar_conta_gera_pix_do_total(self):
         response = self.client.get(reverse('close_order', args=[self.order.id]))
         payload = response.context['pix']['payload']
         self.assertIn('540551.80', payload)
         self.assertIn('PEDIDO' + str(self.order.id), payload)
+
+    def test_pix_de_parte_da_conta(self):
+        response = self.client.get(reverse('pix_amount', args=[self.order.id]), {'valor': '25,90'})
+        self.assertIn('540525.90', response.context['pix']['payload'])
         self.assertContains(response, 'Copiar PIX copia e cola')
 
     def test_sem_chave_nao_quebra(self):

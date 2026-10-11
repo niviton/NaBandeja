@@ -214,8 +214,11 @@ def pix_preview(store_settings):
 
 
 def pix_for_order(order, store_settings):
-    """
-    Gera {'payload', 'svg'} para o total do pedido, ou {'error'} se a
-    configuração estiver incompleta. Nunca levanta exceção (usado em template).
-    """
-    return _build_for_settings(store_settings, order.amount_due, f'PEDIDO{order.id}')
+    """PIX do que falta pagar no pedido (ou do total, se nada foi pago)."""
+    amount = order.amount_remaining if order.pk else order.amount_due
+    return _build_for_settings(store_settings, amount or order.amount_due, f'PEDIDO{order.id}')
+
+
+def pix_for_amount(order, amount, store_settings):
+    """PIX de um valor escolhido (ex.: a parte de uma pessoa na conta dividida)."""
+    return _build_for_settings(store_settings, amount, f'PEDIDO{order.id}')

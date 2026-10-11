@@ -2,7 +2,7 @@
 
 from django.contrib import messages
 from django.contrib.auth import update_session_auth_hash
-from django.db.models import Avg, F, Sum
+from django.db.models import F, Sum
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
@@ -11,25 +11,25 @@ from django.views.decorators.http import require_POST
 from django.conf import settings as django_settings
 
 from ..forms import AppSettingsForm, TeamMemberForm
-from ..models import AppSettings, CashSession, Ingredient, Order, OrderItem, User
+from ..models import AppSettings, CashSession, Expense, Ingredient, Order, OrderItem, Payment, TableCall, User
 from ..permissions import manager_required
 from ..services import cash as cash_service
-from ..services import orders as order_service
 from ..services.audit import audit
-from ..services.cart import SessionCart
-from ..services.orders import OrderError
 from ..services.pix import pix_preview
-from .orders import menu_categories
 
 
 # ------------------------------------------------------------------ dashboard
 
 @manager_required
 def admin_dashboard(request):
+    store = AppSettings.get_settings()
+    if not store.setup_completed:
+        return redirect('setup_wizard', step='loja')
     now = timezone.localtime()
     day_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
     paid_today = Order.objects.filter(status='finalizado', closed_at__gte=day_start)
-    totals = paid_today.aggregate(revenue=Sum('total'), avg_ticket=Avg('total'))
+    revenue = Payment.objects.filter(order__in=paid_today).aggregate(total=Sum('amount'))['total'] or 0
+    count_today = paid_today.count()
 
     active_orders = list(
         Order.objects.filter(status__in=Order.ACTIVE_STATUSES)
@@ -38,9 +38,9 @@ def admin_dashboard(request):
     cash_session = CashSession.get_open_session()
 
     return render(request, 'restaurante/admin/dashboard.html', {
-        'vendas_hoje': totals['revenue'] or 0,
-        'pedidos_hoje': paid_today.count(),
-        'ticket_medio': totals['avg_ticket'] or 0,
+        'vendas_hoje': revenue,
+        'pedidos_hoje': count_today,
+        'ticket_medio': revenue / count_today if count_today else 0,
         'pedidos_ativos': len(active_orders),
         'active_orders': active_orders,
         'mesas_ativas': len({o.mesa for o in active_orders if o.order_type == 'dine-in'}),
@@ -51,6 +51,9 @@ def admin_dashboard(request):
             .values('product_name').annotate(total_qty=Sum('quantity')).order_by('-total_qty')[:5],
         'cash_session': cash_session,
         'cash_summary': cash_service.summary(cash_session) if cash_session else None,
+        'pending_online': Order.objects.filter(status='pendente').count(),
+        'calls': TableCall.objects.filter(resolved_at__isnull=True).select_related('table'),
+        'overdue_expenses': Expense.objects.filter(paid_at__isnull=True, due_date__lte=timezone.localdate()),
         'active_menu': 'dashboard',
     })
 
@@ -109,40 +112,6 @@ def toggle_store_status(request):
     if url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
         return redirect(next_url)
     return redirect('admin_dashboard')
-
-
-# ------------------------------------------------------------------ delivery
-
-@manager_required
-def admin_online_orders(request):
-    cart = SessionCart(request.session)
-    if request.method == 'POST':
-        try:
-            order, _ = order_service.place_order(
-                request.user,
-                cart,
-                order_type='delivery',
-                cliente=request.POST.get('cliente', ''),
-                address=request.POST.get('address', ''),
-                platform=request.POST.get('platform', ''),
-                observacoes=request.POST.get('observacoes', ''),
-                store_settings=AppSettings.get_settings(),
-            )
-        except OrderError as exc:
-            messages.error(request, str(exc))
-        else:
-            cart.clear()
-            messages.success(request, f'Pedido #{order.id} enviado para a cozinha!')
-        return redirect('admin_online_orders')
-
-    return render(request, 'restaurante/admin/online.html', {
-        'categories': menu_categories(),
-        'cart': cart.items,
-        'cart_total': cart.total,
-        'delivery_orders': Order.objects.filter(order_type='delivery', status__in=Order.ACTIVE_STATUSES)
-            .order_by('-created_at'),
-        'active_menu': 'online',
-    })
 
 
 # ------------------------------------------------------------------ configurações

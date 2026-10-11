@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block body_class %}bg-slate-100 min-h-screen text-slate-800{% endblock %}
+{% block body_attrs %}data-realtime="1"{% endblock %}
+
+{% block navbar %}
+<header class="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-slate-200">
+    <div class="max-w-[1600px] mx-auto px-3 sm:px-6 h-16 flex items-center gap-3">
+        <a href="{% url 'dashboard' %}" class="flex items-center gap-3 min-w-0">
+            <span class="w-10 h-10 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0">
+                {% if app_settings.logo %}<img src="{{ app_settings.logo.url }}" alt="" class="w-full h-full object-cover">{% else %}<i class="bi bi-shop text-slate-400"></i>{% endif %}
+            </span>
+            <span class="min-w-0 hidden sm:block">
+                <span class="block font-black text-slate-800 leading-tight truncate">{{ app_settings.store_name }}</span>
+                <span class="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider {% if app_settings.is_store_open %}text-slate-400{% else %}text-red-500{% endif %}">
+                    <span data-realtime-status class="w-2 h-2 rounded-full bg-amber-400"></span>
+                    {% if app_settings.is_store_open %}Loja aberta{% else %}Loja fechada{% endif %}
+                </span>
+            </span>
+        </a>
+
+        <nav class="flex-1 flex items-center justify-center gap-1 sm:gap-2 overflow-x-auto">
+            {% if user.role == 'garcom' or user.role == 'gerente' %}
+            <a href="{% url 'waiter_view' %}" class="px-3 py-2 rounded-xl text-sm font-bold whitespace-nowrap {% if active_tab == 'salao' %}bg-slate-900 text-white{% else %}text-slate-600 hover:bg-slate-100{% endif %}">
+                <i class="bi bi-grid-3x3-gap me-1"></i>Salão
+            </a>
+            {% endif %}
+            {% if user.role == 'cozinha' or user.role == 'gerente' %}
+            <a href="{% url 'kitchen_view' %}" class="px-3 py-2 rounded-xl text-sm font-bold whitespace-nowrap {% if active_tab == 'cozinha' %}bg-slate-900 text-white{% else %}text-slate-600 hover:bg-slate-100{% endif %}">
+                <i class="bi bi-fire me-1"></i>Cozinha
+            </a>
+            {% endif %}
+            {% if user.role == 'gerente' %}
+            <a href="{% url 'admin_dashboard' %}" class="px-3 py-2 rounded-xl text-sm font-bold whitespace-nowrap text-slate-600 hover:bg-slate-100">
+                <i class="bi bi-speedometer2 me-1"></i>Painel
+            </a>
+            {% endif %}
+        </nav>
+
+        <div class="flex items-center gap-2 shrink-0">
+            <span class="hidden md:block text-right leading-tight">
+                <span class="block text-sm font-bold text-slate-700">{{ user.first_name|default:user.username }}</span>
+                <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">{{ user.get_role_display }}</span>
+            </span>
+            <a href="{% url 'logout' %}" class="w-10 h-10 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center hover:bg-red-50 hover:text-red-600" title="Sair">
+                <i class="bi bi-box-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+    {% if license_status.show_warning and user.role == 'gerente' %}
+    <div class="px-4 py-2 text-center text-sm font-bold {% if license_status.blocks_new_orders %}bg-red-600 text-white{% else %}bg-amber-100 text-amber-900{% endif %}">
+        <i class="bi bi-shield-exclamation me-1"></i>{{ license_status.message }}
+    </div>
+    {% endif %}
+</header>
+{% endblock %}

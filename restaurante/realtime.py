@@ -2,8 +2,9 @@
 Avisos em tempo real (WebSocket /ws/orders/).
 
 Toda tela logada entra no grupo ORDERS_GROUP e recebe um evento por mudança:
-    {"type": "order.created" | "order.updated" | "order.status_changed" | "order.items_changed",
-     "order": {...}}
+    {"type": "order.created" | "order.updated" | "order.status_changed" | "order.items_changed"
+             | "table.call" | "table.call_resolved",
+     "order": {...} | "data": {...}}
 As telas usam o evento para se atualizar; se o WebSocket cair, usam polling.
 """
 
@@ -29,6 +30,12 @@ def _send(payload):
         async_to_sync(layer.group_send)(ORDERS_GROUP, {'type': 'order_event', 'payload': payload})
     except Exception:  # tempo real é melhoria; nunca derruba a gravação do pedido
         logger.exception('Falha ao publicar evento em tempo real')
+
+
+def publish_event(event_name, data):
+    """Envia um evento genérico depois que a transação for gravada."""
+    payload = {'type': event_name, 'data': data}
+    transaction.on_commit(lambda: _send(payload))
 
 
 def publish_order_event(order, event_name='order.updated'):

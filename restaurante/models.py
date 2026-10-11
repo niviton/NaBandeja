@@ -48,6 +48,7 @@ class Product(models.Model):
     use_ingredient_stock = models.BooleanField(default=False, verbose_name='Controlar por ingredientes')
     icon = models.CharField(max_length=10, default='🍽️', verbose_name='Emoji')
     image = models.ImageField(upload_to='products/', blank=True, null=True, verbose_name='Imagem')
+    cost_price = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name='Custo (sem receita)')
     is_active = models.BooleanField(default=True, verbose_name='Ativo')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -97,6 +98,16 @@ class Product(models.Model):
 
     def can_make(self, quantity):
         return self.available_stock >= quantity
+
+    @property
+    def unit_cost(self):
+        """Custo de uma unidade: pela receita (ingredientes) ou o custo manual."""
+        if self.use_ingredient_stock:
+            return sum(
+                (item.quantity * item.ingredient.cost_price for item in self.recipe_items.all()),
+                Decimal('0'),
+            ).quantize(Decimal('0.01'))
+        return self.cost_price
 
 
 class Ingredient(models.Model):
@@ -152,6 +163,7 @@ class ProductIngredient(models.Model):
 class Order(models.Model):
     """Pedido"""
     STATUS_CHOICES = [
+        ('pendente', 'Aguardando confirmação'),
         ('cozinha', 'Na Cozinha'),
         ('pronto', 'Pronto'),
         ('finalizado', 'Finalizado'),
@@ -168,6 +180,7 @@ class Order(models.Model):
         ('pix', 'PIX'),
         ('credito', 'Cartão de Crédito'),
         ('debito', 'Cartão de Débito'),
+        ('misto', 'Misto'),
     ]
 
     mesa = models.CharField(max_length=50, verbose_name='Mesa')
@@ -178,6 +191,12 @@ class Order(models.Model):
     order_type = models.CharField(max_length=20, choices=TYPE_CHOICES, default='dine-in', verbose_name='Tipo')
     address = models.TextField(blank=True, verbose_name='Endereço de Entrega')
     platform = models.CharField(max_length=40, blank=True, verbose_name='Plataforma do delivery')
+    customer_phone = models.CharField(max_length=30, blank=True, verbose_name='Telefone do cliente')
+    delivery_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name='Taxa de entrega')
+    discount = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name='Desconto')
+    discount_reason = models.CharField(max_length=200, blank=True, verbose_name='Motivo do desconto')
+    bill_requested_at = models.DateTimeField(null=True, blank=True, verbose_name='Conta pedida em')
+    served_at = models.DateTimeField(null=True, blank=True, verbose_name='Servido em')
     payment_method = models.CharField(max_length=20, choices=PAYMENT_CHOICES, blank=True, verbose_name='Pagamento')
     waiter = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='orders', verbose_name='Garçom')
     closed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='closed_orders', verbose_name='Fechado por')
@@ -228,13 +247,22 @@ class Order(models.Model):
             'pronto': 'info',
             'finalizado': 'success',
             'cancelado': 'danger',
+            'pendente': 'secondary',
         }
         return colors.get(self.status, 'secondary')
 
     @property
     def amount_due(self):
-        """Valor a cobrar do cliente."""
-        return self.total
+        """Valor a cobrar: itens - desconto + taxa de entrega."""
+        return max(self.total - self.discount, Decimal('0')) + self.delivery_fee
+
+    @property
+    def amount_paid(self):
+        return sum((payment.amount for payment in self.payments.all()), Decimal('0'))
+
+    @property
+    def amount_remaining(self):
+        return max(self.amount_due - self.amount_paid, Decimal('0'))
 
 
 class OrderItem(models.Model):
@@ -245,7 +273,9 @@ class OrderItem(models.Model):
     notes = models.CharField(max_length=200, blank=True, verbose_name='Observação do item')
     quantity = models.IntegerField(default=1, verbose_name='Quantidade')
     pending_quantity = models.IntegerField(default=0, verbose_name='Qtd. Pendente Cozinha')
+    printed_quantity = models.IntegerField(default=0, verbose_name='Qtd. já impressa na comanda')
     unit_price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Preço Unitário')
+    unit_cost = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name='Custo unitário na venda')
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -306,6 +336,23 @@ class AppSettings(models.Model):
     
     is_store_open = models.BooleanField(default=True, verbose_name='Loja Aberta')
 
+    # Operação
+    quick_notes = models.TextField(
+        default='Sem cebola\nSem tomate\nSem gelo\nBem passado\nAo ponto\nMal passado\nPara viagem',
+        blank=True, verbose_name='Observações rápidas (uma por linha)',
+    )
+    kitchen_late_minutes = models.PositiveIntegerField(default=15, verbose_name='Pedido atrasado após (minutos)')
+    kitchen_auto_print = models.BooleanField(default=False, verbose_name='Imprimir pedido na cozinha automaticamente')
+
+    # Cardápio digital e pedidos online
+    public_menu_enabled = models.BooleanField(default=True, verbose_name='Cardápio digital (QR Code na mesa)')
+    online_orders_enabled = models.BooleanField(default=False, verbose_name='Aceitar pedidos online')
+    whatsapp_number = models.CharField(max_length=20, blank=True, verbose_name='WhatsApp da loja')
+    min_delivery_order = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name='Pedido mínimo para delivery')
+
+    setup_completed = models.BooleanField(default=False, verbose_name='Configuração inicial concluída')
+    license_key = models.TextField(blank=True, verbose_name='Licença')
+
     class Meta:
         verbose_name = 'Configurações'
         verbose_name_plural = 'Configurações'
@@ -322,6 +369,10 @@ class AppSettings(models.Model):
     def get_settings(cls):
         obj, created = cls.objects.get_or_create(pk=1)
         return obj
+
+    @property
+    def quick_notes_list(self):
+        return [line.strip() for line in self.quick_notes.splitlines() if line.strip()]
 
 
 class AuditLog(models.Model):
@@ -445,3 +496,111 @@ class OrderItemAdditional(models.Model):
 
     def __str__(self):
         return f"{self.order_item} + {self.additional.name}"
+
+
+def _new_token():
+    import secrets
+    return secrets.token_urlsafe(9)
+
+
+class Table(models.Model):
+    """Mesa do salão. O pedido guarda o nome da mesa em Order.mesa."""
+    name = models.CharField(max_length=20, unique=True, verbose_name='Mesa')
+    seats = models.PositiveSmallIntegerField(default=4, verbose_name='Lugares')
+    area = models.CharField(max_length=40, blank=True, verbose_name='Área (ex.: Varanda)')
+    order = models.IntegerField(default=0, verbose_name='Ordem')
+    is_active = models.BooleanField(default=True, verbose_name='Ativa')
+    public_token = models.CharField(max_length=20, unique=True, default=_new_token, verbose_name='Código do QR Code')
+
+    class Meta:
+        verbose_name = 'Mesa'
+        verbose_name_plural = 'Mesas'
+        ordering = ['order', 'name']
+
+    def __str__(self):
+        return f'Mesa {self.name}'
+
+
+class TableCall(models.Model):
+    """Cliente chamou o garçom ou pediu a conta pelo QR Code da mesa."""
+    KIND_CHOICES = [('garcom', 'Chamar garçom'), ('conta', 'Pedir a conta')]
+
+    table = models.ForeignKey(Table, on_delete=models.CASCADE, related_name='calls', verbose_name='Mesa')
+    kind = models.CharField(max_length=10, choices=KIND_CHOICES, verbose_name='Tipo')
+    created_at = models.DateTimeField(auto_now_add=True)
+    resolved_at = models.DateTimeField(null=True, blank=True)
+    resolved_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='+')
+
+    class Meta:
+        verbose_name = 'Chamado de mesa'
+        verbose_name_plural = 'Chamados de mesa'
+        ordering = ['created_at']
+
+
+class Payment(models.Model):
+    """Pagamento (parcial ou total) de um pedido. Permite dividir a conta."""
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='payments', verbose_name='Pedido')
+    method = models.CharField(max_length=20, choices=Order.PAYMENT_CHOICES, verbose_name='Forma de pagamento')
+    amount = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Valor')
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='+')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Pagamento'
+        verbose_name_plural = 'Pagamentos'
+        ordering = ['created_at']
+        constraints = [models.CheckConstraint(condition=models.Q(amount__gt=0), name='payment_amount_positive')]
+        indexes = [models.Index(fields=['created_at', 'method'])]
+
+    def __str__(self):
+        return f'{self.get_method_display()} R$ {self.amount}'
+
+
+class DeliveryZone(models.Model):
+    """Bairro/região de entrega com a taxa cobrada."""
+    name = models.CharField(max_length=80, unique=True, verbose_name='Bairro / região')
+    fee = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name='Taxa de entrega')
+    is_active = models.BooleanField(default=True, verbose_name='Ativo')
+
+    class Meta:
+        verbose_name = 'Área de entrega'
+        verbose_name_plural = 'Áreas de entrega'
+        ordering = ['name']
+
+    def __str__(self):
+        return f'{self.name} (R$ {self.fee})'
+
+
+class Expense(models.Model):
+    """Conta a pagar (aluguel, fornecedor, luz...)."""
+    CATEGORY_CHOICES = [
+        ('fornecedor', 'Fornecedor / insumos'),
+        ('aluguel', 'Aluguel'),
+        ('contas', 'Água, luz, gás, internet'),
+        ('funcionarios', 'Funcionários'),
+        ('impostos', 'Impostos e taxas'),
+        ('manutencao', 'Manutenção'),
+        ('outros', 'Outros'),
+    ]
+
+    description = models.CharField(max_length=200, verbose_name='Descrição')
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='outros', verbose_name='Categoria')
+    amount = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Valor')
+    due_date = models.DateField(verbose_name='Vencimento')
+    paid_at = models.DateField(null=True, blank=True, verbose_name='Pago em')
+    notes = models.TextField(blank=True, verbose_name='Observações')
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='+')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Conta a pagar'
+        verbose_name_plural = 'Contas a pagar'
+        ordering = ['paid_at', 'due_date']
+        constraints = [models.CheckConstraint(condition=models.Q(amount__gt=0), name='expense_amount_positive')]
+
+    def __str__(self):
+        return f'{self.description} - R$ {self.amount}'
+
+    @property
+    def is_overdue(self):
+        return self.paid_at is None and self.due_date < timezone.localdate()

@@ -41,12 +41,14 @@ class RoleTests(TestCase):
         self.cook = f.user('chef', role='cozinha')
 
     def test_garcom_nao_entra_no_painel(self):
+        f.open_store()
         self.client.force_login(self.waiter)
         self.assertRedirects(self.client.get(reverse('admin_dashboard')), reverse('waiter_view'))
 
     def test_cozinha_nao_acessa_carrinho(self):
         self.client.force_login(self.cook)
-        self.assertEqual(self.client.post(reverse('api_clear_cart')).status_code, 403)
+        response = self.client.post(reverse('cart_clear', args=['mesa:1']), HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertEqual(response.status_code, 403)
 
     def test_garcom_nao_cancela_pedido(self):
         order = new_order(self.manager)
@@ -70,6 +72,7 @@ class RoleTests(TestCase):
         self.assertTrue(User.objects.filter(role='gerente', is_active=True).exists())
 
     def test_redirecionamento_externo_bloqueado(self):
+        f.open_store()
         self.client.force_login(self.manager)
         response = self.client.post(reverse('toggle_store_status'), {'next': 'https://site-malicioso.com'})
         self.assertRedirects(response, reverse('admin_dashboard'))
@@ -87,9 +90,14 @@ class SmokeTests(TestCase):
         for name, args in [
             ('admin_dashboard', []), ('admin_reports', []), ('admin_menu', []), ('admin_ingredients', []),
             ('admin_users', []), ('admin_settings', []), ('admin_online_orders', []), ('kitchen_view', []),
-            ('waiter_view', []), ('manage_order', [self.order.pk]), ('close_order', [self.order.pk]),
-            ('print_order', [self.order.pk]), ('product_create', []), ('category_create', []),
+            ('waiter_view', []), ('salao_board', []), ('table_order', ['1']),
+            ('new_order', ['delivery']), ('new_order', ['balcao']), ('order_panel', [f'pedido:{self.order.pk}']),
+            ('close_order', [self.order.pk]), ('print_order', [self.order.pk]), ('kitchen_board', []),
+            ('kitchen_ticket', [self.order.pk]), ('product_create', []), ('category_create', []),
             ('ingredient_create', []), ('user_create', []), ('pwa_manifest', []), ('pwa_service_worker', []),
+            ('admin_tables', []), ('tables_qr_sheet', []), ('delivery_zones', []), ('expenses', []),
+            ('expense_create', []), ('system_status', []), ('setup_wizard', ['loja']), ('setup_wizard', ['pix']),
+            ('setup_wizard', ['mesas']), ('setup_wizard', ['cardapio']),
         ]:
             with self.subTest(name):
                 self.assertEqual(self.client.get(reverse(name, args=args)).status_code, 200)

@@ -1,0 +1,42 @@
+<div class="bg-[var(--admin-card)] rounded-3xl p-6 border border-[var(--admin-line)] shadow-[0_20px_50px_-36px_rgba(66,47,28,0.55)]">
+    <div class="flex items-center justify-between mb-4">
+        <h2 class="admin-brand-title text-2xl text-[var(--admin-text)]">Caixa</h2>
+        {% if cash_session %}
+        <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-black">ABERTO desde {{ cash_session.opened_at|date:"H:i" }}</span>
+        {% else %}
+        <span class="px-3 py-1 rounded-full bg-slate-200 text-slate-600 text-xs font-black">FECHADO</span>
+        {% endif %}
+    </div>
+
+    {% if cash_session %}
+    <dl class="grid grid-cols-2 gap-2 text-sm mb-4">
+        {% for method in cash_summary.methods %}
+        <div class="rounded-xl bg-white border border-[var(--admin-line)] px-3 py-2">
+            <dt class="text-xs text-[var(--admin-muted)]">{{ method.label }} ({{ method.count }})</dt>
+            <dd class="font-black">R$ {{ method.total|floatformat:2 }}</dd>
+        </div>
+        {% endfor %}
+    </dl>
+    <p class="text-sm">Abertura: <b>R$ {{ cash_session.opening_amount|floatformat:2 }}</b> · Vendas no turno: <b>R$ {{ cash_summary.total_sales|floatformat:2 }}</b></p>
+    <p class="text-sm mb-4">Deve haver na gaveta (só dinheiro): <b class="text-lg">R$ {{ cash_summary.expected_in_drawer|floatformat:2 }}</b></p>
+    <form method="post" action="{% url 'close_cash_session' %}" class="flex flex-wrap gap-2 items-end" data-confirm-message="Fechar o caixa agora?">
+        {% csrf_token %}
+        <div class="flex-1 min-w-[160px]">
+            <label class="block text-xs font-bold uppercase tracking-wider text-[var(--admin-muted)] mb-1">Dinheiro contado na gaveta</label>
+            <input name="closing_amount" required inputmode="decimal" placeholder="0,00" class="w-full px-3 py-2.5 rounded-xl border border-[var(--admin-line)] bg-white font-bold">
+        </div>
+        <input name="close_notes" placeholder="Observação (opcional)" class="flex-1 min-w-[160px] px-3 py-2.5 rounded-xl border border-[var(--admin-line)] bg-white">
+        <button class="px-4 py-2.5 rounded-xl bg-slate-900 text-white font-bold">Fechar caixa</button>
+    </form>
+    {% else %}
+    <p class="text-sm text-[var(--admin-muted)] mb-4">Abra o caixa no início do turno para conferir a gaveta no fechamento.</p>
+    <form method="post" action="{% url 'open_cash_session' %}" class="flex flex-wrap gap-2 items-end">
+        {% csrf_token %}
+        <div class="flex-1 min-w-[160px]">
+            <label class="block text-xs font-bold uppercase tracking-wider text-[var(--admin-muted)] mb-1">Troco inicial na gaveta</label>
+            <input name="opening_amount" inputmode="decimal" value="0,00" class="w-full px-3 py-2.5 rounded-xl border border-[var(--admin-line)] bg-white font-bold">
+        </div>
+        <button class="px-4 py-2.5 rounded-xl bg-emerald-600 text-white font-bold">Abrir caixa</button>
+    </form>
+    {% endif %}
+</div>

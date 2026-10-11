@@ -18,17 +18,14 @@
 
 | Módulo | O que faz |
 |---|---|
-| **Garçom** (`/garcom/`) | Abre mesas e pedidos de delivery pelo celular. |
-| **Cozinha** (`/cozinha/`) | Recebe os pedidos na hora e marca quando ficam prontos. |
-| **Painel do gerente** (`/admin-panel/`) | Dashboard, caixa, cardápio, equipe, relatórios e configurações. |
-| **Estoque** | Controle por produto ou por ingrediente, com alerta de estoque baixo. |
-| **Caixa** | Abertura e fechamento, com resumo de pagamentos. |
-| **Relatórios** | Vendas por período, por garçom e produtos mais vendidos. |
-| **Cupom** | Impressão térmica com QR Code PIX. |
-| **Login com Google** | A equipe entra com a conta Google; nada de senha esquecida. |
-| **Personalização** | Nome, logo, cores e fonte de cada loja, sem mexer no código. |
-| **Tempo real** | Atualização via WebSocket, com polling como alternativa. |
-| **PWA** | Instalável na tela inicial do celular. |
+| **Salão** | Mapa de mesas com cores por situação, chamados do cliente, carrinho por mesa, observações rápidas, transferir/juntar mesas. |
+| **Conta** | Dividir por pessoas, várias formas de pagamento, troco, desconto/cortesia, **PIX com valor exato** (sem API de banco). |
+| **Cozinha** | Tempo real, cronômetro e atraso, som de pedido novo, impressão automática da comanda (só itens novos). |
+| **Cliente** | Cardápio digital pelo **QR Code da mesa** (chamar garçom, pedir a conta) e **pedido online** com taxa por bairro. |
+| **Gestão** | Caixa por turno, relatórios com **lucro por produto**, Excel/CSV/PDF, contas a pagar, estoque por ingrediente. |
+| **Sistema** | Funciona **sem internet**, backup automático, **login com Google**, licença por cliente, assistente de primeiro uso, PWA. |
+
+Lista completa em [docs/funcionalidades.md](docs/funcionalidades.md).
 
 ## Início rápido
 
@@ -72,6 +69,10 @@ O passo a passo completo está em [docs/clientes.md](docs/clientes.md).
 | [Tempo real](docs/tempo-real.md) | WebSocket, eventos e PWA |
 | [Login com Google](docs/login-google.md) | Entrar com a conta Google, sem depender de senha |
 | [Segurança](docs/seguranca.md) | Variáveis de ambiente e checklist de produção |
+| [Funcionalidades](docs/funcionalidades.md) | Tudo o que o sistema faz |
+| [Pedidos online](docs/pedidos-online.md) | Cardápio digital, delivery pelo site e acesso pela internet |
+| [Licenças](docs/licenca.md) | Emitir e instalar licenças por cliente |
+| [Desenvolvimento](docs/desenvolvimento.md) | Organização do código, CSS e testes |
 | [Melhorias](docs/melhorias.md) | Checklist do que melhorar (roadmap) |
 
 ## Estrutura do projeto

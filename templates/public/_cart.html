@@ -1,0 +1,38 @@
+<h2 class="text-lg font-black mb-3"><i class="bi bi-bag me-1"></i>Seu pedido</h2>
+{% if cart %}
+<ul class="divide-y divide-stone-100 mb-4">
+    {% for item in cart.items %}
+    <li class="py-2 flex items-center gap-2">
+        <span class="flex-1 min-w-0 text-sm font-bold truncate">{{ item.name }}</span>
+        <button hx-post="{% url 'online_cart_change' %}" hx-vals='{"cart_key": "{{ item.cart_key|escapejs }}", "delta": -1}' hx-target="#onlineCart"
+            class="w-8 h-8 rounded-lg bg-stone-100"><i class="bi bi-dash"></i></button>
+        <span class="w-6 text-center font-black">{{ item.qty }}</span>
+        <button hx-post="{% url 'online_cart_change' %}" hx-vals='{"cart_key": "{{ item.cart_key|escapejs }}", "delta": 1}' hx-target="#onlineCart"
+            class="w-8 h-8 rounded-lg bg-stone-100"><i class="bi bi-plus"></i></button>
+    </li>
+    {% endfor %}
+</ul>
+<p class="flex justify-between font-black text-lg mb-4"><span>Subtotal</span><span>R$ {{ cart.total|floatformat:2 }}</span></p>
+{% if store.min_delivery_order %}<p class="text-xs text-slate-500 -mt-3 mb-4">Pedido mínimo: R$ {{ store.min_delivery_order|floatformat:2 }}</p>{% endif %}
+
+<form hx-post="{% url 'online_checkout' %}" hx-disabled-elt="find button[type=submit]" class="space-y-2">
+    <input name="cliente" required placeholder="Seu nome" class="w-full px-3 py-3 rounded-xl bg-stone-50 border border-stone-200 outline-none">
+    <input name="phone" required inputmode="tel" placeholder="Telefone com DDD" class="w-full px-3 py-3 rounded-xl bg-stone-50 border border-stone-200 outline-none">
+    <input name="address" required placeholder="Endereço (rua, número, complemento)" class="w-full px-3 py-3 rounded-xl bg-stone-50 border border-stone-200 outline-none">
+    {% if zones %}
+    <select name="zone" required class="w-full px-3 py-3 rounded-xl bg-stone-50 border border-stone-200 outline-none">
+        <option value="">Bairro</option>
+        {% for zone in zones %}<option value="{{ zone.id }}">{{ zone.name }} · entrega R$ {{ zone.fee|floatformat:2 }}</option>{% endfor %}
+    </select>
+    {% endif %}
+    <select name="pagamento" class="w-full px-3 py-3 rounded-xl bg-stone-50 border border-stone-200 outline-none">
+        <option value="">Forma de pagamento na entrega</option>
+        <option>PIX</option><option>Dinheiro</option><option>Cartão de crédito</option><option>Cartão de débito</option>
+    </select>
+    <input name="observacoes" placeholder="Observações (troco para, ponto de referência...)" class="w-full px-3 py-3 rounded-xl bg-stone-50 border border-stone-200 outline-none">
+    <button type="submit" class="w-full py-4 rounded-2xl bg-emerald-600 text-white font-black text-lg disabled:opacity-60">Enviar pedido</button>
+    <p class="text-xs text-slate-500 text-center">A loja confirma o pedido e a taxa de entrega antes de preparar.</p>
+</form>
+{% else %}
+<p class="py-6 text-center text-slate-400 font-bold">Adicione itens do cardápio.</p>
+{% endif %}

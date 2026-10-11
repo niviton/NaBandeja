@@ -5,6 +5,7 @@ Tudo que muda por instalação vem do arquivo .env (veja .env.example e
 docs/seguranca.md). Os valores padrão são seguros: DEBUG desligado.
 """
 
+import importlib.util
 import os
 import socket
 import sys
@@ -121,11 +122,7 @@ INSTALLED_APPS = [
     'restaurante',
 ]
 
-try:
-    import channels  # noqa: F401
-    HAS_CHANNELS = True
-except ImportError:
-    HAS_CHANNELS = False
+HAS_CHANNELS = importlib.util.find_spec('channels') is not None
 
 if ENABLE_REALTIME and HAS_CHANNELS:
     INSTALLED_APPS.append('channels')
@@ -196,7 +193,7 @@ elif DB_ENGINE == 'sqlite':
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': DATA_DIR / 'db.sqlite3',
+            'NAME': os.getenv('SQLITE_PATH') or DATA_DIR / 'db.sqlite3',
             'ATOMIC_REQUESTS': True,
             'OPTIONS': {
                 'timeout': int(os.getenv('SQLITE_TIMEOUT', '20')),
@@ -300,4 +297,5 @@ LOGGING = {
 }
 
 # ---------------------------------------------------------------- Produto
-NABANDEJA_VERSION = '2.1.0'
+NABANDEJA_VERSION = '2.2.0'
+BACKUP_KEEP = int(os.getenv('BACKUP_KEEP', '48'))

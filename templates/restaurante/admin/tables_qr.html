@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>QR Codes das mesas - {{ app_settings.store_name }}</title>
+<style>
+    body { font-family: system-ui, sans-serif; margin: 0; padding: 12mm; color: #111; }
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8mm; }
+    .card { border: 1.5px dashed #999; border-radius: 6mm; padding: 6mm; text-align: center; page-break-inside: avoid; }
+    .store { font-weight: 800; font-size: 13pt; margin-bottom: 2mm; }
+    .qr svg { width: 46mm; height: 46mm; }
+    .mesa { font-size: 26pt; font-weight: 900; margin: 2mm 0 0; }
+    .hint { font-size: 9pt; color: #444; margin-top: 1mm; }
+    .toolbar { margin-bottom: 8mm; }
+    @media print { .toolbar { display: none; } body { padding: 6mm; } }
+</style>
+</head>
+<body>
+    <div class="toolbar">
+        <button onclick="window.print()" style="padding:10px 20px;font-weight:700;border-radius:10px;border:0;background:#111;color:#fff">Imprimir</button>
+        <span style="margin-left:12px;color:#555">Imprima, recorte e cole em cada mesa. Os celulares precisam estar no Wi-Fi da loja.</span>
+    </div>
+    <div class="grid">
+        {% for card in cards %}
+        <div class="card">
+            <div class="store">{{ app_settings.store_name }}</div>
+            <div class="qr">{{ card.svg|safe }}</div>
+            <p class="mesa">Mesa {{ card.table.name }}</p>
+            <p class="hint">Aponte a câmera: cardápio, chamar garçom e pedir a conta</p>
+        </div>
+        {% empty %}
+        <p>Nenhuma mesa ativa.</p>
+        {% endfor %}
+    </div>
+</body>
+</html>
