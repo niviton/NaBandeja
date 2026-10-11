@@ -75,6 +75,15 @@
 
             <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200">
                 <label class="inline-flex items-center gap-3 cursor-pointer">
+                    <input type="checkbox" name="is_active" class="w-4 h-4"
+                        {% if form.is_bound %}{% if form.data.is_active %}checked{% endif %}{% elif not product or product.is_active %}checked{% endif %} />
+                    <span class="font-semibold text-slate-700">Disponível no cardápio</span>
+                </label>
+                <p class="text-xs text-slate-400 mt-2">Desmarque para esconder o produto do garçom sem perder o histórico de vendas.</p>
+            </div>
+
+            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+                <label class="inline-flex items-center gap-3 cursor-pointer">
                     <input
                         id="useIngredientStockCheckbox"
                         type="checkbox"

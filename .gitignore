@@ -44,3 +44,6 @@ certs/
 logs/
 backups/antes-de-atualizar/
 backups/logs/
+
+# Ferramentas locais (ex.: tailwindcss.exe)
+tools/
