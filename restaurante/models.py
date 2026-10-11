@@ -3,6 +3,8 @@ from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
 from decimal import Decimal, ROUND_FLOOR
 
+from .services.pix import KEY_TYPES as PIX_KEY_TYPES
+
 
 class User(AbstractUser):
     """Usuário personalizado com roles"""
@@ -241,6 +243,11 @@ class Order(models.Model):
         }
         return colors.get(self.status, 'secondary')
 
+    @property
+    def amount_due(self):
+        """Valor a cobrar do cliente."""
+        return self.total
+
 
 class OrderItem(models.Model):
     """Item de um pedido"""
@@ -283,7 +290,6 @@ class AppSettings(models.Model):
     store_name = models.CharField(max_length=200, default='Meu Restaurante', verbose_name='Nome da Loja')
     slogan = models.CharField(max_length=500, default='Feito com carinho, servido NaBandeja.', verbose_name='Slogan')
     logo = models.ImageField(upload_to='settings/', blank=True, null=True, verbose_name='Logo')
-    pix_qrcode = models.ImageField(upload_to='settings/', blank=True, null=True, verbose_name='QR Code PIX')
     
     # Dados da empresa para nota fiscal
     cnpj = models.CharField(max_length=20, blank=True, verbose_name='CNPJ/CPF')
@@ -301,7 +307,9 @@ class AppSettings(models.Model):
     
     # PIX
     pix_key = models.CharField(max_length=200, blank=True, verbose_name='Chave PIX')
+    pix_key_type = models.CharField(max_length=20, choices=PIX_KEY_TYPES, default='auto', verbose_name='Tipo da chave PIX')
     pix_name = models.CharField(max_length=100, blank=True, verbose_name='Nome do titular PIX')
+    pix_city = models.CharField(max_length=60, blank=True, verbose_name='Cidade do titular PIX')
     show_pix_on_receipt = models.BooleanField(default=True, verbose_name='Mostrar QR Code PIX na nota')
     
     is_store_open = models.BooleanField(default=True, verbose_name='Loja Aberta')

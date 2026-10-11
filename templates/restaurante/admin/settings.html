@@ -174,28 +174,43 @@
                     />
                 </div>
                 
-                <div class="md:col-span-2">
-                    <label class="text-xs font-bold text-slate-400 uppercase tracking-widest block mb-2">QR Code PIX</label>
-                    <div class="flex items-center gap-4">
-                        <div class="w-24 h-24 rounded-2xl bg-slate-100 flex items-center justify-center overflow-hidden border border-slate-200">
-                            {% if settings.pix_qrcode %}
-                            <img src="{{ settings.pix_qrcode.url }}" class="w-full h-full object-cover" />
-                            {% else %}
-                            <i class="bi bi-qr-code text-3xl text-slate-300"></i>
-                            {% endif %}
-                        </div>
-                        <div class="flex-1">
-                            <input 
-                                type="file" 
-                                name="pix_qrcode"
-                                accept="image/*"
-                                class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:font-bold file:bg-green-600 file:text-white hover:file:bg-green-700"
-                            />
-                            <p class="text-xs text-slate-400 mt-2">PNG ou JPG - será exibido na nota fiscal</p>
-                        </div>
-                    </div>
+                <div>
+                    <label class="text-xs font-bold text-slate-400 uppercase tracking-widest block mb-2">Tipo da Chave</label>
+                    <select name="pix_key_type"
+                        class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-800 focus:ring-2 focus:ring-green-500/50 focus:border-green-500 outline-none transition-all font-medium">
+                        {% for value, label in form.fields.pix_key_type.choices %}
+                        <option value="{{ value }}" {% if settings.pix_key_type == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                    <p class="text-xs text-slate-400 mt-2">Telefone com 11 dígitos pode ser confundido com CPF: nesse caso escolha o tipo.</p>
                 </div>
-                
+
+                <div>
+                    <label class="text-xs font-bold text-slate-400 uppercase tracking-widest block mb-2">Cidade do Titular</label>
+                    <input
+                        type="text"
+                        name="pix_city"
+                        value="{{ settings.pix_city }}"
+                        placeholder="Ex: Sao Paulo (usa a cidade da loja se vazio)"
+                        class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-800 focus:ring-2 focus:ring-green-500/50 focus:border-green-500 outline-none transition-all font-medium"
+                    />
+                </div>
+
+                {% if pix_preview %}
+                <div class="md:col-span-2 flex flex-col sm:flex-row items-center gap-6 bg-green-50 border border-green-100 rounded-2xl p-5">
+                    {% if pix_preview.error %}
+                    <p class="text-sm font-semibold text-red-600"><i class="bi bi-exclamation-triangle me-1"></i>{{ pix_preview.error }}</p>
+                    {% else %}
+                    <div class="w-36 h-36 shrink-0 bg-white rounded-xl p-2 border border-green-100 [&>svg]:w-full [&>svg]:h-full">{{ pix_preview.svg|safe }}</div>
+                    <div class="min-w-0">
+                        <p class="font-bold text-green-800">PIX de teste: R$ 0,01</p>
+                        <p class="text-sm text-green-700 mt-1">Leia com o app do seu banco para conferir nome e chave. Não precisa pagar.</p>
+                        <p class="text-[11px] text-slate-500 mt-3 break-all font-mono">{{ pix_preview.payload }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+
                 <div class="md:col-span-2">
                     <label class="flex items-center gap-3 cursor-pointer">
                         <input 
@@ -204,9 +219,9 @@
                             {% if settings.show_pix_on_receipt %}checked{% endif %}
                             class="w-5 h-5 rounded border-slate-300 text-green-600 focus:ring-green-500"
                         />
-                        <span class="font-medium text-slate-700">Exibir QR Code PIX na nota fiscal</span>
+                        <span class="font-medium text-slate-700">Exibir QR Code PIX com o valor da conta no cupom</span>
                     </label>
-                    <p class="text-sm text-slate-400 mt-1 ml-8">Quando ativado, o QR Code do PIX aparecerá automaticamente na impressão da conta</p>
+                    <p class="text-sm text-slate-400 mt-1 ml-8">O QR Code é gerado para cada pedido com o valor exato. O cliente só escaneia e confirma.</p>
                 </div>
             </div>
         </div>

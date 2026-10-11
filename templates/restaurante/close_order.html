@@ -94,6 +94,24 @@
                     </label>
                 </div>
 
+                {% if pix and not pix.error %}
+                <div id="pix-panel" class="hidden flex flex-col sm:flex-row items-center gap-5 bg-green-50 border border-green-200 rounded-2xl p-5">
+                    <div class="w-44 h-44 shrink-0 bg-white rounded-xl p-2 border border-green-100 [&>svg]:w-full [&>svg]:h-full">{{ pix.svg|safe }}</div>
+                    <div class="min-w-0 w-full">
+                        <p class="font-black text-green-800 text-lg">PIX de R$ {{ order.amount_due|floatformat:2 }}</p>
+                        <p class="text-sm text-green-700 mt-1">Peça para o cliente ler o QR Code no app do banco. Confira no seu app se o valor caiu antes de confirmar.</p>
+                        <button type="button" id="pix-copy" data-payload="{{ pix.payload }}"
+                            class="mt-3 px-4 py-2 rounded-xl bg-green-600 text-white font-bold text-sm hover:bg-green-700 transition-all">
+                            <i class="bi bi-clipboard me-1"></i> Copiar PIX copia e cola
+                        </button>
+                    </div>
+                </div>
+                {% elif pix.error %}
+                <div id="pix-panel" class="hidden bg-amber-50 border border-amber-200 rounded-2xl p-4 text-sm text-amber-800">
+                    <i class="bi bi-exclamation-triangle me-1"></i> PIX não configurado corretamente: {{ pix.error }}
+                </div>
+                {% endif %}
+
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
                     <button type="submit" class="w-full py-3 rounded-xl bg-emerald-600 text-white font-bold hover:bg-emerald-700 transition-all">
                         <i class="bi bi-check-circle mr-1"></i>
@@ -108,4 +126,32 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    const panel = document.getElementById('pix-panel');
+    if (!panel) return;
+    const radios = document.querySelectorAll('input[name="payment_method"]');
+    const update = () => {
+        const selected = document.querySelector('input[name="payment_method"]:checked');
+        panel.classList.toggle('hidden', !selected || selected.value !== 'pix');
+    };
+    radios.forEach((radio) => radio.addEventListener('change', update));
+    update();
+
+    const copyButton = document.getElementById('pix-copy');
+    if (copyButton) {
+        copyButton.addEventListener('click', async () => {
+            try {
+                await navigator.clipboard.writeText(copyButton.dataset.payload);
+                copyButton.innerHTML = '<i class="bi bi-check2 me-1"></i> Copiado!';
+            } catch (err) {
+                window.prompt('Copie o código PIX:', copyButton.dataset.payload);
+            }
+        });
+    }
+})();
+</script>
 {% endblock %}

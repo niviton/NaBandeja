@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from .models import User, Category, Product, Order, OrderItem, AppSettings, Ingredient
+from .services.pix import PixError, build_payload as build_pix_payload
 
 
 class LoginForm(AuthenticationForm):
@@ -140,8 +141,9 @@ class AppSettingsForm(forms.ModelForm):
             'background_color',
             'text_color',
             'pix_key',
+            'pix_key_type',
             'pix_name',
-            'pix_qrcode',
+            'pix_city',
             'show_pix_on_receipt',
         ]
         widgets = {
@@ -160,3 +162,18 @@ class AppSettingsForm(forms.ModelForm):
             'pix_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nome do titular da conta'}),
             'show_pix_on_receipt': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
+
+    def clean(self):
+        cleaned = super().clean()
+        if cleaned.get('pix_key'):
+            try:
+                build_pix_payload(
+                    key=cleaned['pix_key'],
+                    key_type=cleaned.get('pix_key_type') or 'auto',
+                    name=cleaned.get('pix_name') or cleaned.get('store_name') or '',
+                    city=cleaned.get('pix_city') or cleaned.get('city') or '',
+                    amount='1.00',
+                )
+            except PixError as exc:
+                raise forms.ValidationError(f'PIX: {exc}')
+        return cleaned

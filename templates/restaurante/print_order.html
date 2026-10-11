@@ -205,6 +205,19 @@
             color: #000;
         }
         
+        .pix-section .pix-qr svg {
+            width: 150px;
+            height: 150px;
+            display: block;
+            margin: 8px auto;
+        }
+
+        .pix-section .pix-amount {
+            font-size: 14px;
+            font-weight: bold;
+            margin: 2px 0;
+        }
+
         .pix-section img {
             width: 110px;
             height: 110px;
@@ -379,25 +392,23 @@
     </div>
     {% endif %}
     
-    <!-- QR Code PIX - Only if enabled -->
-    {% if settings.pix_key and settings.show_pix_on_receipt %}
+    <!-- PIX com o valor exato do pedido (BR Code gerado localmente) -->
+    {% if pix and not pix.error %}
     <div class="pix-section">
-        <div class="title">═══ PAGAMENTO VIA PIX ═══</div>
-        <div style="margin: 12px 0;">
-            {% if settings.pix_qrcode %}
-            <img src="{{ settings.pix_qrcode.url }}" alt="QR Code Pix">
-            {% else %}
-            <img src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data={{ settings.pix_key }}" alt="QR Code Pix">
-            {% endif %}
-        </div>
+        <div class="title">═══ PAGUE COM PIX ═══</div>
+        <div class="pix-qr">{{ pix.svg|safe }}</div>
+        <p class="pix-amount">R$ {{ order.amount_due|floatformat:2 }}</p>
         {% if settings.pix_name %}
         <p class="pix-name">{{ settings.pix_name }}</p>
         {% endif %}
-        <p class="pix-key">{{ settings.pix_key }}</p>
-        <p class="pix-instruction">Escaneie o QR Code acima</p>
+        <p class="pix-instruction">Abra o app do banco, escolha PIX &gt; Ler QR Code. O valor já vem preenchido.</p>
+    </div>
+    {% elif pix.error %}
+    <div class="pix-section no-print">
+        <p class="pix-instruction">PIX não gerado: {{ pix.error }}</p>
     </div>
     {% endif %}
-    
+
     <!-- Footer -->
     <div class="footer">
         <p class="thanks">OBRIGADO PELA PREFERENCIA!</p>

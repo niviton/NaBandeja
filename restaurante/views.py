@@ -40,6 +40,7 @@ from .models import (
     ProductAdditional,
     OrderItemAdditional,
 )
+from .services.pix import pix_for_order, pix_preview
 from .forms import (
     LoginForm, UserForm, CategoryForm, ProductForm, 
     OrderForm, DeliveryOrderForm, PaymentForm, AppSettingsForm, IngredientForm
@@ -2303,7 +2304,12 @@ def admin_settings(request):
             )
             messages.success(request, 'Configurações salvas!')
             return redirect('admin_settings')
-        messages.error(request, 'Não foi possível salvar. Verifique os campos e tente novamente.')
+        for error in form.non_field_errors():
+            messages.error(request, error)
+        for field_name, errors in form.errors.items():
+            if field_name != '__all__':
+                label = form.fields[field_name].label if field_name in form.fields else field_name
+                messages.error(request, f'{label}: {" ".join(errors)}')
     else:
         form = AppSettingsForm(instance=settings)
     
@@ -2330,6 +2336,7 @@ def admin_settings(request):
         'active_menu': 'settings',
         'access_links': access_links,
         'local_ip': local_ip,
+        'pix_preview': pix_preview(settings),
     })
 
 
@@ -2442,7 +2449,11 @@ def close_order(request, order_id):
         return redirect('waiter_view')
     
     form = PaymentForm()
-    return render(request, 'restaurante/close_order.html', {'order': order, 'form': form})
+    return render(request, 'restaurante/close_order.html', {
+        'order': order,
+        'form': form,
+        'pix': pix_for_order(order, AppSettings.get_settings()),
+    })
 
 
 @login_required
@@ -2488,9 +2499,11 @@ def print_order(request, order_id):
         metadata={'status': order.status, 'total': str(order.total)},
     )
     
+    pix = pix_for_order(order, settings) if settings.show_pix_on_receipt and order.status != 'cancelado' else None
     return render(request, 'restaurante/print_order.html', {
         'order': order,
-        'settings': settings
+        'settings': settings,
+        'pix': pix,
     })
 
 
