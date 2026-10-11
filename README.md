@@ -25,6 +25,7 @@
 | **Caixa** | Abertura e fechamento, com resumo de pagamentos. |
 | **Relatórios** | Vendas por período, por garçom e produtos mais vendidos. |
 | **Cupom** | Impressão térmica com QR Code PIX. |
+| **Login com Google** | A equipe entra com a conta Google; nada de senha esquecida. |
 | **Personalização** | Nome, logo, cores e fonte de cada loja, sem mexer no código. |
 | **Tempo real** | Atualização via WebSocket, com polling como alternativa. |
 | **PWA** | Instalável na tela inicial do celular. |
@@ -69,6 +70,7 @@ O passo a passo completo está em [docs/clientes.md](docs/clientes.md).
 | [Implantação no Windows](docs/deploy-windows.md) | Executável `.exe`, rede local, firewall, HTTPS, atalho na Área de Trabalho |
 | [Backup](docs/backup.md) | Backups automáticos de SQLite e PostgreSQL |
 | [Tempo real](docs/tempo-real.md) | WebSocket, eventos e PWA |
+| [Login com Google](docs/login-google.md) | Entrar com a conta Google, sem depender de senha |
 | [Segurança](docs/seguranca.md) | Variáveis de ambiente e checklist de produção |
 | [Melhorias](docs/melhorias.md) | Checklist do que melhorar (roadmap) |
 

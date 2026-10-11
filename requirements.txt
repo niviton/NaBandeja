@@ -5,6 +5,7 @@ daphne==4.2.3
 channels==4.3.2
 whitenoise==6.12.0
 python-dotenv==1.2.4
+django-allauth[socialaccount]==65.19.7   # login com Google
 pillow==12.3.0
 qrcode==8.2
 psycopg2-binary==2.9.13   # só usado com DB_ENGINE=postgres

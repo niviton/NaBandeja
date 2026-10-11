@@ -5,6 +5,8 @@ Mudanças relevantes do NaBandeja. O formato segue o [Keep a Changelog](https://
 ## [2.1.0] - 2026-10-11
 
 ### Adicionado
+- **Login com Google** para a equipe (só entra quem o gerente cadastrou com aquele e-mail).
+- Edição de membros da equipe (nome, e-mail, função, nova senha).
 - PIX com valor exato no cupom e na tela de fechar conta (BR Code oficial, gerado offline, sem API de banco).
 - Bloqueio de login após 5 senhas erradas; logs de erro em `logs/nabandeja.log`.
 - `.env` criado automaticamente no primeiro início (chave secreta e senha do gerente próprias).

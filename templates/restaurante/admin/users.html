@@ -23,7 +23,8 @@
                 {{ member.username|slice:":1"|upper }}
             </div>
             <div class="flex-1">
-                <h3 class="font-bold text-lg text-slate-800">{{ member.username }}</h3>
+                <h3 class="font-bold text-lg text-slate-800">{{ member.first_name|default:member.username }}{% if member.first_name %} <span class="text-sm font-medium text-slate-400">@{{ member.username }}</span>{% endif %}</h3>
+                {% if member.email %}<p class="text-sm text-slate-500">{{ member.email }}</p>{% endif %}
                 <span class="inline-block px-3 py-1 rounded-full text-xs font-bold mt-1 {% if member.role == 'gerente' %}bg-purple-100 text-purple-600{% elif member.role == 'cozinha' %}bg-orange-100 text-orange-600{% else %}bg-emerald-100 text-emerald-600{% endif %}">
                     {% if member.role == 'gerente' %}
                     <i class="bi bi-shield-check me-1"></i>Gerente
@@ -33,9 +34,15 @@
                     <i class="bi bi-person-badge me-1"></i>Garçom
                     {% endif %}
                 </span>
+                {% if member.socialaccount_set.all %}
+                <span class="inline-block px-3 py-1 rounded-full text-xs font-bold mt-1 bg-sky-100 text-sky-700"><i class="bi bi-google me-1"></i>Google vinculado</span>
+                {% endif %}
             </div>
+            <a href="{% url 'user_edit' member.id %}" class="p-3 bg-slate-100 text-slate-500 rounded-xl hover:bg-slate-200 transition-all" title="Editar">
+                <i class="bi bi-pencil"></i>
+            </a>
             {% if member.username != request.user.username %}
-            <form method="post" action="{% url 'user_delete' member.id %}" class="inline" data-confirm-message="Remover este usuário?">
+            <form method="post" action="{% url 'user_delete' member.id %}" class="inline" data-confirm-message="Desativar este usuário? O histórico de vendas dele é mantido.">
                 {% csrf_token %}
                 <button type="submit" class="p-3 bg-slate-100 text-slate-400 rounded-xl hover:bg-red-100 hover:text-red-600 transition-all">
                     <i class="bi bi-trash"></i>

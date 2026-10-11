@@ -57,7 +57,7 @@ FOR /F %%i IN ('hostname') DO SET HOSTNAME=%%i
 
 :: Gera o certificado SSL para todos os enderecos necessarios
 echo [3/4] Gerando certificados SSL...
-mkcert.exe -key-file key.pem -cert-file cert.pem %LAN_IP% localhost 127.0.0.1 %HOSTNAME% ::1
+mkcert.exe -key-file key.pem -cert-file cert.pem %LAN_IP% %LAN_IP%.sslip.io localhost 127.0.0.1 %HOSTNAME% ::1
 IF %ERRORLEVEL% NEQ 0 (
     echo ERRO: Falha ao gerar certificados.
     pause

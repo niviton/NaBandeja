@@ -41,6 +41,7 @@ urlpatterns = [
     path('admin-panel/settings/', manager.admin_settings, name='admin_settings'),
     path('admin-panel/users/', manager.admin_users, name='admin_users'),
     path('admin-panel/user/new/', manager.user_create, name='user_create'),
+    path('admin-panel/user/<int:user_id>/edit/', manager.user_edit, name='user_edit'),
     path('admin-panel/user/<int:user_id>/delete/', manager.user_delete, name='user_delete'),
     path('admin-panel/reports/', reports.admin_reports, name='admin_reports'),
 

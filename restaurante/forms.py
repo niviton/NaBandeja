@@ -1,6 +1,8 @@
 from django import forms
+from django.contrib.auth.password_validation import validate_password
+from django.core.validators import validate_slug
 from django.contrib.auth.forms import AuthenticationForm
-from .models import AppSettings, Category, Ingredient, Product
+from .models import AppSettings, Category, Ingredient, Product, User
 from .services.pix import PixError, build_payload as build_pix_payload
 
 
@@ -118,3 +120,55 @@ class AppSettingsForm(forms.ModelForm):
             except PixError as exc:
                 raise forms.ValidationError(f'PIX: {exc}')
         return cleaned
+
+
+class TeamMemberForm(forms.ModelForm):
+    """Cria ou edita um membro da equipe. Senha obrigatória só na criação."""
+
+    password = forms.CharField(label='Senha', required=False, strip=False, widget=forms.PasswordInput)
+
+    class Meta:
+        model = User
+        fields = ['username', 'first_name', 'email', 'role']
+        labels = {'username': 'Usuário', 'first_name': 'Nome', 'email': 'E-mail (login com Google)'}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['role'].choices = User.ROLE_CHOICES
+        if self.instance.pk:
+            self.fields['username'].disabled = True
+            self.fields['password'].label = 'Nova senha (deixe em branco para manter)'
+
+    def clean_username(self):
+        username = self.cleaned_data['username'].strip()
+        validate_slug(username)
+        if User.objects.filter(username__iexact=username).exclude(pk=self.instance.pk).exists():
+            raise forms.ValidationError('Este usuário já existe.')
+        return username
+
+    def clean_email(self):
+        email = (self.cleaned_data.get('email') or '').strip().lower()
+        if email and User.objects.filter(email__iexact=email, is_active=True).exclude(pk=self.instance.pk).exists():
+            raise forms.ValidationError('Este e-mail já está em uso por outro membro.')
+        return email
+
+    def clean(self):
+        cleaned = super().clean()
+        password = cleaned.get('password')
+        if not self.instance.pk and not password:
+            self.add_error('password', 'Informe a senha.')
+        if password:
+            user = self.instance if self.instance.pk else User(username=cleaned.get('username', ''))
+            try:
+                validate_password(password, user)
+            except forms.ValidationError as exc:
+                self.add_error('password', exc)
+        return cleaned
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        if self.cleaned_data.get('password'):
+            user.set_password(self.cleaned_data['password'])
+        if commit:
+            user.save()
+        return user

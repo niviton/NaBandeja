@@ -21,6 +21,10 @@ APP_PORT=8000
 
 # Senha do usuário "gerente" criado no primeiro início. Troque após entrar.
 NABANDEJA_INIT_ADMIN_PASSWORD={admin_password}
+
+# Login com Google (opcional): veja docs/login-google.md
+# GOOGLE_CLIENT_ID=
+# GOOGLE_CLIENT_SECRET=
 """
 
 

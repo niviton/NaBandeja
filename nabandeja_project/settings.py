@@ -69,7 +69,9 @@ AUTO_ALLOW_LOCAL_HOSTS = env_bool('AUTO_ALLOW_LOCAL_HOSTS', True)
 LOCAL_IP = get_local_ip()
 MACHINE_NAME = socket.gethostname().strip().lower()
 if AUTO_ALLOW_LOCAL_HOSTS:
-    for host in (LOCAL_IP, MACHINE_NAME):
+    # <ip>.sslip.io aponta para o IP local: dá um domínio ao sistema para o
+    # login com Google funcionar nos celulares (o Google não aceita IP).
+    for host in (LOCAL_IP, MACHINE_NAME, f'{LOCAL_IP}.sslip.io' if LOCAL_IP else None):
         if host and host not in ALLOWED_HOSTS:
             ALLOWED_HOSTS.append(host)
 
@@ -112,6 +114,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'whitenoise.runserver_nostatic',
     'django.contrib.staticfiles',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
     'restaurante',
 ]
 
@@ -134,6 +140,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'allauth.account.middleware.AccountMiddleware',
 ]
 
 ROOT_URLCONF = 'nabandeja_project.urls'
@@ -217,6 +224,33 @@ AUTH_PASSWORD_VALIDATORS = [
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL = 'login'
+
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+]
+
+# ---------------------------------------------------------------- Login com Google
+# Crie as credenciais em https://console.cloud.google.com (docs/login-google.md).
+GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID', '').strip()
+GOOGLE_CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET', '').strip()
+GOOGLE_LOGIN_ENABLED = bool(GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET)
+
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'APPS': [{'client_id': GOOGLE_CLIENT_ID, 'secret': GOOGLE_CLIENT_SECRET, 'key': ''}]
+        if GOOGLE_LOGIN_ENABLED else [],
+        'SCOPE': ['openid', 'email', 'profile'],
+        'AUTH_PARAMS': {'prompt': 'select_account'},
+    },
+}
+ACCOUNT_ADAPTER = 'restaurante.social.AccountAdapter'
+SOCIALACCOUNT_ADAPTER = 'restaurante.social.SocialAccountAdapter'
+SOCIALACCOUNT_LOGIN_ON_GET = False      # o botão faz POST (protegido por CSRF)
+SOCIALACCOUNT_AUTO_SIGNUP = False
+SOCIALACCOUNT_STORE_TOKENS = False
+ACCOUNT_EMAIL_VERIFICATION = 'none'     # o e-mail já vem verificado pelo Google
+ACCOUNT_LOGIN_METHODS = {'username'}
 
 # ---------------------------------------------------------------- Idioma
 LANGUAGE_CODE = 'pt-br'

@@ -56,6 +56,8 @@ a = Analysis(
         'qrcode', 'qrcode.image.svg',
         'PIL',
         'dotenv',
+        'allauth', 'allauth.account', 'allauth.socialaccount',
+        'allauth.socialaccount.providers.google', 'restaurante.social',
         'nabandeja_project.settings',
         'nabandeja_project.urls',
         'nabandeja_project.asgi',

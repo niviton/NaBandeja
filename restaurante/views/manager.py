@@ -1,9 +1,7 @@
 """Painel do gerente: dashboard, caixa, loja, delivery, configurações e equipe."""
 
 from django.contrib import messages
-from django.contrib.auth.password_validation import validate_password
-from django.core.exceptions import ValidationError
-from django.core.validators import validate_slug
+from django.contrib.auth import update_session_auth_hash
 from django.db.models import Avg, F, Sum
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -12,7 +10,7 @@ from django.views.decorators.http import require_POST
 
 from django.conf import settings as django_settings
 
-from ..forms import AppSettingsForm
+from ..forms import AppSettingsForm, TeamMemberForm
 from ..models import AppSettings, CashSession, Ingredient, Order, OrderItem, User
 from ..permissions import manager_required
 from ..services import cash as cash_service
@@ -186,51 +184,40 @@ def admin_settings(request):
 @manager_required
 def admin_users(request):
     return render(request, 'restaurante/admin/users.html', {
-        'users': User.objects.filter(is_active=True).order_by('role', 'username'),
+        'users': User.objects.filter(is_active=True).prefetch_related('socialaccount_set').order_by('role', 'username'),
         'active_menu': 'users',
     })
 
 
 @manager_required
 def user_create(request):
-    if request.method == 'POST':
-        username = request.POST.get('username', '').strip()
-        password = request.POST.get('password', '')
-        role = request.POST.get('role', 'garcom')
-        error = None
-        if role not in dict(User.ROLE_CHOICES):
-            error = 'Função inválida.'
-        elif not username:
-            error = 'Informe o nome de usuário.'
+    return _member_edit(request, None)
+
+
+@manager_required
+def user_edit(request, user_id):
+    return _member_edit(request, get_object_or_404(User, pk=user_id, is_active=True))
+
+
+def _member_edit(request, member):
+    form = TeamMemberForm(request.POST or None, instance=member)
+    if request.method == 'POST' and form.is_valid():
+        if member and member.pk == request.user.pk and form.cleaned_data['role'] != 'gerente':
+            form.add_error('role', 'Você não pode tirar a sua própria função de gerente.')
         else:
-            try:
-                validate_slug(username)
-            except ValidationError:
-                error = 'Usuário inválido. Use apenas letras, números, hífen ou underline.'
-        if not error and User.objects.filter(username__iexact=username).exists():
-            error = 'Este usuário já existe.'
-        if not error:
-            try:
-                validate_password(password)
-            except ValidationError as exc:
-                error = ' '.join(exc.messages)
-        if error:
-            messages.error(request, error)
-            return render(request, 'restaurante/admin/user_form.html', {
-                'title': 'Novo Usuário', 'active_menu': 'users', 'values': request.POST,
-            })
-
-        user = User.objects.create_user(
-            username=username,
-            password=password,
-            role=role,
-            email=request.POST.get('email', '').strip(),
-        )
-        audit(request, 'user.create', f'Usuário "{username}" criado.', user, role=role)
-        messages.success(request, f'Usuário "{username}" criado com sucesso!')
-        return redirect('admin_users')
-
-    return render(request, 'restaurante/admin/user_form.html', {'title': 'Novo Usuário', 'active_menu': 'users'})
+            saved = form.save()
+            action = 'user.update' if member else 'user.create'
+            audit(request, action, f'Usuário "{saved.username}" salvo.', saved, role=saved.role)
+            if member and member.pk == request.user.pk and form.cleaned_data.get('password'):
+                update_session_auth_hash(request, saved)
+            messages.success(request, f'Usuário "{saved.username}" salvo!')
+            return redirect('admin_users')
+    return render(request, 'restaurante/admin/user_form.html', {
+        'form': form,
+        'member': member,
+        'title': 'Editar Membro' if member else 'Novo Membro',
+        'active_menu': 'users',
+    })
 
 
 @manager_required
