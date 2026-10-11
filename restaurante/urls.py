@@ -66,6 +66,7 @@ urlpatterns = [
     path('admin-panel/mesas/<int:table_id>/', operations.table_save, name='table_edit'),
     path('admin-panel/mesas/<int:table_id>/novo-qr/', operations.table_new_qr, name='table_new_qr'),
     path('admin-panel/mesas/qr/', operations.tables_qr_sheet, name='tables_qr_sheet'),
+    path('admin-panel/cardapio-qr/', operations.menu_qr_sheet, name='menu_qr_sheet'),
     path('admin-panel/contas/', finance.expenses, name='expenses'),
     path('admin-panel/contas/nova/', finance.expense_edit, name='expense_create'),
     path('admin-panel/contas/<int:expense_id>/', finance.expense_edit, name='expense_edit'),

@@ -28,6 +28,7 @@
 
 ## Cliente
 
+- **Cartão do cardápio para o suporte de molhos**: QR do Wi-Fi + QR do cardápio, só para consulta (o pedido continua com o garçom). Produtos podem ter descrição.
 - **Cardápio digital** pelo QR Code da mesa, com **Chamar garçom** e **Pedir a conta**. QR Codes prontos para imprimir em *Mesas e QR Code*.
 - **Pedido online para entrega** (`/pedir/`): o cliente escolhe o bairro (taxa de entrega), envia e pode confirmar pelo WhatsApp. O pedido só vai para a cozinha depois que o gerente aceita. Veja [pedidos-online.md](pedidos-online.md).
 

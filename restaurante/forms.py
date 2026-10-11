@@ -39,7 +39,7 @@ class ProductForm(forms.ModelForm):
     """Formulário de produto"""
     class Meta:
         model = Product
-        fields = ['name', 'category', 'price', 'cost_price', 'stock', 'use_ingredient_stock', 'icon', 'image', 'is_active']
+        fields = ['name', 'description', 'category', 'price', 'cost_price', 'stock', 'use_ingredient_stock', 'icon', 'image', 'is_active']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
             'category': forms.Select(attrs={'class': 'form-control'}),
@@ -96,6 +96,8 @@ class AppSettingsForm(forms.ModelForm):
             'online_orders_enabled',
             'whatsapp_number',
             'min_delivery_order',
+            'wifi_ssid',
+            'wifi_password',
         ]
         widgets = {
             'store_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nome do estabelecimento'}),

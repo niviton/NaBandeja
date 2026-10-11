@@ -1,5 +1,25 @@
 # Pedidos online e cardápio digital
 
+## Cartão do cardápio (suporte de molhos)
+
+Cartão só para **consultar** o cardápio: o pedido continua sendo feito com o garçom, então não há risco de pedido falso nem de alguém pedir e ir embora.
+
+1. Em **Configurações → Cardápio digital**, deixe o cardápio ligado e preencha o **Wi-Fi dos clientes** (nome e senha).
+2. Clique em **Imprimir cartões**. Cada cartão tem dois QR Codes: **1. conectar ao Wi-Fi** e **2. abrir o cardápio**.
+3. Antes de imprimir, **fixe o IP do computador do sistema no roteador** (reserva de DHCP). Se o IP mudar, os cartões impressos param de funcionar.
+
+> Abrindo a página pelo próprio computador do sistema, o QR já usa o IP da rede (e não `localhost`).
+
+**Segurança:** o cardápio não tem botão de pedido e não mostra dados de clientes. Quem entra no Wi-Fi da loja também consegue abrir a tela de login da equipe; por isso mantenha senhas fortes (o sistema bloqueia após 5 tentativas erradas). Se preferir que os clientes nem cheguem na rede do sistema, use o endereço pela internet (abaixo) e uma rede de clientes separada.
+
+Para o cartão funcionar no **4G** (sem Wi-Fi), configure um endereço na internet e coloque no `.env`:
+
+```env
+PUBLIC_BASE_URL=https://cardapio.minhaloja.com.br
+```
+
+Aí o QR aponta para esse endereço e o QR do Wi-Fi vira opcional.
+
 ## Ligar
 
 Em **Configurações → Cardápio digital e pedidos online**:

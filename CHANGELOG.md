@@ -2,6 +2,16 @@
 
 Mudanças relevantes do NaBandeja. O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [2.3.0] - 2026-10-11
+
+### Adicionado
+- **Cartão do cardápio** para o suporte de molhos: QR para conectar ao Wi-Fi + QR do cardápio (só consulta), pronto para imprimir.
+- Descrição dos produtos e busca no cardápio digital.
+- `PUBLIC_BASE_URL` para os QR Codes apontarem para um endereço na internet.
+
+### Corrigido
+- QR Codes gerados pelo próprio computador do sistema apontavam para `localhost`; agora usam o IP da rede.
+
 ## [2.2.0] - 2026-10-11
 
 ### Adicionado

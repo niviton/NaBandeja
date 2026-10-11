@@ -9,7 +9,8 @@
             <h1 class="admin-brand-title text-4xl text-[var(--admin-text)]">Mesas e QR Code</h1>
             <p class="text-[var(--admin-muted)]">O QR Code de cada mesa abre o cardápio digital com os botões "Chamar garçom" e "Pedir a conta".</p>
         </div>
-        <a href="{% url 'tables_qr_sheet' %}" target="_blank" class="px-4 py-3 rounded-xl bg-slate-900 text-white font-bold"><i class="bi bi-qr-code me-1"></i>Imprimir QR Codes</a>
+        <a href="{% url 'menu_qr_sheet' %}" target="_blank" class="px-4 py-3 rounded-xl bg-white border border-[var(--admin-line)] font-bold"><i class="bi bi-book me-1"></i>Cartão só do cardápio</a>
+        <a href="{% url 'tables_qr_sheet' %}" target="_blank" class="px-4 py-3 rounded-xl bg-slate-900 text-white font-bold"><i class="bi bi-qr-code me-1"></i>QR por mesa</a>
     </div>
 
     {% if not app_settings.public_menu_enabled %}

@@ -45,6 +45,19 @@
             <label class="{{ label }}">Pedido mínimo para delivery (R$)</label>
             <input name="min_delivery_order" value="{{ settings.min_delivery_order|stringformat:'s' }}" inputmode="decimal" class="{{ input }}">
         </div>
+        <div>
+            <label class="{{ label }}">Wi-Fi dos clientes (nome)</label>
+            <input name="wifi_ssid" value="{{ settings.wifi_ssid }}" autocomplete="off" class="{{ input }}">
+        </div>
+        <div>
+            <label class="{{ label }}">Senha do Wi-Fi dos clientes</label>
+            <input name="wifi_password" value="{{ settings.wifi_password }}" autocomplete="off" class="{{ input }}">
+        </div>
+        <div class="md:col-span-2 flex flex-wrap items-center gap-3 rounded-2xl bg-sky-50 border border-sky-100 p-4">
+            <i class="bi bi-qr-code text-2xl text-sky-700"></i>
+            <p class="flex-1 min-w-[220px] text-sm text-sky-900">Cartão para o suporte de molhos: QR do Wi-Fi + QR do cardápio. O cliente só consulta; o pedido continua com o garçom.</p>
+            <a href="{% url 'menu_qr_sheet' %}" target="_blank" class="px-4 py-2.5 rounded-xl bg-sky-700 text-white font-bold text-sm">Imprimir cartões</a>
+        </div>
     </div>
 </div>
 {% endwith %}

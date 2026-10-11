@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Cartões do cardápio - {{ store.store_name }}</title>
+<style>
+    body { font-family: system-ui, 'Segoe UI', sans-serif; margin: 0; padding: 10mm; color: #111; }
+    .toolbar { margin-bottom: 8mm; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    .toolbar button, .toolbar input { padding: 8px 14px; border-radius: 10px; font-weight: 700; }
+    .toolbar button { border: 0; background: #111; color: #fff; }
+    .warn { background: #fff7ed; border: 1px solid #fdba74; border-radius: 10px; padding: 8px 12px; color: #9a3412; font-size: 13px; max-width: 760px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, 90mm); gap: 6mm; }
+    .card { width: 90mm; height: 130mm; box-sizing: border-box; border: 1.5px dashed #999; border-radius: 6mm;
+            padding: 6mm; display: flex; flex-direction: column; align-items: center; text-align: center; page-break-inside: avoid; }
+    .logo { width: 16mm; height: 16mm; border-radius: 4mm; object-fit: cover; }
+    .store { font-weight: 900; font-size: 15pt; margin: 2mm 0 0; }
+    .title { font-size: 10pt; letter-spacing: .12em; text-transform: uppercase; color: #555; margin: 1mm 0 3mm; }
+    .codes { display: flex; gap: 4mm; justify-content: center; flex: 1; align-items: center; }
+    .code svg { width: 36mm; height: 36mm; display: block; }
+    .code.single svg { width: 58mm; height: 58mm; }
+    .step { font-size: 9pt; font-weight: 800; margin-top: 1.5mm; }
+    .hint { font-size: 8pt; color: #444; }
+    .foot { font-size: 7.5pt; color: #666; margin-top: 2mm; }
+    @media print { .toolbar, .warn { display: none; } body { padding: 5mm; } }
+</style>
+</head>
+<body>
+    <div class="toolbar">
+        <button onclick="window.print()">Imprimir</button>
+        <form method="get" style="display:flex;gap:8px;align-items:center">
+            <label>Cópias <input type="number" name="copias" min="1" max="60" value="{{ copies_count }}" style="width:70px"></label>
+            <button type="submit" style="background:#555">Atualizar</button>
+        </form>
+        <span style="color:#555">Endereço do cardápio: <b>{{ menu_url }}</b></span>
+    </div>
+    {% if not using_public_base %}
+    <p class="warn">
+        O cardápio só abre para quem estiver no <b>Wi-Fi da loja</b>{% if not wifi_svg %}. Cadastre o Wi-Fi em Configurações para incluir o QR de conexão no cartão{% endif %}.
+        Antes de imprimir, fixe o IP deste computador no roteador (reserva de DHCP): se o IP mudar, o QR deixa de funcionar.
+        Para funcionar no 4G, veja docs/pedidos-online.md (PUBLIC_BASE_URL).
+    </p>
+    {% endif %}
+
+    <div class="grid">
+        {% for _ in copies %}
+        <div class="card">
+            {% if store.logo %}<img class="logo" src="{{ store.logo.url }}" alt="">{% endif %}
+            <p class="store">{{ store.store_name }}</p>
+            <p class="title">Cardápio digital</p>
+            <div class="codes">
+                {% if wifi_svg %}
+                <div class="code">
+                    {{ wifi_svg|safe }}
+                    <p class="step">1. Conecte ao Wi-Fi</p>
+                    <p class="hint">{{ store.wifi_ssid }}</p>
+                </div>
+                <div class="code">
+                    {{ menu_svg|safe }}
+                    <p class="step">2. Veja o cardápio</p>
+                    <p class="hint">aponte a câmera</p>
+                </div>
+                {% else %}
+                <div class="code single">
+                    {{ menu_svg|safe }}
+                    <p class="step">Aponte a câmera do celular</p>
+                </div>
+                {% endif %}
+            </div>
+            <p class="foot">Faça seu pedido com o garçom 🙂</p>
+        </div>
+        {% endfor %}
+    </div>
+</body>
+</html>

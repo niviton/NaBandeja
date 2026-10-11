@@ -1,18 +1,20 @@
 """Gerente: mesas (e QR Codes), áreas de entrega e pedidos online/delivery."""
 
+from django.conf import settings
 from django.contrib import messages
 from django.db import IntegrityError
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 
-from ..models import DeliveryZone, Order, Table
+from ..models import AppSettings, DeliveryZone, Order, Table
 from ..permissions import manager_required
 from ..services import orders as order_service
 from ..services import tables as table_service
 from ..services.audit import audit
 from ..services.orders import OrderError, normalize_mesa
 from ..services.cash import CashError, parse_amount
+from ..services.menu_qr import public_url, wifi_payload
 from ..services.pix import qr_svg
 
 
@@ -87,9 +89,8 @@ def table_new_qr(request, table_id):
 @manager_required
 def tables_qr_sheet(request):
     """Folha com os QR Codes de todas as mesas, pronta para imprimir e recortar."""
-    base = request.build_absolute_uri('/')[:-1]
     cards = [
-        {'table': table, 'url': f"{base}{reverse('table_menu', args=[table.public_token])}"}
+        {'table': table, 'url': public_url(request, reverse('table_menu', args=[table.public_token]))}
         for table in Table.objects.filter(is_active=True)
     ]
     for card in cards:
@@ -168,3 +169,24 @@ def online_order_decide(request, order_id, decision):
     else:
         audit(request, f'online.{decision}', f'Pedido online #{order.id}: {decision}.', order)
     return redirect('admin_online_orders')
+
+
+@manager_required
+def menu_qr_sheet(request):
+    """Cartões com o QR do cardápio (e do Wi-Fi) para o suporte de molhos."""
+    store = AppSettings.get_settings()
+    try:
+        copies = max(1, min(60, int(request.GET.get('copias', 6))))
+    except ValueError:
+        copies = 6
+    menu_url = public_url(request, reverse('public_menu'))
+    wifi = wifi_payload(store.wifi_ssid, store.wifi_password)
+    return render(request, 'restaurante/admin/menu_qr.html', {
+        'store': store,
+        'menu_url': menu_url,
+        'menu_svg': qr_svg(menu_url, box_size=8, border=1),
+        'wifi_svg': qr_svg(wifi, box_size=8, border=1) if wifi else '',
+        'copies': range(copies),
+        'copies_count': copies,
+        'using_public_base': bool(settings.PUBLIC_BASE_URL),
+    })
