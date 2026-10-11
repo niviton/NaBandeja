@@ -7,7 +7,4 @@ class RestauranteConfig(AppConfig):
     verbose_name = 'Gestão do Restaurante'
 
     def ready(self):
-        try:
-            from . import signals  # noqa: F401
-        except Exception:
-            pass
+        from . import signals  # noqa: F401

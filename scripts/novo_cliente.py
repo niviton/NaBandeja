@@ -96,7 +96,8 @@ def main():
     if db_path.exists():
         db_path.unlink()
     python = find_python()
-    env = dict(os.environ, DB_ENGINE='sqlite')
+    # DEBUG só durante a criação: dispensa .env com chave secreta neste passo.
+    env = dict(os.environ, DB_ENGINE='sqlite', DJANGO_DEBUG='true')
     run([python, 'manage.py', 'migrate', '--noinput'], env=env)
 
     print('\n[4/5] Configurando loja e usuário gerente...')

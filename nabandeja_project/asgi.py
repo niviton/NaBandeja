@@ -1,5 +1,5 @@
 """
-ASGI config for nabandeja_project project.
+ASGI: HTTP (Django) e WebSocket (/ws/orders/) no mesmo servidor Daphne.
 """
 
 import os
@@ -22,5 +22,6 @@ try:
             'websocket': AuthMiddlewareStack(URLRouter(websocket_urlpatterns)),
         }
     )
-except Exception:
+except ImportError:
+    # Sem django-channels instalado: só HTTP (as telas usam polling).
     application = django_asgi_app

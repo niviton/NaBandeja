@@ -39,3 +39,8 @@ certs/
 # Editores
 .vscode/
 .idea/
+
+# Logs e backups locais
+logs/
+backups/antes-de-atualizar/
+backups/logs/

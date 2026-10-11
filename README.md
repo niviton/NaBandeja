@@ -95,7 +95,7 @@ O passo a passo completo está em [docs/clientes.md](docs/clientes.md).
 
 ## Tecnologias
 
-Django · Django Channels · Daphne · Waitress · SQLite/PostgreSQL · Bootstrap 5 · PyInstaller
+Django · Django Channels · Daphne · WhiteNoise · SQLite/PostgreSQL · Tailwind CSS · PyInstaller
 
 ## Licença
 

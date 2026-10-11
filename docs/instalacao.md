@@ -43,7 +43,9 @@ Endereços de acesso:
 - **No próprio PC:** http://localhost:8000
 - **Em celulares e tablets da mesma rede:** `http://IP_DO_COMPUTADOR:8000` (o IP aparece no `ipconfig` e na tela **Configurações**)
 
-> Para desenvolvimento local, coloque `DJANGO_DEBUG=true` e `DB_ENGINE=sqlite` no `.env`.
+> Para desenvolvimento, coloque `DJANGO_DEBUG=true` no `.env` (com `DEBUG` ligado, a chave secreta não é obrigatória).
+>
+> Testes: `pip install -r requirements-dev.txt` e `python manage.py test restaurante`.
 
 ## Opção 3: Executável `.exe`
 
@@ -54,7 +56,8 @@ Veja [Implantação no Windows](deploy-windows.md#executável-exe).
 O usuário inicial é o **`gerente`**. A senha depende de como ela foi definida:
 
 - **`NABANDEJA_INIT_ADMIN_PASSWORD` definida no `.env`:** é essa senha.
-- **Sem a variável, em modo desenvolvimento (`DJANGO_DEBUG=true`):** o sistema gera uma senha aleatória e mostra no terminal.
+- **Primeiro início pelo `INICIAR_PC_NOVO.bat` ou `.exe`:** a senha é gerada, aparece na janela do servidor e fica salva no `.env`.
+- **Sem a variável:** o comando `ensure_initial_access` gera uma senha aleatória e mostra no terminal.
 - **Cliente criado com `novo_cliente.py`:** a senha aparece na tela ao final do script.
 
 Para trocar a senha:

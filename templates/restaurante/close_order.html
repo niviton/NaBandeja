@@ -53,7 +53,7 @@
                     <div class="py-3 flex items-center justify-between gap-4">
                         <p class="text-slate-700 font-medium truncate">
                             <span class="mr-2">{{ item.product.icon|default:'🍽️' }}</span>
-                            {{ item.quantity }}x {{ item.product.name }}
+                            {{ item.quantity }}x {{ item.name }}
                         </p>
                         <p class="font-bold text-slate-800 whitespace-nowrap">R$ {{ item.subtotal|floatformat:2 }}</p>
                     </div>

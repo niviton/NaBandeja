@@ -22,6 +22,7 @@ import django
 django.setup()
 
 from PIL import Image
+from django.conf import settings
 from restaurante.models import AppSettings
 
 
@@ -102,10 +103,11 @@ def setup_desktop_shortcut():
         shortcut_name = f"{store_name}.lnk"
         shortcut_path = desktop / shortcut_name
         
-        start_script = BASE_DIR / 'INICIAR_PC_NOVO.bat'
+        # No .exe o atalho abre o próprio executável; no código-fonte, o .bat.
+        start_script = Path(sys.executable) if getattr(sys, 'frozen', False) else BASE_DIR / 'INICIAR_PC_NOVO.bat'
         
         # 3. Diretório de ícones
-        icons_dir = BASE_DIR / 'deploy' / 'windows' / 'icons'
+        icons_dir = Path(settings.DATA_DIR) / 'deploy' / 'windows' / 'icons'
         icons_dir.mkdir(parents=True, exist_ok=True)
         
         safe_name = store_name.replace(' ', '_').replace('/', '_').replace('\\', '_')
@@ -114,10 +116,7 @@ def setup_desktop_shortcut():
         # 4. Gerar ícone se houver logo
         if logo_field and logo_field.name:
             # Logo pode estar em media/ ou ser caminho relativo
-            logo_path = BASE_DIR / logo_field.name
-            if not logo_path.exists():
-                # Tentar em media/
-                logo_path = BASE_DIR / 'media' / logo_field.name
+            logo_path = Path(logo_field.path)
             
             if logo_path.exists():
                 if gerar_icone(logo_path, icon_file):

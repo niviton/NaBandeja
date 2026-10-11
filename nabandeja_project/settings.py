@@ -1,26 +1,33 @@
 """
-Django settings for nabandeja_project project.
-NaBandeja - sistema modular de gestão para restaurantes
+Configurações do NaBandeja.
+
+Tudo que muda por instalação vem do arquivo .env (veja .env.example e
+docs/seguranca.md). Os valores padrão são seguros: DEBUG desligado.
 """
 
-from pathlib import Path
 import os
 import socket
 import sys
+from pathlib import Path
+
 from django.core.exceptions import ImproperlyConfigured
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+# No executável (PyInstaller) os arquivos ficam em _internal/, mas o .env, o
+# banco e os uploads ficam ao lado do .exe para sobreviver a atualizações.
+IS_FROZEN = getattr(sys, 'frozen', False)
+if IS_FROZEN:
+    DATA_DIR = Path(sys.executable).resolve().parent
+    BASE_DIR = DATA_DIR / '_internal'
+else:
+    DATA_DIR = BASE_DIR
 
 try:
     from dotenv import load_dotenv
-    load_dotenv()
-except Exception:
+    load_dotenv(DATA_DIR / '.env')
+except ImportError:
     pass
-
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
-
-# Detecta se está rodando como executável PyInstaller
-if getattr(sys, 'frozen', False):
-    BASE_DIR = Path(sys.executable).resolve().parent / '_internal'
 
 
 def env_bool(name, default=False):
@@ -29,161 +36,98 @@ def env_bool(name, default=False):
         return default
     return value.strip().lower() in ('1', 'true', 'yes', 'on')
 
-# SECURITY WARNING: keep the secret key used in production secret!
-DEFAULT_SECRET_KEY = 'django-insecure-nabandeja-change-this-in-production'
-SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', DEFAULT_SECRET_KEY)
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env_bool('DJANGO_DEBUG', True)
-
-if not DEBUG and SECRET_KEY == DEFAULT_SECRET_KEY:
-    raise ImproperlyConfigured('Defina DJANGO_SECRET_KEY com um valor forte em produção.')
-
-raw_allowed_hosts = os.getenv('DJANGO_ALLOWED_HOSTS', '127.0.0.1,localhost').strip()
-ALLOWED_HOSTS = [host.strip() for host in raw_allowed_hosts.split(',') if host.strip()]
-
-AUTO_ALLOW_LOCAL_HOSTS = env_bool('AUTO_ALLOW_LOCAL_HOSTS', DEBUG)
-
-
-def split_csv_env(name):
-    raw = os.getenv(name, '').strip()
+def env_list(name, default=''):
+    raw = os.getenv(name, default)
     return [item.strip() for item in raw.split(',') if item.strip()]
 
-# Detecta IP local automaticamente para acesso em rede local
+
 def get_local_ip():
+    """IP da máquina na rede local (não envia nada para a internet)."""
     try:
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        sock.connect(('8.8.8.8', 80))
-        ip = sock.getsockname()[0]
-        sock.close()
-        return ip
-    except Exception:
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
+            sock.connect(('8.8.8.8', 80))
+            return sock.getsockname()[0]
+    except OSError:
         return None
 
-local_ip = get_local_ip()
-if AUTO_ALLOW_LOCAL_HOSTS and local_ip and local_ip not in ALLOWED_HOSTS:
-    ALLOWED_HOSTS.append(local_ip)
 
-machine_name = socket.gethostname().strip().lower()
-if AUTO_ALLOW_LOCAL_HOSTS and machine_name and machine_name not in ALLOWED_HOSTS:
-    ALLOWED_HOSTS.append(machine_name)
+# ---------------------------------------------------------------- Segurança
+DEBUG = env_bool('DJANGO_DEBUG', False)
 
-# Aceita qualquer IP local em modo executável (para facilitar acesso em rede)
-if getattr(sys, 'frozen', False) and env_bool('ALLOW_ANY_HOST_FROZEN', False):
-    ALLOWED_HOSTS.append('*')
+DEFAULT_SECRET_KEY = 'django-insecure-nabandeja-apenas-desenvolvimento'
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', DEFAULT_SECRET_KEY)
+if not DEBUG and SECRET_KEY == DEFAULT_SECRET_KEY:
+    raise ImproperlyConfigured(
+        'Defina DJANGO_SECRET_KEY no .env (o INICIAR_PC_NOVO.bat gera uma automaticamente).'
+    )
 
-ENABLE_REALTIME = os.getenv('ENABLE_REALTIME', 'true').strip().lower() == 'true'
+ALLOWED_HOSTS = env_list('DJANGO_ALLOWED_HOSTS', '127.0.0.1,localhost')
 
-# Em desenvolvimento (localhost + Codespaces), aceitar variações de host/porta
-# evita falhas intermitentes de CSRF no login e nos POSTs AJAX.
-CSRF_TRUSTED_ORIGINS = []
-if DEBUG:
-    CSRF_TRUSTED_ORIGINS.extend([
-        'http://localhost',
-        'https://localhost',
-        'http://127.0.0.1',
-        'https://127.0.0.1',
-        'http://localhost:8000',
-        'https://localhost:8000',
-        'http://127.0.0.1:8000',
-        'https://127.0.0.1:8000',
-        'https://*.app.github.dev',
-        'https://*.githubpreview.dev',
-    ])
+# Libera o IP e o nome do PC na rede local, que podem mudar (DHCP).
+AUTO_ALLOW_LOCAL_HOSTS = env_bool('AUTO_ALLOW_LOCAL_HOSTS', True)
+LOCAL_IP = get_local_ip()
+MACHINE_NAME = socket.gethostname().strip().lower()
+if AUTO_ALLOW_LOCAL_HOSTS:
+    for host in (LOCAL_IP, MACHINE_NAME):
+        if host and host not in ALLOWED_HOSTS:
+            ALLOWED_HOSTS.append(host)
 
-CSRF_TRUSTED_ORIGINS.extend(split_csv_env('DJANGO_CSRF_TRUSTED_ORIGINS'))
+if '*' in ALLOWED_HOSTS and not DEBUG:
+    raise ImproperlyConfigured('Não use "*" em DJANGO_ALLOWED_HOSTS em produção.')
 
-if local_ip and DEBUG:
-    CSRF_TRUSTED_ORIGINS.extend([
-        f'http://{local_ip}',
-        f'https://{local_ip}',
-        f'http://{local_ip}:8000',
-        f'https://{local_ip}:8000',
-    ])
+# O Django já aceita POSTs da mesma origem; esta lista é só para origens extras.
+CSRF_TRUSTED_ORIGINS = env_list('DJANGO_CSRF_TRUSTED_ORIGINS')
 
-if machine_name and DEBUG:
-    CSRF_TRUSTED_ORIGINS.extend([
-        f'http://{machine_name}',
-        f'https://{machine_name}',
-        f'http://{machine_name}:8000',
-        f'https://{machine_name}:8000',
-    ])
-
-codespace_name = os.getenv('CODESPACE_NAME', '').strip()
-forward_domain = os.getenv('GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN', '').strip()
-if DEBUG and codespace_name and forward_domain:
-    CSRF_TRUSTED_ORIGINS.append(f'https://{codespace_name}-*.{forward_domain}')
-
-CSRF_TRUSTED_ORIGINS = list(dict.fromkeys(CSRF_TRUSTED_ORIGINS))
-
-# Em desenvolvimento, manter token CSRF por cookie é mais compatível com os
-# fluxos AJAX já existentes no projeto.
-CSRF_USE_SESSIONS = False
-
-# Ajustes para execução atrás do proxy HTTPS do Codespaces.
-if os.getenv('CODESPACES', '').lower() == 'true':
-    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-    USE_X_FORWARDED_HOST = True
-    # Compatível com acesso por localhost/http e também por URL https do Codespaces.
-    SECURE_SSL_REDIRECT = False
-    CSRF_COOKIE_SECURE = False
-    SESSION_COOKIE_SECURE = False
-
+# HTTPS: só force quando houver certificado (deploy/windows/setup_ssl.bat).
+USE_HTTPS = env_bool('USE_HTTPS', False)
+SECURE_SSL_REDIRECT = env_bool('SECURE_SSL_REDIRECT', USE_HTTPS)
+SESSION_COOKIE_SECURE = env_bool('SESSION_COOKIE_SECURE', USE_HTTPS)
+CSRF_COOKIE_SECURE = env_bool('CSRF_COOKIE_SECURE', USE_HTTPS)
+if USE_HTTPS:
+    SECURE_HSTS_SECONDS = int(os.getenv('SECURE_HSTS_SECONDS', '0'))
 if env_bool('TRUST_X_FORWARDED_PROTO', False):
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+USE_X_FORWARDED_HOST = env_bool('USE_X_FORWARDED_HOST', False)
 
-if env_bool('USE_X_FORWARDED_HOST', False):
-    USE_X_FORWARDED_HOST = True
-
-if not DEBUG:
-    SECURE_SSL_REDIRECT = env_bool('SECURE_SSL_REDIRECT', True)
-    SESSION_COOKIE_SECURE = env_bool('SESSION_COOKIE_SECURE', True)
-    CSRF_COOKIE_SECURE = env_bool('CSRF_COOKIE_SECURE', True)
-    SECURE_HSTS_SECONDS = int(os.getenv('SECURE_HSTS_SECONDS', '31536000'))
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = env_bool('SECURE_HSTS_INCLUDE_SUBDOMAINS', True)
-    SECURE_HSTS_PRELOAD = env_bool('SECURE_HSTS_PRELOAD', True)
-    SECURE_CONTENT_TYPE_NOSNIFF = True
-    X_FRAME_OPTIONS = 'DENY'
-    SECURE_REFERRER_POLICY = 'same-origin'
-    SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin'
-
-if not DEBUG:
-    if SECRET_KEY == DEFAULT_SECRET_KEY:
-        raise ImproperlyConfigured('Defina DJANGO_SECRET_KEY com um valor forte em produção.')
-    if not ALLOWED_HOSTS:
-        raise ImproperlyConfigured('Defina DJANGO_ALLOWED_HOSTS em produção.')
-    if '*' in ALLOWED_HOSTS:
-        raise ImproperlyConfigured('Nao use "*" em DJANGO_ALLOWED_HOSTS em produção.')
-    if not CSRF_TRUSTED_ORIGINS:
-        raise ImproperlyConfigured('Defina DJANGO_CSRF_TRUSTED_ORIGINS em produção.')
-
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_REFERRER_POLICY = 'same-origin'
+X_FRAME_OPTIONS = 'DENY'
 SESSION_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_AGE = int(os.getenv('SESSION_COOKIE_AGE', str(60 * 60 * 16)))  # um turno
 
-# Application definition
+# Bloqueio de login após tentativas erradas (restaurante/security.py)
+LOGIN_MAX_ATTEMPTS = int(os.getenv('LOGIN_MAX_ATTEMPTS', '5'))
+LOGIN_LOCKOUT_SECONDS = int(os.getenv('LOGIN_LOCKOUT_SECONDS', '300'))
+
+# ---------------------------------------------------------------- Aplicação
+ENABLE_REALTIME = env_bool('ENABLE_REALTIME', True)
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    'whitenoise.runserver_nostatic',
     'django.contrib.staticfiles',
-    'crispy_forms',
-    'crispy_bootstrap5',
     'restaurante',
 ]
 
 try:
     import channels  # noqa: F401
     HAS_CHANNELS = True
-except Exception:
+except ImportError:
     HAS_CHANNELS = False
 
 if ENABLE_REALTIME and HAS_CHANNELS:
     INSTALLED_APPS.append('channels')
+    CHANNEL_LAYERS = {'default': {'BACKEND': 'channels.layers.InMemoryChannelLayer'}}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -193,6 +137,8 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'nabandeja_project.urls'
+WSGI_APPLICATION = 'nabandeja_project.wsgi.application'
+ASGI_APPLICATION = 'nabandeja_project.asgi.application'
 
 TEMPLATES = [
     {
@@ -201,7 +147,6 @@ TEMPLATES = [
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
-                'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
@@ -211,27 +156,20 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'nabandeja_project.wsgi.application'
-ASGI_APPLICATION = 'nabandeja_project.asgi.application'
-
-# Database
+# ---------------------------------------------------------------- Banco
 DB_ENGINE = os.getenv('DB_ENGINE', 'sqlite').strip().lower()
 
 if DB_ENGINE == 'postgres':
-    db_sslmode = os.getenv('POSTGRES_SSLMODE', 'prefer').strip()
     db_options = {}
-    if db_sslmode:
-        db_options['sslmode'] = db_sslmode
-
-    sslrootcert = os.getenv('POSTGRES_SSLROOTCERT', '').strip()
-    sslcert = os.getenv('POSTGRES_SSLCERT', '').strip()
-    sslkey = os.getenv('POSTGRES_SSLKEY', '').strip()
-    if sslrootcert:
-        db_options['sslrootcert'] = sslrootcert
-    if sslcert:
-        db_options['sslcert'] = sslcert
-    if sslkey:
-        db_options['sslkey'] = sslkey
+    for option, env_name in [
+        ('sslmode', 'POSTGRES_SSLMODE'),
+        ('sslrootcert', 'POSTGRES_SSLROOTCERT'),
+        ('sslcert', 'POSTGRES_SSLCERT'),
+        ('sslkey', 'POSTGRES_SSLKEY'),
+    ]:
+        value = os.getenv(env_name, 'prefer' if option == 'sslmode' else '').strip()
+        if value:
+            db_options[option] = value
 
     DATABASES = {
         'default': {
@@ -247,70 +185,85 @@ if DB_ENGINE == 'postgres':
             'OPTIONS': db_options,
         }
     }
-else:
+elif DB_ENGINE == 'sqlite':
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
+            'NAME': DATA_DIR / 'db.sqlite3',
             'ATOMIC_REQUESTS': True,
             'OPTIONS': {
                 'timeout': int(os.getenv('SQLITE_TIMEOUT', '20')),
+                # IMMEDIATE evita "database is locked" quando dois garçons
+                # gravam ao mesmo tempo (a transação já nasce com a trava).
+                'transaction_mode': 'IMMEDIATE',
             },
         }
     }
+else:
+    raise ImproperlyConfigured(f'DB_ENGINE inválido: {DB_ENGINE!r} (use sqlite ou postgres).')
 
-REDIS_URL = os.getenv('REDIS_URL', 'redis://127.0.0.1:6379/1')
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+AUTH_USER_MODEL = 'restaurante.User'
 
-if ENABLE_REALTIME and HAS_CHANNELS:
-    # Usa InMemoryChannelLayer para funcionar sem Redis
-    CHANNEL_LAYERS = {
-        'default': {
-            'BACKEND': 'channels.layers.InMemoryChannelLayer',
-        },
-    }
+CACHES = {'default': {'BACKEND': 'django.core.cache.backends.locmem.LocMemCache'}}
 
-# Password validation
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-# Internationalization
-LANGUAGE_CODE = 'pt-br'
-TIME_ZONE = 'America/Sao_Paulo'
-USE_I18N = True
-USE_TZ = True
-
-# Static files (CSS, JavaScript, Images)
-STATIC_URL = '/static/'
-STATICFILES_DIRS = [BASE_DIR / 'static']
-STATIC_ROOT = BASE_DIR / 'staticfiles'
-
-# Media files
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
-
-# Default primary key field type
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-# Crispy Forms
-CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
-CRISPY_TEMPLATE_PACK = "bootstrap5"
-
-# Login/Logout URLs
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL = 'login'
 
-# Custom User Model
-AUTH_USER_MODEL = 'restaurante.User'
+# ---------------------------------------------------------------- Idioma
+LANGUAGE_CODE = 'pt-br'
+TIME_ZONE = os.getenv('TIME_ZONE', 'America/Sao_Paulo')
+USE_I18N = True
+USE_TZ = True
+
+# ---------------------------------------------------------------- Arquivos
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [BASE_DIR / 'static']
+STATIC_ROOT = DATA_DIR / 'staticfiles'
+# Serve direto de static/ sem precisar de collectstatic (rede local).
+WHITENOISE_USE_FINDERS = True
+WHITENOISE_AUTOREFRESH = DEBUG
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = DATA_DIR / 'media'
+FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
+DATA_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
+
+# ---------------------------------------------------------------- Logs
+LOG_DIR = DATA_DIR / 'logs'
+LOG_DIR.mkdir(exist_ok=True)
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'default': {'format': '{asctime} {levelname} {name}: {message}', 'style': '{'},
+    },
+    'handlers': {
+        'console': {'class': 'logging.StreamHandler', 'formatter': 'default'},
+        'file': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': LOG_DIR / 'nabandeja.log',
+            'maxBytes': 2 * 1024 * 1024,
+            'backupCount': 5,
+            'encoding': 'utf-8',
+            'formatter': 'default',
+        },
+    },
+    'root': {'handlers': ['console', 'file'], 'level': 'INFO'},
+    'loggers': {
+        'django.request': {'level': 'ERROR', 'propagate': True},
+        'django.server': {'level': 'WARNING', 'propagate': True},
+    },
+}
+
+# ---------------------------------------------------------------- Produto
+NABANDEJA_VERSION = '2.1.0'

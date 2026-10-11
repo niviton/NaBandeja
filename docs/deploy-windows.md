@@ -4,15 +4,26 @@ O NaBandeja roda num PC do estabelecimento, que funciona como servidor. Garçons
 
 ## Como o sistema roda
 
-| Componente | Função | Obrigatório |
-|---|---|---|
-| **Waitress** | Servidor HTTP (WSGI) | Sim |
-| **Daphne + Channels** | WebSocket para o tempo real | Não (sem ele o sistema usa polling) |
-| **SQLite** | Banco padrão, um arquivo só | Sim, se não usar PostgreSQL |
-| **PostgreSQL** | Banco recomendado para grandes volumes | Não |
-| **Redis** | Não é necessário: o Channels usa uma camada em memória | Não |
+| Componente | Função |
+|---|---|
+| **Daphne** | Um único servidor para páginas e WebSocket (tempo real), na mesma porta |
+| **WhiteNoise** | Entrega CSS, JS e ícones com `DEBUG` desligado |
+| **SQLite** | Banco padrão, um arquivo só (`db.sqlite3`) |
+| **PostgreSQL** | Opcional, para grandes volumes |
 
-O [`deploy/windows/launcher.py`](../deploy/windows/launcher.py) inicia tudo. Se houver serviços `postgresql-x64-16` ou `Redis` instalados, ele também tenta iniciá-los.
+O [`deploy/windows/launcher.py`](../deploy/windows/launcher.py) faz tudo, nesta ordem:
+
+1. cria o `.env` no primeiro início, com chave secreta e senha do gerente próprias;
+2. aplica as migrações e garante um gerente ativo;
+3. atualiza o atalho da Área de Trabalho;
+4. sobe o servidor (e o HTTPS, se houver certificado em `certs/`);
+5. abre o navegador e mostra o endereço para os celulares.
+
+Na primeira vez, a **senha do gerente** aparece na janela do servidor e fica salva no `.env`.
+
+## Atualizar um cliente
+
+Dê duplo clique em **`ATUALIZAR.bat`**. Ele faz backup do banco em `backups/antes-de-atualizar/`, baixa a versão nova (`git pull`), atualiza as dependências e aplica as migrações.
 
 ## Iniciar pelo código-fonte
 
@@ -38,8 +49,6 @@ O resultado fica em `dist\NaBandeja\NaBandeja.exe`.
 2. Copie `.env.example` para `.env` na mesma pasta e ajuste os valores.
 3. Dê duplo clique em `NaBandeja.exe`. O navegador abre sozinho.
 
-> No modo `.exe`, o tempo real usa polling HTTP em vez de WebSocket.
-
 Se o executável não abrir, rode-o pelo terminal para ver a mensagem de erro:
 
 ```powershell
@@ -58,8 +67,7 @@ Para garçons e cozinha acessarem pelo celular:
    ```
 3. Libere as portas, no PowerShell **como Administrador**:
    ```powershell
-   New-NetFirewallRule -DisplayName "NaBandeja HTTP" -Direction Inbound -LocalPort 8000 -Protocol TCP -Action Allow
-   New-NetFirewallRule -DisplayName "NaBandeja WebSocket" -Direction Inbound -LocalPort 8001 -Protocol TCP -Action Allow
+   New-NetFirewallRule -DisplayName "NaBandeja" -Direction Inbound -LocalPort 8000 -Protocol TCP -Action Allow
    ```
 4. Nos celulares, acesse `http://192.168.1.100:8000`.
 
@@ -69,8 +77,7 @@ Portas usadas, que podem ser alteradas no `.env`:
 
 | Variável | Padrão |
 |---|---|
-| `APP_PORT` | `8000` (HTTP) |
-| `ASGI_PORT` | `8001` (WebSocket) |
+| `APP_PORT` | `8000` (páginas e tempo real) |
 | `HTTPS_PORT` | `443` |
 
 ## HTTPS na rede local

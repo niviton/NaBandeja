@@ -28,6 +28,7 @@ class Category(models.Model):
     name = models.CharField(max_length=100, verbose_name='Nome')
     icon = models.CharField(max_length=10, default='🍽️', verbose_name='Emoji/Ícone')
     order = models.IntegerField(default=0, verbose_name='Ordem')
+    is_active = models.BooleanField(default=True, verbose_name='Ativa')
 
     class Meta:
         verbose_name = 'Categoria'
@@ -41,7 +42,7 @@ class Category(models.Model):
 class Product(models.Model):
     """Produto do cardápio"""
     name = models.CharField(max_length=200, verbose_name='Nome')
-    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='products', verbose_name='Categoria')
+    category = models.ForeignKey(Category, on_delete=models.PROTECT, related_name='products', verbose_name='Categoria')
     price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Preço')
     stock = models.IntegerField(default=0, verbose_name='Estoque')
     use_ingredient_stock = models.BooleanField(default=False, verbose_name='Controlar por ingredientes')
@@ -96,44 +97,6 @@ class Product(models.Model):
 
     def can_make(self, quantity):
         return self.available_stock >= quantity
-
-    def consume_ingredients(self, quantity):
-        quantity = Decimal(str(quantity))
-        if not self.use_ingredient_stock:
-            if self.stock < int(quantity):
-                raise ValueError(f'Estoque insuficiente para {self.name}.')
-            self.stock -= int(quantity)
-            self.save(update_fields=['stock', 'updated_at'])
-            return
-
-        recipe_items = list(self.recipe_items.select_related('ingredient').all())
-        if not recipe_items:
-            raise ValueError(f'Receita não definida para {self.name}.')
-            
-        if not self.can_make(quantity):
-            raise ValueError(f'Estoque insuficiente para {self.name}.')
-
-        for recipe_item in recipe_items:
-            required = recipe_item.quantity * quantity
-            ingredient = recipe_item.ingredient
-            ingredient.stock_quantity -= required
-            ingredient.save(update_fields=['stock_quantity', 'updated_at'])
-
-    def restore_ingredients(self, quantity):
-        quantity = Decimal(str(quantity))
-        if not self.use_ingredient_stock:
-            self.stock += int(quantity)
-            self.save(update_fields=['stock', 'updated_at'])
-            return
-
-        recipe_items = list(self.recipe_items.select_related('ingredient').all())
-        if not recipe_items:
-            return
-
-        for recipe_item in recipe_items:
-            ingredient = recipe_item.ingredient
-            ingredient.stock_quantity += recipe_item.quantity * quantity
-            ingredient.save(update_fields=['stock_quantity', 'updated_at'])
 
 
 class Ingredient(models.Model):
@@ -214,24 +177,49 @@ class Order(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='cozinha', verbose_name='Status')
     order_type = models.CharField(max_length=20, choices=TYPE_CHOICES, default='dine-in', verbose_name='Tipo')
     address = models.TextField(blank=True, verbose_name='Endereço de Entrega')
+    platform = models.CharField(max_length=40, blank=True, verbose_name='Plataforma do delivery')
     payment_method = models.CharField(max_length=20, choices=PAYMENT_CHOICES, blank=True, verbose_name='Pagamento')
     waiter = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='orders', verbose_name='Garçom')
+    closed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='closed_orders', verbose_name='Fechado por')
+    closed_at = models.DateTimeField(null=True, blank=True, verbose_name='Fechado em')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    ACTIVE_STATUSES = ('cozinha', 'pronto')
 
     class Meta:
         verbose_name = 'Pedido'
         verbose_name_plural = 'Pedidos'
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['status', 'created_at']),
+            models.Index(fields=['status', 'closed_at']),
+            models.Index(fields=['mesa', 'status']),
+        ]
 
     def __str__(self):
         return f"Pedido #{self.id} - Mesa {self.mesa}"
 
-    def calculate_total(self):
-        total = sum(item.subtotal for item in self.items.all())
-        self.total = total
-        self.save()
-        return total
+    @property
+    def is_active(self):
+        return self.status in self.ACTIVE_STATUSES
+
+    # Nomes usados pelos templates antigos.
+    @property
+    def platform_name(self):
+        return self.platform
+
+    @property
+    def display_observacoes(self):
+        return self.observacoes
+
+    @property
+    def display_name(self):
+        if self.order_type == 'delivery':
+            return self.cliente or 'Delivery'
+        if self.mesa and self.mesa != 'SEM MESA':
+            return f'Mesa {self.mesa}'
+        return self.cliente or 'Balcão'
 
     @property
     def status_color(self):
@@ -252,7 +240,9 @@ class Order(models.Model):
 class OrderItem(models.Model):
     """Item de um pedido"""
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items', verbose_name='Pedido')
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, verbose_name='Produto')
+    product = models.ForeignKey(Product, on_delete=models.PROTECT, verbose_name='Produto')
+    product_name = models.CharField(max_length=200, blank=True, verbose_name='Nome do produto na venda')
+    notes = models.CharField(max_length=200, blank=True, verbose_name='Observação do item')
     quantity = models.IntegerField(default=1, verbose_name='Quantidade')
     pending_quantity = models.IntegerField(default=0, verbose_name='Qtd. Pendente Cozinha')
     unit_price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Preço Unitário')
@@ -269,19 +259,21 @@ class OrderItem(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.quantity}x {self.product.name}"
+        return f"{self.quantity}x {self.name}"
+
+    @property
+    def name(self):
+        return self.product_name or self.product.name
 
     @property
     def subtotal(self):
-        try:
-            additionals_extra = sum(a.unit_price for a in self.additionals.all())
-        except Exception:
-            additionals_extra = Decimal('0')
-        return self.quantity * (self.unit_price + additionals_extra)
+        return self.quantity * self.unit_price
 
     def save(self, *args, **kwargs):
-        if not self.unit_price:
+        if self.unit_price is None:
             self.unit_price = self.product.price
+        if not self.product_name:
+            self.product_name = self.product.name
         super().save(*args, **kwargs)
 
 

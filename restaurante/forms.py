@@ -1,6 +1,6 @@
 from django import forms
-from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
-from .models import User, Category, Product, Order, OrderItem, AppSettings, Ingredient
+from django.contrib.auth.forms import AuthenticationForm
+from .models import AppSettings, Category, Ingredient, Product
 from .services.pix import PixError, build_payload as build_pix_payload
 
 
@@ -21,16 +21,6 @@ class LoginForm(AuthenticationForm):
             'placeholder': 'Senha'
         })
     )
-
-
-class UserForm(UserCreationForm):
-    """Formulário de criação de usuário"""
-    class Meta:
-        model = User
-        fields = ['username', 'password1', 'password2', 'role']
-        widgets = {
-            'role': forms.Select(attrs={'class': 'form-control'}),
-        }
 
 
 class CategoryForm(forms.ModelForm):
@@ -73,55 +63,6 @@ class IngredientForm(forms.ModelForm):
             'cost_price': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0'}),
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
-
-
-class OrderForm(forms.ModelForm):
-    """Formulário de pedido"""
-    class Meta:
-        model = Order
-        fields = ['mesa', 'cliente', 'observacoes', 'order_type', 'address']
-        widgets = {
-            'mesa': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Número da Mesa'}),
-            'cliente': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nome do Cliente'}),
-            'observacoes': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Observações...'}),
-            'order_type': forms.Select(attrs={'class': 'form-control'}),
-            'address': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Endereço de entrega...'}),
-        }
-
-
-class DeliveryOrderForm(forms.ModelForm):
-    """Formulário de pedido delivery"""
-    PLATFORM_CHOICES = [
-        ('Whatsapp', 'WhatsApp'),
-        ('iFood', 'iFood'),
-        ('Rappi', 'Rappi'),
-        ('Telefone', 'Telefone'),
-        ('Outro', 'Outro'),
-    ]
-    platform = forms.ChoiceField(choices=PLATFORM_CHOICES, widget=forms.Select(attrs={'class': 'form-control'}))
-
-    class Meta:
-        model = Order
-        fields = ['cliente', 'address', 'observacoes']
-        widgets = {
-            'cliente': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nome do Cliente'}),
-            'address': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Endereço completo...'}),
-            'observacoes': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Observações...'}),
-        }
-
-
-class PaymentForm(forms.Form):
-    """Formulário de pagamento"""
-    PAYMENT_CHOICES = [
-        ('dinheiro', '💵 Dinheiro'),
-        ('pix', '📱 PIX'),
-        ('credito', '💳 Cartão de Crédito'),
-        ('debito', '💳 Cartão de Débito'),
-    ]
-    payment_method = forms.ChoiceField(
-        choices=PAYMENT_CHOICES,
-        widget=forms.RadioSelect(attrs={'class': 'form-check-input'})
-    )
 
 
 class AppSettingsForm(forms.ModelForm):

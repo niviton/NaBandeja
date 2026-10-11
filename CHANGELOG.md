@@ -2,6 +2,30 @@
 
 Mudanças relevantes do NaBandeja. O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [2.1.0] - 2026-10-11
+
+### Adicionado
+- PIX com valor exato no cupom e na tela de fechar conta (BR Code oficial, gerado offline, sem API de banco).
+- Bloqueio de login após 5 senhas erradas; logs de erro em `logs/nabandeja.log`.
+- `.env` criado automaticamente no primeiro início (chave secreta e senha do gerente próprias).
+- `ATUALIZAR.bat`: atualização em 1 clique com backup antes.
+- Testes automatizados (51) e CI no GitHub Actions.
+
+### Corrigido
+- Excluir produto/categoria apagava o histórico de vendas: agora são desativados e o banco protege o histórico.
+- Estoque podia ficar errado com dois pedidos simultâneos (baixa atômica no banco).
+- Caixa somava PIX e cartão como dinheiro na gaveta.
+- Tempo real nunca conectava (WebSocket em outra porta) e notificações vinham duplicadas.
+- Era possível fechar conta de pedido cancelado; total usava preço antigo guardado no carrinho.
+- `DEBUG` ligado por padrão em produção.
+
+### Alterado
+- Código reorganizado: `views/` por área, regras de negócio em `services/`, permissões em `permissions.py`.
+- Um único servidor (Daphne) para páginas e tempo real; WhiteNoise para arquivos estáticos.
+- Dependências com versões fixas; `requirements-dev.txt` separado.
+- Garçom pode atender qualquer mesa do salão (antes só os pedidos que ele abriu).
+- Usuários removidos passam a ser desativados (o histórico mantém o nome).
+
 ## [2.0.0] - 2026-10-11
 
 Projeto renomeado de **Billar / Sistema Restaurante** para **NaBandeja**, com estrutura para atender vários clientes.

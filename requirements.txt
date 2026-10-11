@@ -1,13 +1,10 @@
-Django>=4.2
-django-crispy-forms>=2.1
-crispy-bootstrap5>=2023.10
-Pillow>=10.0
-qrcode>=7.4
-python-dotenv>=1.0
-waitress>=3.0
-daphne>=4.1
-channels>=4.1
-channels-redis>=4.2
-redis>=5.0
-psycopg2-binary>=2.9
-selenium>=4.25
+# Dependências do NaBandeja com versões fixas (testadas juntas).
+# Para atualizar: mude a versão aqui, rode os testes e só então faça o commit.
+Django==6.1.2
+daphne==4.2.3
+channels==4.3.2
+whitenoise==6.12.0
+python-dotenv==1.2.4
+pillow==12.3.0
+qrcode==8.2
+psycopg2-binary==2.9.13   # só usado com DB_ENGINE=postgres

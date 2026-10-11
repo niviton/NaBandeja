@@ -657,12 +657,12 @@ function connectWaiterSocket() {
                 }
                 
                 // Show notifications and update active orders on order events
-                if (data.event_type === 'order.created') {
+                if (data.type === 'order.created') {
                     showToast(`Novo pedido: ${data.order?.mesa || 'DELIVERY'}`, 'success', 2000);
-                } else if (data.event_type === 'order.updated') {
-                } else if (data.event_type === 'order.deleted') {
+                } else if (data.type === 'order.updated') {
+                } else if (data.type === 'order.deleted') {
                     showToast(`Pedido cancelado`, 'warning', 2000);
-                } else if (data.event_type === 'order.status_changed') {
+                } else if (data.type === 'order.status_changed') {
                     showToast(`Status alterado: ${data.order?.mesa || ''}`, 'info', 2000);
                 }
                 

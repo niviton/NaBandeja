@@ -12,9 +12,10 @@ As telas principais se atualizam sozinhas, sem recarregar a página:
 
 ### Como funciona
 
-- **WebSocket** em `/ws/orders/`, servido pelo Daphne e pelo Django Channels.
-- A camada de canais é **em memória** (`InMemoryChannelLayer`), então não precisa de Redis.
-- Se o WebSocket cair, o navegador **reconecta** com espera crescente e, enquanto isso, usa **polling HTTP**. No executável `.exe` o polling é sempre usado.
+- **WebSocket** em `/ws/orders/`, na **mesma porta** das páginas (Daphne + Django Channels), inclusive no `.exe`.
+- A camada de canais é **em memória** (`InMemoryChannelLayer`): não precisa de Redis.
+- Cada mudança gera **um** evento, enviado só depois que o pedido foi gravado no banco.
+- Se o WebSocket cair, as telas usam **polling HTTP** até reconectar.
 - Um indicador na tela mostra o estado da conexão, e avisos rápidos (toasts) informam os eventos.
 
 ### Eventos
@@ -22,9 +23,9 @@ As telas principais se atualizam sozinhas, sem recarregar a página:
 | Evento | Quando acontece |
 |---|---|
 | `order.created` | Um pedido novo é criado |
-| `order.updated` | Um pedido é alterado |
-| `order.status_changed` | O status de um pedido muda |
-| `order.deleted` | Um pedido é cancelado |
+| `order.updated` | Dados do pedido mudam (mesa, cliente, total) |
+| `order.items_changed` | Itens entram ou saem do pedido |
+| `order.status_changed` | Status muda (cozinha, pronto, finalizado, cancelado) |
 
 O código fica em [`restaurante/realtime.py`](../restaurante/realtime.py) (publicação) e [`restaurante/consumers.py`](../restaurante/consumers.py) (WebSocket).
 
@@ -32,7 +33,6 @@ O código fica em [`restaurante/realtime.py`](../restaurante/realtime.py) (publi
 
 ```env
 ENABLE_REALTIME=true
-ASGI_PORT=8001
 ```
 
 ## PWA (app no celular)

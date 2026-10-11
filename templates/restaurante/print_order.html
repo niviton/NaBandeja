@@ -360,7 +360,7 @@
         {% for item in order.items.all %}
         <div class="item">
             <span class="qty">{{ item.quantity }}</span>
-            <span class="name">{{ item.product.name }}</span>
+            <span class="name">{{ item.name }}</span>
             <span class="price">R$ {{ item.subtotal|floatformat:2 }}</span>
         </div>
         {% endfor %}
