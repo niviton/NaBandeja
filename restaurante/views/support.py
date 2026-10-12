@@ -23,6 +23,7 @@ def support_panel(request):
         'modules': [(key, label, help_text, modules[key]) for key, label, help_text in MODULES],
         'license': license.status(store.license_key),
         'team': User.objects.filter(is_superuser=False).order_by('-is_active', 'role', 'username'),
+        'google_callback': request.build_absolute_uri('/accounts/google/login/callback/').replace('127.0.0.1', 'localhost'),
         'active_menu': 'support',
     })
 

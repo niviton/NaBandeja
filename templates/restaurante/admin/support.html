@@ -51,6 +51,21 @@
             </form>
         </section>
 
+        <section class="nb-card nb-card-pad" aria-labelledby="sup-google">
+            <h2 id="sup-google" class="nb-h2">Login com Google</h2>
+            {% if google_login_enabled %}
+            <p class="nb-alert-ok mt-3"><i class="bi bi-check-circle" aria-hidden="true"></i>Ativo nesta loja.</p>
+            {% else %}
+            <p class="nb-alert-warn mt-3"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i>Falta a credencial do Google.</p>
+            <ol class="mt-3 text-sm space-y-1.5 list-decimal pl-5">
+                <li>Em <span class="font-mono">console.cloud.google.com</span> crie um <b>ID do cliente OAuth</b> (Aplicativo da Web).</li>
+                <li>Em "URIs de redirecionamento autorizados", cole:<br><span class="font-mono text-xs break-all">{{ google_callback }}</span></li>
+                <li>Coloque no <span class="font-mono">.env</span> da loja <span class="font-mono">GOOGLE_CLIENT_ID</span> e <span class="font-mono">GOOGLE_CLIENT_SECRET</span> e reinicie.</li>
+            </ol>
+            <p class="nb-help">Passo a passo completo: docs/login-google.md</p>
+            {% endif %}
+        </section>
+
         <section class="nb-card" aria-labelledby="sup-team">
             <h2 id="sup-team" class="nb-h2 px-6 pt-5 pb-2">Senhas da equipe</h2>
             <ul class="nb-divide border-t border-linha">

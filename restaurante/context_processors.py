@@ -36,6 +36,8 @@ def settings_processor(request):
         'modules': modules,
         'license_status': license.status(store.license_key),
         'google_login_enabled': settings.GOOGLE_LOGIN_ENABLED and modules['google'],
+        # Botão aparece mesmo sem credenciais; nesse caso explica o que falta.
+        'google_login_visible': modules['google'],
         'nabandeja_version': settings.NABANDEJA_VERSION,
         'admin_nav': [item[:4] for item in ADMIN_NAV if _visible(item[4], modules)],
     }

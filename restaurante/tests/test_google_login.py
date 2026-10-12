@@ -57,9 +57,6 @@ class GoogleAdapterTests(TestCase):
 
 
 class GoogleButtonTests(TestCase):
-    def test_botao_escondido_sem_credenciais(self):
-        self.assertNotContains(self.client.get(reverse('login')), 'Entrar com Google')
-
     @FAKE_GOOGLE
     def test_botao_aparece_com_credenciais(self):
         self.assertContains(self.client.get(reverse('login')), 'Entrar com Google')
@@ -99,3 +96,17 @@ class TeamMemberFormTests(TestCase):
         self.client.post(reverse('user_edit', args=[self.manager.pk]), {'role': 'garcom', 'email': ''})
         self.manager.refresh_from_db()
         self.assertEqual(self.manager.role, 'gerente')
+
+
+class GoogleNotConfiguredTests(TestCase):
+    def test_botao_aparece_e_explica_quando_falta_configurar(self):
+        response = self.client.get(reverse('login'))
+        self.assertContains(response, 'Entrar com Google')
+        self.assertContains(response, 'ainda não foi ativado')
+
+    def test_modulo_desligado_esconde_botao(self):
+        from restaurante.models import AppSettings
+        store = AppSettings.get_settings()
+        store.modules = {'google': False}
+        store.save()
+        self.assertNotContains(self.client.get(reverse('login')), 'Entrar com Google')
