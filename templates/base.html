@@ -6,7 +6,9 @@
     <meta name="theme-color" content="#FAF6EF">
     <meta name="color-scheme" content="light">
     <title>{% block title %}NaBandeja{% endblock %}</title>
-    <link rel="icon" type="image/svg+xml" href="{% static 'brand/nabandeja-mark.svg' %}">
+    <link rel="icon" type="image/svg+xml" href="{% static 'brand/nabandeja-icone.svg' %}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'brand/favicon-32.png' %}">
+    <link rel="apple-touch-icon" href="{% static 'brand/apple-touch-icon.png' %}">
     <link rel="manifest" href="{% url 'pwa_manifest' %}">
     <link rel="preload" href="{% static 'vendor/fonts/inter.woff2' %}" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="{% static 'vendor/fonts/fraunces.woff2' %}" as="font" type="font/woff2" crossorigin>
@@ -16,13 +18,22 @@
     <script src="{% static 'js/nabandeja.js' %}" defer></script>
     {% block extra_css %}{% endblock %}
 </head>
-<body class="{% block body_class %}min-h-screen{% endblock %}" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' {% block body_attrs %}{% endblock %}>
+<body class="{% block body_class %}min-h-screen{% endblock %}" style="display:flex;flex-direction:column" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' {% block body_attrs %}{% endblock %}>
     <a href="#conteudo" class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[90] nb-btn-dark">Pular para o conteúdo</a>
+    {% if espelho_nome %}
+    <div class="bg-carvao text-white text-sm px-4 py-2 flex flex-wrap items-center justify-center gap-3" role="note">
+        <i class="bi bi-shield-lock" aria-hidden="true"></i>
+        <span><b>Painel master</b> · {{ espelho_nome }} · {% if somente_leitura %}somente leitura (cópia do último backup){% else %}implantação (alterações vão no pacote){% endif %}</span>
+        {% if espelho_master_url %}<a href="{{ espelho_master_url }}" class="underline font-semibold">Voltar ao painel</a>{% endif %}
+    </div>
+    {% endif %}
     {% block navbar %}{% endblock %}
 
-    <main id="conteudo">
+    {# O main ocupa o espaço livre: o rodapé fica no fim da tela mesmo em páginas curtas. #}
+    <main id="conteudo" style="flex:1 0 auto">
         {% block content %}{% endblock %}
     </main>
+    {% block footer %}{% endblock %}
 
     <dialog id="nbConfirm" class="rounded-card border border-linha bg-papel p-0 w-[calc(100%-2rem)] max-w-md backdrop:bg-carvao/50" aria-labelledby="nbConfirmTitle">
         <form method="dialog" class="p-6">

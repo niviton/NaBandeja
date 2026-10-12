@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
@@ -19,12 +20,13 @@ def login_view(request):
     form = LoginForm(request, data=request.POST or None)
     if request.method == 'POST':
         username = request.POST.get('username', '')
+        # No painel master não há empresa: só o administrador (superusuário) entra.
         if security.is_locked(request, username):
             messages.error(request, 'Muitas tentativas erradas. Aguarde alguns minutos e tente de novo.')
-        elif not company.matches(request.POST.get('empresa', ''), AppSettings.get_settings()):
+        elif not settings.IS_MASTER and not company.matches(request.POST.get('empresa', ''), AppSettings.get_settings()):
             security.register_failure(request, username)
             messages.error(request, 'Empresa, usuário ou senha incorretos.')
-        elif form.is_valid():
+        elif form.is_valid() and (form.get_user().is_superuser or not settings.IS_MASTER):
             security.reset(request, username)
             user = form.get_user()
             login(request, user)

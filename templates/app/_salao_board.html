@@ -53,7 +53,7 @@
 </ul>
 {% else %}
 <div class="nb-card nb-card-pad text-center py-12">
-    {% include 'brand/_mark.html' with class='w-12 h-12 mx-auto opacity-60' %}
+    {% include 'brand/_mark.html' with class='h-12 mx-auto opacity-60' %}
     <p class="nb-h2 mt-3">Nenhuma mesa cadastrada</p>
     {% if user.role == 'gerente' %}
     <a href="{% url 'admin_tables' %}" class="nb-btn-primary mt-4">Cadastrar mesas</a>

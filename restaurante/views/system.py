@@ -10,11 +10,13 @@ from django.conf import settings
 from django.contrib import messages
 from django.http import FileResponse, Http404
 from django.shortcuts import redirect, render
+from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
 from ..models import AppSettings, Category, Table
 from ..permissions import manager_required
-from ..services import backup, license
+from ..services import backup, backup_remoto, license
 from ..services import tables as table_service
 from ..services.audit import audit
 from ..services.pix import KEY_TYPES, PixError, build_payload
@@ -47,6 +49,7 @@ def system_status(request):
         'license': license.status(store.license_key),
         'last_backup': last_date,
         'last_backup_name': last_file.name if last_file else '',
+        'remote': backup_remoto.status(),
         'db_size_mb': round(db_path.stat().st_size / 1024 ** 2, 1) if db_path and db_path.exists() else None,
         'disk_free_gb': _disk_free_gb(settings.DATA_DIR),
         'local_ip': settings.LOCAL_IP,
@@ -71,6 +74,23 @@ def backup_now(request):
     else:
         messages.error(request, 'Backup automático só funciona com banco SQLite.')
     return redirect('system_status')
+
+
+@manager_required
+@require_POST
+def save_data(request):
+    """Botão "Salvar dados" do rodapé: envia o backup criptografado agora."""
+    if not backup_remoto.configured():
+        messages.error(request, 'O backup externo ainda não foi configurado nesta loja. Fale com o suporte NaBandeja.')
+    elif backup_remoto.run_in_background():
+        audit(request, 'backup.remoto', 'Envio do backup externo solicitado.')
+        messages.success(request, 'Salvando os dados em segundo plano. Pode continuar usando o sistema.')
+    else:
+        messages.info(request, 'Os dados já estão sendo salvos.')
+    back = request.META.get('HTTP_REFERER', '')
+    if not url_has_allowed_host_and_scheme(back, allowed_hosts={request.get_host()}, require_https=request.is_secure()):
+        back = reverse('dashboard')
+    return redirect(back)
 
 
 @manager_required

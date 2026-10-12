@@ -6,34 +6,20 @@ Para não perder dados:
 2. Guarde uma cópia **fora do PC do estabelecimento**: no GitHub, no Google Drive ou em outro disco.
 3. Teste a restauração de vez em quando. Ter o arquivo não basta; é preciso conseguir voltar com ele.
 
-## Backup automático no Git
+## Backup externo criptografado (recomendado)
 
-Esta é a forma recomendada para clientes NaBandeja. A cada 30 minutos, uma cópia do banco vai para a branch do cliente no GitHub.
+É a forma padrão para clientes NaBandeja e vem pronta no **instalador gerado pelo [painel master](master.md)**:
 
-No PC do cliente, dentro da pasta do sistema:
+- **a cada hora**, com o sistema aberto, e quando o gerente clica em **Salvar dados** no rodapé, o banco e as fotos são **criptografados** e enviados para o repositório privado da loja (`nabandeja-dados-<código>`);
+- só a **chave mestra** do painel master consegue abrir. Nem o GitHub, nem quem pegar o PC da loja, lê os dados;
+- a chave da loja (`chave-backup`) só escreve no repositório **dela**;
+- fica o último backup e **um por dia** dos últimos 14 dias (`BACKUP_REMOTO_DIAS`).
 
-```powershell
-.\deploy\windows\instalar_backup_git_automatico.bat
-```
+A situação aparece no rodapé (para o gerente) e em **Gestão › Sistema**. Pré-requisito no PC da loja: [Git](https://git-scm.com/downloads) instalado.
 
-A rotina:
+Para restaurar ou reinstalar uma loja, use o painel master: **Gerar instalador** sempre usa o último backup ou o ponto de restauração aberto.
 
-- copia o `db.sqlite3` para `backups\db\`, mantendo as 40 cópias mais recentes;
-- faz commit e `git push` para a branch atual (`cliente/<slug>`);
-- grava um log em `backups\logs\db_backup_git_push.log`.
-
-Pré-requisitos:
-
-- o repositório precisa estar conectado ao `origin`;
-- o `git push` precisa funcionar sem pedir senha (Git Credential Manager ou token salvo).
-
-Para remover a rotina:
-
-```powershell
-schtasks /Delete /TN "NaBandeja-DB-Backup-GitPush" /F
-```
-
-> ⚠️ O repositório precisa ser **privado**, porque o banco contém dados do estabelecimento.
+> O modelo antigo (commit do `db.sqlite3` na branch do cliente, **sem criptografia**) foi removido. Veja [clientes.md](clientes.md#clientes-do-modelo-antigo-uma-branch-por-cliente) para migrar.
 
 ## SQLite: cópia local e Google Drive
 

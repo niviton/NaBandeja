@@ -43,30 +43,29 @@ Para outras formas de instalar (manual, executável `.exe` ou Linux/Mac), veja [
 
 ## Um sistema, vários clientes
 
-O NaBandeja é **modular**: o mesmo código atende vários estabelecimentos, e cada cliente tem sua própria branch.
+O mesmo código atende todos os estabelecimentos. Cada loja roda no PC dela, e o dono do NaBandeja acompanha todas pelo **painel master** (`INICIAR_MASTER.bat`):
 
 ```
-main                      ← produto: toda melhoria é feita aqui
-├── cliente/billa-burguer ← código da main + banco, logo e fotos do cliente
-└── cliente/<novo>        ← criado com NOVO_CLIENTE.bat
+Repositório NaBandeja (main)           ← só código, nunca dados de clientes
+Painel master (seu PC)                 ← empresas, chave mestra, instaladores
+nabandeja-dados-<loja> (privado)       ← backup CRIPTOGRAFADO de cada loja
 ```
 
-```powershell
-python scripts/novo_cliente.py "Pizzaria do João"   # cria o cliente
-git switch cliente/pizzaria-do-joao; git merge main   # leva melhorias ao cliente
-```
+Criar empresa, entrar nela, gerar instalador e restaurar: [docs/master.md](docs/master.md).
 
-O passo a passo completo está em [docs/clientes.md](docs/clientes.md).
+O sistema também roda no **Android (Termux)**, no **Railway/VPS** e no **PythonAnywhere**: [docs/deploy-outros.md](docs/deploy-outros.md).
 
 ## Documentação
 
 | Guia | Conteúdo |
 |---|---|
 | [Instalação](docs/instalacao.md) | Rodar pelo código-fonte, primeiro acesso, problemas comuns |
-| [Clientes](docs/clientes.md) | Criar, atualizar e fazer backup de clientes |
+| [Painel master](docs/master.md) | Empresas, backup criptografado, entrar na empresa, instaladores |
+| [Clientes](docs/clientes.md) | Um código para todos, atualizar lojas, migrar do modelo antigo |
 | [Implantação no Windows](docs/deploy-windows.md) | Executável `.exe`, rede local, firewall, HTTPS, atalho na Área de Trabalho |
-| [Backup](docs/backup.md) | Backups automáticos de SQLite e PostgreSQL |
-| [Tempo real](docs/tempo-real.md) | WebSocket, eventos e PWA |
+| [Outros ambientes](docs/deploy-outros.md) | Termux (Android), Railway, VPS e PythonAnywhere |
+| [Backup](docs/backup.md) | Backup externo criptografado, SQLite e PostgreSQL |
+| [Tempo real](docs/tempo-real.md) | WebSocket ou polling conforme o servidor, eventos e PWA |
 | [Login com Google](docs/login-google.md) | Entrar com a conta Google, sem depender de senha |
 | [Segurança](docs/seguranca.md) | Variáveis de ambiente e checklist de produção |
 | [Funcionalidades](docs/funcionalidades.md) | Tudo o que o sistema faz |
@@ -89,11 +88,13 @@ O passo a passo completo está em [docs/clientes.md](docs/clientes.md).
 ├── static/                # Arquivos estáticos e ícones do PWA
 ├── media/                 # Uploads do cliente (logo, fotos de produtos)
 ├── deploy/windows/        # Launcher, build do .exe, backup, HTTPS, atalho
-├── scripts/               # novo_cliente.py, initial_data.py
+├── requirements/          # Dependências por ambiente (base, asgi, postgres, redis)
+├── scripts/               # licenca.py, initial_data.py
 ├── tests/                 # Teste end-to-end com Selenium
 ├── docs/                  # Documentação
 ├── INICIAR_PC_NOVO.bat    # Instala e inicia o sistema
-├── NOVO_CLIENTE.bat       # Cria um novo cliente
+├── INICIAR_MASTER.bat     # Painel master (dono do NaBandeja)
+├── Procfile               # Railway: python -m nabandeja_project.servir
 ├── NaBandeja.spec         # Build do executável (PyInstaller)
 └── manage.py
 ```

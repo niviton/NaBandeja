@@ -12,7 +12,9 @@ A tela inicial pede três campos:
 | **Usuário** | `ana` |
 | **Senha** | a senha da pessoa |
 
-O campo empresa fica guardado no aparelho depois do primeiro login. O código de cada loja é definido na página de suporte (e o `novo_cliente.py` já cria com o nome da branch).
+O campo empresa fica guardado no aparelho depois do primeiro login. O código de cada loja é definido ao criar a empresa no [painel master](master.md) e pode ser trocado na página de suporte.
+
+> Pelo painel master você também entra em qualquer loja **sem senha** ("Entrar na empresa"): o painel abre a empresa num processo próprio e entra como suporte com um link de uso único.
 
 ## Criar o seu usuário de suporte
 
@@ -26,7 +28,7 @@ venv\Scripts\python.exe manage.py suporte_nabandeja --gerar-hash
 venv\Scripts\python.exe manage.py suporte_nabandeja --hash "<hash gerado>"
 ```
 
-Ou coloque no `.env` da loja `NABANDEJA_SUPPORT_HASH=<hash>`: o sistema cria o usuário sozinho ao iniciar. O `novo_cliente.py` também usa essa variável, se existir no seu terminal.
+Ou coloque no `.env` da loja `NABANDEJA_SUPPORT_HASH=<hash>`: o sistema cria o usuário sozinho ao iniciar. Se essa variável estiver no `.env` do painel master, os instaladores gerados por ele já a incluem.
 
 Login: empresa da loja, usuário **`nabandeja`** e a sua senha.
 

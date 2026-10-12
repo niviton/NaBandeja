@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block title %}Painel master · NaBandeja{% endblock %}
+{% block body_class %}min-h-screen bg-creme{% endblock %}
+
+{% block navbar %}
+<header class="sticky top-0 z-40 bg-creme/95 text-carvao backdrop-blur border-b border-linha">
+    <div class="max-w-[1200px] mx-auto px-4 sm:px-6 h-16 flex items-center gap-3">
+        <a href="{% url 'master_home' %}" class="flex items-center gap-3 min-w-0 rounded-xl" aria-label="Painel master">
+            {% include 'brand/_wordmark.html' with class='h-8' %}
+            <span class="hidden sm:block nb-kicker">Master</span>
+        </a>
+        <nav class="flex-1 flex items-center justify-end gap-1" aria-label="Painel master">
+            <a href="{% url 'master_home' %}" class="nb-app-link" {% if active == 'home' %}aria-current="page"{% endif %}><i class="bi bi-buildings" aria-hidden="true"></i><span>Empresas</span></a>
+            <a href="{% url 'master_new' %}" class="nb-app-link" {% if active == 'new' %}aria-current="page"{% endif %}><i class="bi bi-plus-lg" aria-hidden="true"></i><span>Nova</span></a>
+        </nav>
+        <span class="hidden md:block text-sm text-fumaca truncate max-w-[14rem]">{{ user.email|default:user.username }}</span>
+        <a href="{% url 'logout' %}" class="nb-icon-btn" aria-label="Sair"><i class="bi bi-box-arrow-right" aria-hidden="true"></i></a>
+    </div>
+</header>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-[1200px] mx-auto px-4 sm:px-6 py-6 sm:py-10">
+    {% block master_content %}{% endblock %}
+</div>
+{% endblock %}

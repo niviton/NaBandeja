@@ -24,8 +24,13 @@ if IS_FROZEN:
 else:
     DATA_DIR = BASE_DIR
 
+from .envfile import is_master_mode, master_dir  # noqa: E402
+
 try:
     from dotenv import load_dotenv
+    if is_master_mode():
+        # Painel master: o .env dele (token do GitHub etc.) fica fora do repositório.
+        load_dotenv(master_dir() / '.env')
     load_dotenv(DATA_DIR / '.env')
 except ImportError:
     pass
@@ -41,6 +46,27 @@ def env_bool(name, default=False):
 def env_list(name, default=''):
     raw = os.getenv(name, default)
     return [item.strip() for item in raw.split(',') if item.strip()]
+
+
+def env_path(name, default):
+    value = os.getenv(name, '').strip()
+    return Path(value) if value else Path(default)
+
+
+# ---------------------------------------------------------------- Modo
+# loja:   o sistema do restaurante (padrão).
+# master: o painel do dono do NaBandeja, que cria as empresas e acompanha os
+#         backups delas (docs/master.md). Guarda tudo em MASTER_DIR, fora do
+#         repositório: chaves, bancos das empresas e pacotes de instalação.
+NABANDEJA_MODO = os.getenv('NABANDEJA_MODO', 'loja').strip().lower()
+IS_MASTER = NABANDEJA_MODO == 'master'
+MASTER_DIR = master_dir()
+
+# Empresa aberta pelo painel master (processo separado, nabandeja_project/espelho.py).
+ESPELHO_NOME = os.getenv('NABANDEJA_ESPELHO_NOME', '').strip()
+ESPELHO_SSO_KEY = os.getenv('NABANDEJA_ESPELHO_SSO_KEY', '').strip()
+ESPELHO_MASTER_URL = os.getenv('NABANDEJA_ESPELHO_MASTER_URL', '').strip()
+SOMENTE_LEITURA = env_bool('NABANDEJA_SOMENTE_LEITURA', False)
 
 
 def get_local_ip():
@@ -76,11 +102,18 @@ if AUTO_ALLOW_LOCAL_HOSTS:
         if host and host not in ALLOWED_HOSTS:
             ALLOWED_HOSTS.append(host)
 
+# Railway informa o domínio público e fica atrás de um proxy HTTPS.
+RAILWAY_DOMAIN = os.getenv('RAILWAY_PUBLIC_DOMAIN', '').strip()
+if RAILWAY_DOMAIN:
+    ALLOWED_HOSTS.append(RAILWAY_DOMAIN)
+
 if '*' in ALLOWED_HOSTS and not DEBUG:
     raise ImproperlyConfigured('Não use "*" em DJANGO_ALLOWED_HOSTS em produção.')
 
 # O Django já aceita POSTs da mesma origem; esta lista é só para origens extras.
 CSRF_TRUSTED_ORIGINS = env_list('DJANGO_CSRF_TRUSTED_ORIGINS')
+if RAILWAY_DOMAIN:
+    CSRF_TRUSTED_ORIGINS.append(f'https://{RAILWAY_DOMAIN}')
 
 # HTTPS: só force quando houver certificado (deploy/windows/setup_ssl.bat).
 USE_HTTPS = env_bool('USE_HTTPS', False)
@@ -89,7 +122,7 @@ SESSION_COOKIE_SECURE = env_bool('SESSION_COOKIE_SECURE', USE_HTTPS)
 CSRF_COOKIE_SECURE = env_bool('CSRF_COOKIE_SECURE', USE_HTTPS)
 if USE_HTTPS:
     SECURE_HSTS_SECONDS = int(os.getenv('SECURE_HSTS_SECONDS', '0'))
-if env_bool('TRUST_X_FORWARDED_PROTO', False):
+if env_bool('TRUST_X_FORWARDED_PROTO', bool(RAILWAY_DOMAIN)):
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 USE_X_FORWARDED_HOST = env_bool('USE_X_FORWARDED_HOST', False)
 
@@ -99,13 +132,25 @@ X_FRAME_OPTIONS = 'DENY'
 SESSION_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_SAMESITE = 'Lax'
 SESSION_COOKIE_AGE = int(os.getenv('SESSION_COOKIE_AGE', str(60 * 60 * 16)))  # um turno
+# Cookies não separam por porta: cada empresa aberta pelo painel master usa os seus.
+SESSION_COOKIE_NAME = os.getenv('SESSION_COOKIE_NAME', 'sessionid')
+CSRF_COOKIE_NAME = os.getenv('CSRF_COOKIE_NAME', 'csrftoken')
 
 # Bloqueio de login após tentativas erradas (restaurante/security.py)
 LOGIN_MAX_ATTEMPTS = int(os.getenv('LOGIN_MAX_ATTEMPTS', '5'))
 LOGIN_LOCKOUT_SECONDS = int(os.getenv('LOGIN_LOCKOUT_SECONDS', '300'))
 
 # ---------------------------------------------------------------- Aplicação
+# Tempo real (restaurante/realtime.py). O mesmo código serve qualquer ambiente:
+# - NABANDEJA_SERVIDOR é marcado por asgi.py / wsgi.py: em WSGI é sempre polling;
+# - REALTIME_TRANSPORT: auto (WebSocket com polling de reserva), websocket, polling ou off;
+# - ENABLE_REALTIME=false desliga só o WebSocket (as telas usam polling).
 ENABLE_REALTIME = env_bool('ENABLE_REALTIME', True)
+NABANDEJA_SERVIDOR = os.getenv('NABANDEJA_SERVIDOR', '').strip().lower()
+REALTIME_TRANSPORT = os.getenv('REALTIME_TRANSPORT', 'auto').strip().lower()
+REALTIME_POLL_SECONDS = max(2, int(os.getenv('REALTIME_POLL_SECONDS', '4')))
+# Vários processos/servidores (Railway, VPS com mais de um worker): Redis para o WebSocket.
+REDIS_URL = os.getenv('REDIS_URL', '').strip()
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -126,7 +171,13 @@ HAS_CHANNELS = importlib.util.find_spec('channels') is not None
 
 if ENABLE_REALTIME and HAS_CHANNELS:
     INSTALLED_APPS.append('channels')
-    CHANNEL_LAYERS = {'default': {'BACKEND': 'channels.layers.InMemoryChannelLayer'}}
+    if REDIS_URL and importlib.util.find_spec('channels_redis') is not None:
+        CHANNEL_LAYERS = {'default': {'BACKEND': 'channels_redis.core.RedisChannelLayer', 'CONFIG': {'hosts': [REDIS_URL]}}}
+    else:
+        # Um processo só (PC da loja, Termux): em memória, sem Redis. Com vários
+        # processos sem Redis o WebSocket só avisa quem está no mesmo processo,
+        # mas o polling de reserva entrega o resto (o registro fica no banco).
+        CHANNEL_LAYERS = {'default': {'BACKEND': 'channels.layers.InMemoryChannelLayer'}}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -136,6 +187,7 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    'restaurante.middleware.ModoMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'allauth.account.middleware.AccountMiddleware',
 ]
@@ -161,9 +213,13 @@ TEMPLATES = [
 ]
 
 # ---------------------------------------------------------------- Banco
-DB_ENGINE = os.getenv('DB_ENGINE', 'sqlite').strip().lower()
+DATABASE_URL = os.getenv('DATABASE_URL', '').strip()
+DB_ENGINE = os.getenv('DB_ENGINE', 'postgres' if DATABASE_URL else 'sqlite').strip().lower()
 
-if DB_ENGINE == 'postgres':
+if DB_ENGINE == 'postgres' and DATABASE_URL:
+    from .dburl import parse_database_url
+    DATABASES = {'default': parse_database_url(DATABASE_URL, int(os.getenv('DB_CONN_MAX_AGE', '60')))}
+elif DB_ENGINE == 'postgres':
     db_options = {}
     for option, env_name in [
         ('sslmode', 'POSTGRES_SSLMODE'),
@@ -190,10 +246,14 @@ if DB_ENGINE == 'postgres':
         }
     }
 elif DB_ENGINE == 'sqlite':
+    if IS_MASTER:
+        MASTER_DIR.mkdir(parents=True, exist_ok=True)
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': os.getenv('SQLITE_PATH') or DATA_DIR / 'db.sqlite3',
+            # O master nunca usa SQLITE_PATH: um .env de loja não pode apontá-lo para o banco da loja.
+            'NAME': (os.getenv('NABANDEJA_MASTER_DB') or MASTER_DIR / 'master.sqlite3') if IS_MASTER
+                    else (os.getenv('SQLITE_PATH') or DATA_DIR / 'db.sqlite3'),
             'ATOMIC_REQUESTS': True,
             'OPTIONS': {
                 'timeout': int(os.getenv('SQLITE_TIMEOUT', '20')),
@@ -264,13 +324,13 @@ WHITENOISE_USE_FINDERS = True
 WHITENOISE_AUTOREFRESH = DEBUG
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = DATA_DIR / 'media'
+MEDIA_ROOT = env_path('MEDIA_ROOT', DATA_DIR / 'media')
 FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
 DATA_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
 
 # ---------------------------------------------------------------- Logs
-LOG_DIR = DATA_DIR / 'logs'
-LOG_DIR.mkdir(exist_ok=True)
+LOG_DIR = env_path('LOG_DIR', DATA_DIR / 'logs')
+LOG_DIR.mkdir(parents=True, exist_ok=True)
 
 LOGGING = {
     'version': 1,
@@ -297,8 +357,22 @@ LOGGING = {
 }
 
 # ---------------------------------------------------------------- Produto
-NABANDEJA_VERSION = '3.1.0'
+NABANDEJA_VERSION = '3.2.0'
 BACKUP_KEEP = int(os.getenv('BACKUP_KEEP', '48'))
+
+# Backup externo criptografado (restaurante/services/backup_remoto.py). Os
+# valores vêm prontos no pacote de instalação gerado pelo painel master.
+BACKUP_REMOTO_REPO = os.getenv('NABANDEJA_BACKUP_REPO', '').strip()
+BACKUP_REMOTO_CHAVE_PUBLICA = os.getenv('NABANDEJA_BACKUP_CHAVE_PUBLICA', '').strip()
+BACKUP_REMOTO_CHAVE_SSH = env_path('NABANDEJA_BACKUP_CHAVE_SSH', DATA_DIR / 'chave-backup')
+BACKUP_REMOTO_DIAS = int(os.getenv('BACKUP_REMOTO_DIAS', '14'))
+
+# Painel master: onde criar os repositórios de dados das empresas.
+# GitHub (recomendado): token com permissão de criar repositórios privados.
+# Pasta (alternativa, ex.: disco de rede): NABANDEJA_REPOS_DIR.
+GITHUB_TOKEN = os.getenv('NABANDEJA_GITHUB_TOKEN', '').strip()
+GITHUB_OWNER = os.getenv('NABANDEJA_GITHUB_OWNER', '').strip()
+REPOS_DIR = os.getenv('NABANDEJA_REPOS_DIR', '').strip()
 # Endereço usado nos QR Codes impressos (ex.: https://cardapio.minhaloja.com.br).
 # Vazio: usa o endereço pelo qual o gerente acessou o sistema.
 PUBLIC_BASE_URL = os.getenv('PUBLIC_BASE_URL', '').strip().rstrip('/')

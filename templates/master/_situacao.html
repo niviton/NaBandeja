@@ -1,0 +1,1 @@
+{% with s=empresa.situacao %}<span class="{% if s.0 == 'ativa' %}nb-status-pronto{% elif s.0 == 'implantacao' %}nb-status-cozinha{% elif s.0 == 'atrasada' %}nb-status-erro{% else %}nb-status-livre{% endif %}">{{ s.1 }}</span>{% endwith %}

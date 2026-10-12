@@ -5,6 +5,7 @@ Gera uma chave secreta própria e uma senha inicial para o gerente. Nunca
 sobrescreve um .env existente.
 """
 
+import os
 import secrets
 from pathlib import Path
 
@@ -26,6 +27,38 @@ NABANDEJA_INIT_ADMIN_PASSWORD={admin_password}
 # GOOGLE_CLIENT_ID=
 # GOOGLE_CLIENT_SECRET=
 """
+
+
+MASTER_TEMPLATE = """# Painel master do NaBandeja (gerado em {data_dir}). Contém segredos: fica fora do repositório.
+DJANGO_DEBUG=false
+DJANGO_SECRET_KEY={secret_key}
+
+# Repositórios de backup das empresas (docs/master.md)
+# NABANDEJA_GITHUB_OWNER=seu-usuario-ou-organizacao
+# NABANDEJA_GITHUB_TOKEN=github_pat_...
+# NABANDEJA_REPOS_DIR=D:\\Backups\\NaBandeja
+"""
+
+
+def is_master_mode():
+    return os.getenv('NABANDEJA_MODO', '').strip().lower() == 'master'
+
+
+def master_dir():
+    value = os.getenv('NABANDEJA_MASTER_DIR', '').strip()
+    return Path(value) if value else Path.home() / 'NaBandejaMaster'
+
+
+def ensure_master_env_file():
+    """.env do painel master, em MASTER_DIR (nunca na pasta do código)."""
+    folder = master_dir()
+    env_path = folder / '.env'
+    if not env_path.exists():
+        folder.mkdir(parents=True, exist_ok=True)
+        env_path.write_text(
+            MASTER_TEMPLATE.format(data_dir=folder.resolve(), secret_key=secrets.token_urlsafe(50)), encoding='utf-8',
+        )
+    return env_path
 
 
 def ensure_env_file(data_dir):

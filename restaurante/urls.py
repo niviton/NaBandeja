@@ -2,7 +2,8 @@ from django.urls import path
 from django.views.generic import RedirectView
 
 from .views import (
-    auth, catalog, day, delivery, finance, manager, operations, orders, public, pwa, reports, support, system,
+    auth, catalog, day, delivery, finance, manager, master, operations, orders, public, pwa, realtime, reports,
+    support, system,
 )
 
 urlpatterns = [
@@ -16,6 +17,7 @@ urlpatterns = [
     path('login/', RedirectView.as_view(pattern_name='login', permanent=False)),
     path('logout/', auth.logout_view, name='logout'),
     path('dashboard/', auth.dashboard, name='dashboard'),
+    path('tempo-real/eventos/', realtime.realtime_events, name='realtime_events'),
 
     # Salão e pedidos (garçom/gerente)
     path('garcom/', orders.waiter_view, name='waiter_view'),
@@ -89,7 +91,9 @@ urlpatterns = [
     path('admin-panel/sistema/', system.system_status, name='system_status'),
     path('admin-panel/sistema/backup/', system.backup_now, name='backup_now'),
     path('admin-panel/sistema/backup/baixar/', system.backup_download, name='backup_download'),
+    path('sistema/salvar-dados/', system.save_data, name='save_data'),
     path('suporte/', support.support_panel, name='support_panel'),
+    path('suporte/espelho/<str:token>/', support.espelho_login, name='espelho_login'),
     path('suporte/salvar/', support.support_save, name='support_save'),
     path('suporte/licenca/', support.support_license, name='license_install'),
     path('suporte/senha/<int:user_id>/', support.support_reset_password, name='support_reset_password'),
@@ -114,6 +118,19 @@ urlpatterns = [
     path('admin-panel/ingredient/new/', catalog.ingredient_create, name='ingredient_create'),
     path('admin-panel/ingredient/<int:ingredient_id>/edit/', catalog.ingredient_edit, name='ingredient_edit'),
     path('admin-panel/ingredient/<int:ingredient_id>/delete/', catalog.ingredient_delete, name='ingredient_delete'),
+
+    # Painel master (só com NABANDEJA_MODO=master)
+    path('master/', master.master_home, name='master_home'),
+    path('master/atualizar/', master.atualizar, name='master_update_all'),
+    path('master/nova/', master.empresa_nova, name='master_new'),
+    path('master/empresa/<slug:codigo>/', master.empresa_detalhe, name='master_empresa'),
+    path('master/empresa/<slug:codigo>/atualizar/', master.atualizar, name='master_update'),
+    path('master/empresa/<slug:codigo>/backup/', master.configurar_backup, name='master_setup_backup'),
+    path('master/empresa/<slug:codigo>/publicar/', master.publicar, name='master_publish'),
+    path('master/empresa/<slug:codigo>/entrar/', master.entrar, name='master_enter'),
+    path('master/empresa/<slug:codigo>/fechar/', master.fechar, name='master_close'),
+    path('master/empresa/<slug:codigo>/restaurar/', master.restaurar, name='master_restore'),
+    path('master/empresa/<slug:codigo>/pacote/', master.pacote, name='master_package'),
 
     # Público (sem login): cardápio da mesa (QR Code) e pedido online
     path('cardapio/', public.public_menu, name='public_menu'),

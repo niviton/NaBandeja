@@ -7,7 +7,7 @@
 <header class="bg-papel border-b border-linha">
     <div class="max-w-3xl mx-auto px-4 py-4 flex items-center gap-3">
         <span class="w-14 h-14 rounded-2xl overflow-hidden bg-creme border border-linha flex items-center justify-center shrink-0">
-            {% if store.logo %}<img src="{{ store.logo.url }}" alt="" width="56" height="56" class="w-full h-full object-cover">{% else %}{% include 'brand/_mark.html' with class='w-9 h-9' %}{% endif %}
+            {% if store.logo %}<img src="{{ store.logo.url }}" alt="" width="56" height="56" class="w-full h-full object-cover">{% else %}{% include 'brand/_mark.html' with class='h-8' %}{% endif %}
         </span>
         <div class="min-w-0">
             <p class="font-display text-xl font-semibold leading-tight truncate">{{ store.store_name }}</p>

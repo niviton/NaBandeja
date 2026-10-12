@@ -26,7 +26,7 @@ Levantamento feito em 11/10/2026, com base no código da versão 2.0.0. Marque `
 - [x] **O estoque pode ficar errado com dois garçons ao mesmo tempo.** `Product.stock -= quantidade` é calculado em Python (`models.py:103` e `:117`). Dois pedidos simultâneos podem gravar um valor velho. Trocar por `F('stock') - quantidade` ou `select_for_update()`.
 - [x] **`DEBUG` fica ligado por padrão.** Sem `.env`, `DJANGO_DEBUG` vale `true`. No PC do cliente, uma tela de erro mostra código e configuração para qualquer pessoa da rede. O padrão deve ser `false`, e o `INICIAR_PC_NOVO.bat` deve gerar um `.env` com uma `DJANGO_SECRET_KEY` própria.
 - [x] **Sem limite de tentativas de login.** Não há proteção contra força bruta na senha. Bloquear por alguns minutos após N tentativas erradas (por exemplo, com `django-axes`).
-- [x] **Backup automático ligado por padrão em todo cliente novo.** Hoje é opcional e manual. O `novo_cliente.py` ou o primeiro início devem instalar a tarefa agendada.
+- [x] **Backup automático ligado por padrão em todo cliente novo.** Hoje é opcional e manual. Resolvido pelo backup externo criptografado (vem pronto no instalador do painel master; roda com o sistema aberto).
 - [ ] **Repositório privado no GitHub.** Ele contém o banco do Billá Burger.
 
 ## 🟠 Importante: funcionar sempre no restaurante

@@ -2,6 +2,33 @@
 
 Mudanças relevantes do NaBandeja. O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [3.2.0] - 2026-10-12
+
+### Painel master
+- Novo modo **`NABANDEJA_MODO=master`** (`INICIAR_MASTER.bat`): o dono do NaBandeja vê todas as empresas,
+  cria empresas novas (ou importa o banco de uma loja), **entra** em qualquer uma e gera o **instalador** de cada loja.
+- Cada empresa ganha um **repositório privado de dados** (`nabandeja-dados-<código>`) e uma **chave de envio**
+  que só escreve nele (deploy key). O código do sistema nunca mais recebe dados de clientes.
+- **Backup externo criptografado** (X25519 + AES-256-GCM): só a chave mestra do painel abre. A loja envia a
+  cada hora e pelo botão **Salvar dados** no rodapé; um ponto de restauração por dia (14 dias).
+- "Entrar na empresa" abre a empresa num processo próprio: editável em implantação, **somente leitura** depois
+  que a loja está em produção.
+
+### Tempo real modular
+- O mesmo código roda no PC Windows (ASGI), no **Termux**, no **Railway/VPS** e no **PythonAnywhere** (só WSGI).
+- Os eventos ficam num registro no banco: o WebSocket entrega na hora e o **polling** (`/tempo-real/eventos/`)
+  entrega os mesmos eventos em qualquer servidor. Sons e avisos agora funcionam também sem WebSocket.
+- `python -m nabandeja_project.servir`: escolhe Daphne (ASGI) ou WSGI conforme o que estiver instalado.
+- `REDIS_URL` para vários processos, `DATABASE_URL` e domínio do Railway reconhecidos.
+- Dependências separadas por ambiente em `requirements/`.
+
+### Alterado
+- Nova logo (símbolo, logo horizontal, favicons e ícones do app).
+
+### Removido
+- `novo_cliente.py`, `NOVO_CLIENTE.bat` e o backup que fazia commit do banco **sem criptografia** no repositório
+  do código (`auto_backup_git_push.ps1`). Veja docs/clientes.md para migrar clientes do modelo antigo.
+
 ## [3.1.0] - 2026-10-11
 
 ### Fluxo reorganizado

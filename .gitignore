@@ -48,3 +48,10 @@ backups/logs/
 # Ferramentas locais (ex.: tailwindcss.exe)
 tools/
 backups/auto/
+
+# Backup externo e painel master (segredos e dados de clientes: nunca no git)
+chave-backup
+chave-backup.pub
+backups/remoto/
+master.sqlite3
+*.nbk

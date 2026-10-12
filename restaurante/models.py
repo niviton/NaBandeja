@@ -634,3 +634,24 @@ class Expense(models.Model):
     @property
     def is_overdue(self):
         return self.paid_at is None and self.due_date < timezone.localdate()
+
+
+class RealtimeEvent(models.Model):
+    """
+    Registro curto dos avisos em tempo real (restaurante/realtime.py).
+
+    É a fonte da verdade: o WebSocket entrega na hora e o polling HTTP busca
+    "eventos depois do id X", então qualquer servidor (ASGI, WSGI, vários
+    processos) entrega os mesmos eventos. Guarda só os últimos minutos.
+    """
+    kind = models.CharField(max_length=40)
+    payload = models.JSONField(default=dict)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        verbose_name = 'Evento em tempo real'
+        verbose_name_plural = 'Eventos em tempo real'
+        ordering = ['id']
+
+    def __str__(self):
+        return f'#{self.id} {self.kind}'

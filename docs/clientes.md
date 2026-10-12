@@ -1,93 +1,43 @@
 # Clientes
 
-O NaBandeja usa **uma branch do Git por cliente**:
+O código é **um só** para todos os clientes (branch `main`). O que muda de uma loja para outra (nome, logo, cores, cardápio, módulos) fica no **banco de cada loja**, nunca no código.
 
-| Branch | Conteúdo |
+Os clientes são criados e acompanhados pelo **[painel master](master.md)**:
+
+| O quê | Onde |
 |---|---|
-| `main` | O produto. Toda correção e funcionalidade nova é feita aqui. |
-| `cliente/<slug>` | O código da `main` mais os dados do cliente: `db.sqlite3`, logo, fotos dos produtos e ícone do atalho. |
-
-O nome, o logo, as cores e os dados do cupom de cada loja ficam no banco (tela **Configurações**). Por isso o código é o mesmo para todos os clientes e as melhorias da `main` chegam a eles com um `merge`.
+| Código do sistema | Repositório `NaBandeja` (branch `main`), sem dados de clientes |
+| Dados de cada loja | No PC da loja + backup criptografado no repositório privado `nabandeja-dados-<código>` |
+| Cadastro das lojas, chaves e instaladores | Painel master, só no seu PC |
 
 ## Criar um cliente
 
-Com a `main` atualizada e sem alterações pendentes:
+**Painel master › Nova empresa.** Veja [master.md](master.md#criar-uma-empresa).
+
+## Levar melhorias para os clientes
+
+Toda melhoria é feita na `main`. No PC de cada loja:
 
 ```powershell
-git switch main
 git pull
-python scripts/novo_cliente.py "Pizzaria do João"
+.\deploy\windows\start_system.bat
 ```
 
-Se não quiser usar o terminal, dê duplo clique em **`NOVO_CLIENTE.bat`**.
+As migrações novas são aplicadas ao iniciar, sem apagar nada. O banco, as fotos, o `.env` e a chave de envio não estão no git, então o `pull` não mexe neles.
 
-Opções do script:
+## Regras
 
-| Opção | Exemplo | Padrão |
-|---|---|---|
-| `--slogan` | `--slogan "A melhor pizza do bairro"` | genérico |
-| `--cor` | `--cor "#16a34a"` | `#ef4444` |
-| `--slug` | `--slug pizzaria-joao` | gerado a partir do nome |
-| `--base` | `--base main` | `main` |
+- **Nunca** faça commit de `db.sqlite3`, `media/`, `.env` ou `chave-backup`: o `.gitignore` já impede.
+- O que for diferente entre clientes deve ser **configuração** (tela Configurações, módulos do suporte ou `.env`), nunca um `if cliente == ...` no código.
 
-O script:
+## Clientes do modelo antigo (uma branch por cliente)
 
-1. cria a branch `cliente/pizzaria-do-joao` a partir da `main`;
-2. remove fotos, logos e ícones de outros clientes;
-3. cria um banco limpo, com o nome da loja, o **código da empresa** (igual ao slug da branch) e o usuário `gerente`;
-4. mostra a **senha do gerente** (anote, ela não fica salva em lugar nenhum);
-5. faz o commit.
+Antes, cada cliente tinha uma branch `cliente/<slug>` com o `db.sqlite3` **sem criptografia** dentro do repositório do código. Para migrar um desses clientes:
 
-Para enviar o cliente para o GitHub:
-
-```powershell
-git push -u origin cliente/pizzaria-do-joao
-```
-
-## Levar melhorias da main para um cliente
-
-```powershell
-git switch cliente/pizzaria-do-joao
-git merge main
-git push
-```
-
-Na próxima vez que o sistema iniciar no PC do cliente, as migrações novas são aplicadas sem apagar nada.
-
-Para atualizar todos os clientes de uma vez:
-
-```powershell
-git fetch
-foreach ($b in git branch --format="%(refname:short)" --list "cliente/*") {
-  git switch $b; git merge main --no-edit; git push
-}
-git switch main
-```
-
-## Instalar no PC do cliente
-
-```powershell
-git clone -b cliente/pizzaria-do-joao https://github.com/niviton/nabandeja.git
-cd nabandeja
-.\INICIAR_PC_NOVO.bat
-```
-
-## Backup dos dados do cliente
-
-O `db.sqlite3` de cada cliente fica versionado na branch dele. Para salvar o estado atual:
-
-```powershell
-git add -f db.sqlite3 media
-git commit -m "backup: dados do cliente"
-git push
-```
-
-Também é possível automatizar isso a cada 30 minutos. Veja [Backup](backup.md#backup-automático-no-git).
-
-> ⚠️ **Privacidade:** o banco tem pedidos, usuários e dados do estabelecimento. Mantenha o repositório **privado** no GitHub.
-
-## Regras para não dar conflito
-
-- **Não altere código direto na branch de um cliente.** Faça na `main` e depois faça o merge.
-- **Não faça commit do `db.sqlite3` na `main`.** Ali ele serve só de referência; os dados de verdade ficam nas branches dos clientes.
-- O que for diferente entre clientes deve ser uma **configuração** (tela Configurações ou `.env`), nunca um `if cliente == ...` no código.
+1. No painel master, crie a empresa **importando** o `db.sqlite3` atual da loja.
+2. Gere o instalador e extraia no PC da loja (ele traz o `.env` com o backup novo).
+3. No PC da loja, troque para a `main`: `git switch main`.
+4. Depois que o primeiro backup novo chegar ao painel, **apague a branch antiga do GitHub**. O histórico dela ainda contém o banco sem criptografia:
+   ```powershell
+   git push origin --delete cliente/<slug>
+   ```

@@ -7,7 +7,7 @@
 {% block content %}
 <div class="min-h-screen grid lg:grid-cols-[1.1fr_1fr]">
     <section class="relative hidden lg:flex flex-col justify-between p-12 xl:p-16 border-r border-linha overflow-hidden">
-        {% include 'brand/_wordmark.html' with mark_class='w-10 h-10' text_class='text-[1.7rem] text-carvao' %}
+        {% include 'brand/_wordmark.html' with class='h-12' %}
 
         <div class="max-w-xl">
             <p class="nb-kicker">Sistema para restaurantes</p>
@@ -25,30 +25,36 @@
             <div><dt class="nb-label">Internet</dt><dd class="font-display text-2xl font-semibold">opcional</dd></div>
         </dl>
 
-        <svg viewBox="0 0 48 48" class="absolute -right-24 bottom-24 w-[26rem] h-[26rem] opacity-[0.06]" aria-hidden="true">
-            <circle cx="24" cy="11.5" r="3" fill="#D9442B"/><path d="M7 33a17 17 0 0 1 34 0z" fill="#D9442B"/><rect x="3" y="35" width="42" height="4.5" rx="2.25" fill="#1F1A17"/>
-        </svg>
+        {% include 'brand/_mark.html' with class='absolute -right-24 bottom-24 h-[26rem] opacity-[0.06]' %}
     </section>
 
     <section class="flex flex-col justify-center px-5 py-10 sm:px-10">
         <div class="w-full max-w-sm mx-auto">
             <div class="lg:hidden mb-10">
-                {% include 'brand/_wordmark.html' with mark_class='w-10 h-10' text_class='text-[1.7rem] text-carvao' %}
+                {% include 'brand/_wordmark.html' with class='h-11' %}
             </div>
 
+            {% if is_master %}
+            <p class="nb-kicker">Painel master</p>
+            <h2 class="nb-title mt-2">Suas <em>empresas.</em></h2>
+            <p class="nb-subtitle mt-2">Acesso exclusivo do administrador do NaBandeja.</p>
+            {% else %}
             <p class="nb-kicker">Acesso da equipe</p>
             <h2 class="nb-title mt-2">Bom te ver <em>de novo.</em></h2>
             <p class="nb-subtitle mt-2">Entre com a empresa, o seu usuário e a senha.</p>
+            {% endif %}
 
             <form method="post" class="mt-8 space-y-4" novalidate>
                 {% csrf_token %}
+                {% if not is_master %}
                 <div>
                     <label for="empresa" class="nb-label">Empresa</label>
                     <input id="empresa" name="empresa" class="nb-input" required autocomplete="organization"
                         autocapitalize="none" spellcheck="false" placeholder="ex.: billa-burger" value="{{ request.POST.empresa|default:'' }}">
                 </div>
+                {% endif %}
                 <div>
-                    <label for="usuario" class="nb-label">Usuário</label>
+                    <label for="usuario" class="nb-label">{% if is_master %}E-mail{% else %}Usuário{% endif %}</label>
                     <input id="usuario" name="username" class="nb-input" required autocomplete="username"
                         autocapitalize="none" spellcheck="false" value="{{ request.POST.username|default:'' }}">
                 </div>
@@ -64,7 +70,7 @@
                 <button type="submit" class="nb-btn-primary nb-btn-lg w-full mt-2">Entrar</button>
             </form>
 
-            {% if google_login_visible %}
+            {% if google_login_visible and not is_master %}
             <div class="flex items-center gap-3 my-6" aria-hidden="true">
                 <span class="h-px flex-1 bg-linha"></span><span class="nb-label mb-0">ou</span><span class="h-px flex-1 bg-linha"></span>
             </div>
@@ -94,13 +100,17 @@
 document.addEventListener('DOMContentLoaded', () => {
     const empresa = document.getElementById('empresa');
     const usuario = document.getElementById('usuario');
-    try {
-        if (!empresa.value) empresa.value = localStorage.getItem('nb.empresa') || '';
-    } catch (err) { /* sem storage */ }
-    (empresa.value ? usuario : empresa).focus();
-    empresa.form.addEventListener('submit', () => {
-        try { localStorage.setItem('nb.empresa', empresa.value.trim()); } catch (err) { /* sem storage */ }
-    });
+    if (empresa) {
+        try {
+            if (!empresa.value) empresa.value = localStorage.getItem('nb.empresa') || '';
+        } catch (err) { /* sem storage */ }
+        (empresa.value ? usuario : empresa).focus();
+        empresa.form.addEventListener('submit', () => {
+            try { localStorage.setItem('nb.empresa', empresa.value.trim()); } catch (err) { /* sem storage */ }
+        });
+    } else {
+        usuario.focus();
+    }
     document.querySelectorAll('[data-toggle-password]').forEach((button) => {
         button.addEventListener('click', () => {
             const input = document.getElementById(button.dataset.togglePassword);

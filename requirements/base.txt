@@ -1,0 +1,10 @@
+# Núcleo do NaBandeja: roda em qualquer ambiente (WSGI ou ASGI), sem compilar nada.
+# Para atualizar: mude a versão aqui, rode os testes e só então faça o commit.
+Django==6.1.2
+whitenoise==6.12.0
+python-dotenv==1.2.4
+django-allauth[socialaccount]==65.19.7   # login com Google
+pillow==12.3.0
+qrcode==8.2
+openpyxl==3.1.5        # exportação para Excel
+cryptography==50.0.2   # licença e backup criptografado

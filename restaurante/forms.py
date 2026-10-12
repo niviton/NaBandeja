@@ -1,4 +1,5 @@
 from django import forms
+from django.conf import settings
 from django.contrib.auth.password_validation import validate_password
 from django.core.validators import validate_slug
 from django.contrib.auth.forms import AuthenticationForm
@@ -27,6 +28,11 @@ class LoginForm(AuthenticationForm):
             'placeholder': 'Senha'
         })
     )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if settings.IS_MASTER:  # painel master: só e-mail e senha
+            self.fields['empresa'].required = False
 
 
 class CategoryForm(forms.ModelForm):

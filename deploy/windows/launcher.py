@@ -31,7 +31,7 @@ sys.path.insert(0, str(CODE_DIR))
 os.chdir(DATA_DIR)
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'nabandeja_project.settings')
 
-from nabandeja_project.envfile import ensure_env_file  # noqa: E402
+from nabandeja_project.envfile import ensure_env_file, ensure_master_env_file, is_master_mode  # noqa: E402
 
 CERT_DIR = DATA_DIR / 'certs'
 CERT_FILE = CERT_DIR / 'cert.pem'
@@ -68,42 +68,58 @@ def update_desktop_shortcut():
 
 
 def backup_loop(interval_minutes):
-    """Backup automático do banco enquanto o sistema estiver aberto."""
+    """Backup automático do banco enquanto o sistema estiver aberto: local e,
+    se configurado, o externo criptografado (repositório da empresa)."""
+    from restaurante.services import backup_remoto
     from restaurante.services.backup import run_backup
     while True:
         try:
             run_backup()
         except Exception as exc:
             print(f'Aviso: backup automático falhou ({exc}).')
+        if backup_remoto.run() is False:
+            print(f'Aviso: backup externo falhou ({backup_remoto.status()["erro"]}).')
         time.sleep(interval_minutes * 60)
 
 
 def main():
     sys.stdout.reconfigure(line_buffering=True)
-    initial_password = ensure_env_file(DATA_DIR)
-
-    from dotenv import load_dotenv
-    load_dotenv(DATA_DIR / '.env')
+    if is_master_mode():
+        initial_password = None
+        from dotenv import load_dotenv
+        load_dotenv(ensure_master_env_file())
+    else:
+        initial_password = ensure_env_file(DATA_DIR)
+        from dotenv import load_dotenv
+        load_dotenv(DATA_DIR / '.env')
 
     import django
     django.setup()
     from django.core.management import call_command
 
+    from django.conf import settings
+
     print('Preparando banco de dados...')
     call_command('migrate', interactive=False, verbosity=0)
-    call_command('ensure_initial_access')
-    if os.getenv('NABANDEJA_SUPPORT_HASH', '').strip():
-        call_command('suporte_nabandeja')  # usa o hash do .env
-    interval = int(os.getenv('BACKUP_INTERVAL_MINUTES', '60'))
-    if interval > 0:
-        threading.Thread(target=backup_loop, args=(interval,), daemon=True).start()
-    if os.getenv('NABANDEJA_SKIP_SHORTCUT', '').lower() not in ('1', 'true'):
-        threading.Thread(target=update_desktop_shortcut, daemon=True).start()
+    if settings.IS_MASTER:
+        # Painel master: sem gerente de loja, sem atalho e sem backup de loja.
+        from restaurante.services import master
+        master.ensure_master_key()
+    else:
+        call_command('ensure_initial_access')
+        if os.getenv('NABANDEJA_SUPPORT_HASH', '').strip():
+            call_command('suporte_nabandeja')  # usa o hash do .env
+        interval = int(os.getenv('BACKUP_INTERVAL_MINUTES', '60'))
+        if interval > 0:
+            threading.Thread(target=backup_loop, args=(interval,), daemon=True).start()
+        if os.getenv('NABANDEJA_SKIP_SHORTCUT', '').lower() not in ('1', 'true'):
+            threading.Thread(target=update_desktop_shortcut, daemon=True).start()
 
     http_port = int(os.getenv('APP_PORT', '8000'))
     https_port = int(os.getenv('HTTPS_PORT', '443'))
-    host = os.getenv('APP_HOST', '0.0.0.0')
-    lan_ip = get_local_ip()
+    # O painel master só atende este computador; a loja atende a rede Wi-Fi.
+    host = os.getenv('APP_HOST', '127.0.0.1' if settings.IS_MASTER else '0.0.0.0')
+    lan_ip = '127.0.0.1' if host == '127.0.0.1' else get_local_ip()
 
     endpoints = [f'tcp:port={http_port}:interface={host}']
     url = f'http://{lan_ip}:{http_port}'
@@ -114,7 +130,8 @@ def main():
 
     print('=' * 60)
     print(f'  NaBandeja rodando em: {url}')
-    print(f'  Celulares e tablets: use esse endereço na mesma rede Wi-Fi.')
+    if not settings.IS_MASTER:
+        print('  Celulares e tablets: use esse endereço na mesma rede Wi-Fi.')
     if initial_password:
         print(f'  Primeiro acesso -> usuário: gerente  senha: {initial_password}')
     print('  Para encerrar, feche esta janela.')

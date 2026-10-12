@@ -31,7 +31,14 @@
             <form method="post" action="{% url 'backup_now' %}">{% csrf_token %}<button class="nb-btn-dark">Fazer backup agora</button></form>
             {% if last_backup %}<a href="{% url 'backup_download' %}" class="nb-btn-secondary"><i class="bi bi-download" aria-hidden="true"></i>Baixar último</a>{% endif %}
         </div>
-        <p class="nb-help mt-3">Guarde uma cópia fora deste computador (pendrive ou Google Drive).</p>
+        <h3 class="nb-label mt-6">Backup externo (criptografado)</h3>
+        {% if not remote.configurado %}
+        <p class="nb-alert-warn"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i>Não configurado. O suporte NaBandeja configura com o pacote de instalação.</p>
+        {% else %}
+        <p class="text-sm">{% if remote.ultimo_ok %}Último envio: <b>{{ remote.ultimo_ok|date:"d/m/Y H:i" }}</b>{% else %}Nenhum envio ainda.{% endif %}</p>
+        {% if remote.erro %}<p class="nb-alert-error mt-2">{{ remote.erro }}</p>{% endif %}
+        <p class="nb-help">Vai sozinho a cada hora e pelo botão "Salvar dados" no rodapé. Só o suporte NaBandeja consegue abrir.</p>
+        {% endif %}
     </section>
 
     <section class="nb-card nb-card-pad min-w-0" aria-labelledby="sys-lic">

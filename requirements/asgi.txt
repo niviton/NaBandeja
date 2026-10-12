@@ -1,0 +1,5 @@
+# ASGI: páginas e WebSocket (tempo real instantâneo) no mesmo servidor.
+# PC Windows da loja, VPS, Railway e Termux (se o twisted instalar).
+-r base.txt
+daphne==4.2.3
+channels==4.3.2

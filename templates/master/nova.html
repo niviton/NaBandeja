@@ -1,0 +1,74 @@
+{% extends 'master/base_master.html' %}
+
+{% block title %}Nova empresa · Painel master{% endblock %}
+
+{% block master_content %}
+{% url 'master_home' as back %}
+{% include 'restaurante/admin/_page_head.html' with back=back kicker='Painel master' title='Nova' emphasis='empresa' subtitle='Cria o banco próprio da empresa, o gerente, o repositório privado de backup e a chave de envio da loja. Leva até um minuto.' %}
+
+<form method="post" enctype="multipart/form-data" class="grid gap-6 lg:grid-cols-[1.4fr_1fr] items-start" data-loading-form>
+    {% csrf_token %}
+    <section class="nb-card nb-card-pad space-y-4" aria-labelledby="nv-dados">
+        <h2 id="nv-dados" class="nb-h2">Dados da empresa</h2>
+        {% if form.non_field_errors %}<p class="nb-alert-error">{{ form.non_field_errors|join:' ' }}</p>{% endif %}
+        <div>
+            <label class="nb-label" for="nv-nome">Nome da empresa</label>
+            <input id="nv-nome" name="nome" required maxlength="200" value="{{ form.nome.value|default:'' }}" class="nb-input" placeholder="ex.: Pizzaria do João">
+            {% for error in form.nome.errors %}<p class="nb-error">{{ error }}</p>{% endfor %}
+        </div>
+        <div>
+            <label class="nb-label" for="nv-codigo">Código de login</label>
+            <input id="nv-codigo" name="codigo" maxlength="40" value="{{ form.codigo.value|default:'' }}" class="nb-input font-mono" autocapitalize="none" spellcheck="false" placeholder="gerado a partir do nome">
+            <p class="nb-help">É o que a equipe digita no campo "Empresa" e o nome do repositório de backup.</p>
+            {% for error in form.codigo.errors %}<p class="nb-error">{{ error }}</p>{% endfor %}
+        </div>
+        <div class="grid gap-4 sm:grid-cols-2">
+            <div>
+                <label class="nb-label" for="nv-gerente">Usuário do gerente</label>
+                <input id="nv-gerente" name="gerente_usuario" required maxlength="150" value="{{ form.gerente_usuario.value|default:'gerente' }}" class="nb-input" autocapitalize="none" spellcheck="false">
+            </div>
+            <div>
+                <label class="nb-label" for="nv-senha">Senha do gerente</label>
+                <input id="nv-senha" name="gerente_senha" type="password" maxlength="128" class="nb-input" autocomplete="new-password" placeholder="em branco: gera uma">
+                {% for error in form.gerente_senha.errors %}<p class="nb-error">{{ error }}</p>{% endfor %}
+            </div>
+        </div>
+        <div>
+            <label class="nb-label" for="nv-banco">Importar banco existente (opcional)</label>
+            <input id="nv-banco" name="banco" type="file" accept=".sqlite3,.db" class="nb-input file:mr-3 file:rounded-lg file:border-0 file:bg-carvao file:text-white file:px-3 file:py-1.5">
+            <p class="nb-help">Para trazer uma loja que já usa o NaBandeja (o db.sqlite3 dela). O banco é atualizado para esta versão.</p>
+            {% for error in form.banco.errors %}<p class="nb-error">{{ error }}</p>{% endfor %}
+        </div>
+        {% if not remote_mode %}
+        <p class="nb-alert-warn"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i>O backup externo não está configurado no master: a empresa será criada sem repositório (dá para configurar depois).</p>
+        {% endif %}
+        <button class="nb-btn-primary nb-btn-lg w-full" data-loading-label="Criando empresa…">Criar empresa</button>
+    </section>
+
+    <fieldset class="nb-card nb-card-pad">
+        <legend class="nb-h2 px-1">Módulos</legend>
+        <p class="nb-help mt-0 mb-3">Dá para mudar depois, entrando na empresa (Gestão › Suporte).</p>
+        <ul class="nb-divide border-y border-linha">
+            {% for key, label, help_text, enabled in modules %}
+            <li>
+                <label class="flex items-start gap-3 py-3 cursor-pointer">
+                    <input type="checkbox" name="module_{{ key }}" class="nb-check mt-0.5" {% if enabled %}checked{% endif %}>
+                    <span><span class="font-semibold">{{ label }}</span><span class="block nb-help mt-0">{{ help_text }}</span></span>
+                </label>
+            </li>
+            {% endfor %}
+        </ul>
+    </fieldset>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.querySelectorAll('[data-loading-form]').forEach((form) => {
+    form.addEventListener('submit', () => {
+        const button = form.querySelector('[data-loading-label]');
+        if (button) { button.disabled = true; button.textContent = button.dataset.loadingLabel; }
+    });
+});
+</script>
+{% endblock %}

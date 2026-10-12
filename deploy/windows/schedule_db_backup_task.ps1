@@ -1,5 +1,5 @@
 param(
-  [string]$TaskName = "NaBandeja-DB-Backup-GitPush",
+  [string]$TaskName = "NaBandeja-Backup-Postgres",
   [int]$EveryMinutes = 30,
   [string]$ScriptPath = ""
 )
@@ -11,7 +11,7 @@ if ($EveryMinutes -lt 5) {
 }
 
 if ([string]::IsNullOrWhiteSpace($ScriptPath)) {
-  $ScriptPath = Join-Path $PSScriptRoot "auto_backup_git_push.ps1"
+  $ScriptPath = Join-Path $PSScriptRoot "backup_postgres.ps1"
 }
 
 $ScriptPath = [System.IO.Path]::GetFullPath($ScriptPath)

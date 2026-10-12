@@ -1,0 +1,74 @@
+{% extends 'master/base_master.html' %}
+
+{% block master_content %}
+<div class="nb-page-head">
+    <div>
+        <p class="nb-kicker">Painel master</p>
+        <h1 class="nb-title mt-1">Suas <em>empresas</em></h1>
+        <p class="nb-subtitle mt-1.5">Cada empresa roda no PC dela e envia backups criptografados para o próprio repositório. Aqui você acompanha, entra e gera instaladores.</p>
+    </div>
+    <div class="flex flex-wrap gap-2">
+        {% if empresas %}
+        <form method="post" action="{% url 'master_update_all' %}">{% csrf_token %}
+            <button class="nb-btn-secondary"><i class="bi bi-arrow-repeat" aria-hidden="true"></i>Atualizar do Git</button>
+        </form>
+        {% endif %}
+        <a href="{% url 'master_new' %}" class="nb-btn-primary"><i class="bi bi-plus-lg" aria-hidden="true"></i>Nova empresa</a>
+    </div>
+</div>
+
+{% if not remote_mode %}
+<div class="nb-alert-warn mb-6">
+    <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+    <span><b>Backup externo não configurado.</b> No <span class="font-mono">.env</span> do master, defina
+        <span class="font-mono">NABANDEJA_GITHUB_TOKEN</span> e <span class="font-mono">NABANDEJA_GITHUB_OWNER</span>
+        (ou <span class="font-mono">NABANDEJA_REPOS_DIR</span>) e reinicie. Passo a passo em docs/master.md.</span>
+</div>
+{% endif %}
+{% if has_master_key %}
+<div class="nb-alert-info mb-6">
+    <i class="bi bi-key" aria-hidden="true"></i>
+    <span><b>Guarde uma cópia da chave mestra</b> em lugar seguro (pendrive, cofre de senhas):
+        <span class="font-mono break-all">{{ key_path }}</span>.
+        Sem ela, nenhum backup das lojas pode ser aberto.</span>
+</div>
+{% endif %}
+
+{% if empresas %}
+<dl class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+    <div class="nb-card nb-card-pad"><dt class="nb-label">Empresas</dt><dd class="nb-money text-2xl">{{ empresas|length }}</dd></div>
+    <div class="nb-card nb-card-pad"><dt class="nb-label">Ativas</dt><dd class="nb-money text-2xl text-manjericao">{{ counts.ativa|default:0 }}</dd></div>
+    <div class="nb-card nb-card-pad"><dt class="nb-label">Em implantação</dt><dd class="nb-money text-2xl">{{ counts.implantacao|default:0 }}</dd></div>
+    <div class="nb-card nb-card-pad"><dt class="nb-label">Backup atrasado</dt><dd class="nb-money text-2xl {% if counts.atrasada %}text-pimenta{% endif %}">{{ counts.atrasada|default:0 }}</dd></div>
+</dl>
+
+<div class="nb-card overflow-x-auto">
+    <table class="nb-table">
+        <thead>
+            <tr><th>Empresa</th><th>Situação</th><th>Último backup da loja</th><th>Vendas 30 dias</th><th class="sr-only">Abrir</th></tr>
+        </thead>
+        <tbody>
+            {% for empresa in empresas %}
+            <tr>
+                <td>
+                    <a href="{% url 'master_empresa' empresa.codigo %}" class="font-semibold">{{ empresa.nome }}</a>
+                    <span class="block font-mono text-xs text-fumaca">{{ empresa.codigo }}{% if empresa.codigo in abertas %} · aberta{% endif %}</span>
+                </td>
+                <td>{% include 'master/_situacao.html' %}{% if empresa.data.erro %}<span class="block nb-error mt-1">{{ empresa.data.erro|truncatechars:80 }}</span>{% endif %}</td>
+                <td class="tabular">{% if empresa.ultimo_backup_loja %}{{ empresa.ultimo_backup_loja|date:"d/m/Y H:i" }}{% else %}<span class="text-fumaca">—</span>{% endif %}</td>
+                <td class="tabular">{% if empresa.resumo.vendas_30d is not None %}R$ {{ empresa.resumo.vendas_30d|floatformat:2 }} <span class="text-fumaca">· {{ empresa.resumo.pedidos_30d }} pedidos</span>{% else %}<span class="text-fumaca">—</span>{% endif %}</td>
+                <td class="text-right"><a href="{% url 'master_empresa' empresa.codigo %}" class="nb-btn-secondary nb-btn-sm">Abrir<i class="bi bi-chevron-right" aria-hidden="true"></i></a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="nb-card nb-card-pad text-center py-12">
+    {% include 'brand/_mark.html' with class='h-12 mx-auto opacity-60' %}
+    <h2 class="nb-h2 mt-4">Nenhuma empresa ainda</h2>
+    <p class="nb-subtitle mt-1">Crie a primeira empresa ou importe o banco de uma loja que já usa o NaBandeja.</p>
+    <a href="{% url 'master_new' %}" class="nb-btn-primary mt-6"><i class="bi bi-plus-lg" aria-hidden="true"></i>Nova empresa</a>
+</div>
+{% endif %}
+{% endblock %}

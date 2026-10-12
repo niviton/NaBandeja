@@ -1,0 +1,3 @@
+# Só com vários processos/servidores (REDIS_URL): WebSocket entre todos eles.
+-r asgi.txt
+channels-redis==4.3.0

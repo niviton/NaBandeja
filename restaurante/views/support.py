@@ -2,10 +2,17 @@
 
 import secrets
 
+from django.conf import settings
 from django.contrib import messages
+from django.contrib.auth import login
+from django.core import signing
+from django.core.exceptions import PermissionDenied
+from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_POST
 
+from ..management.commands.suporte_nabandeja import SUPPORT_USERNAME
 from ..models import AppSettings, User
 from ..modules import MODULES, enabled_modules
 from ..permissions import support_required
@@ -57,6 +64,36 @@ def support_license(request):
         audit(request, 'license.install', f'Licença instalada até {payload["expira"]:%d/%m/%Y}.')
         messages.success(request, f'Licença de {payload["cliente"]} válida até {payload["expira"]:%d/%m/%Y}.')
     return redirect('support_panel')
+
+
+_used_tokens = set()
+
+
+@never_cache
+def espelho_login(request, token):
+    """Entrada do painel master numa empresa aberta por ele (link de uso único, 60 s)."""
+    from ..services.espelho import SSO_SALT
+
+    if not settings.ESPELHO_SSO_KEY:
+        raise Http404
+    try:
+        signing.loads(token, key=settings.ESPELHO_SSO_KEY, salt=SSO_SALT, max_age=60)
+    except signing.BadSignature as exc:
+        raise PermissionDenied('Link de acesso inválido ou expirado. Entre de novo pelo painel master.') from exc
+    if token in _used_tokens:
+        raise PermissionDenied('Este link de acesso já foi usado. Entre de novo pelo painel master.')
+    _used_tokens.add(token)
+
+    user, created = User.objects.get_or_create(username=SUPPORT_USERNAME)
+    if created or not (user.is_superuser and user.is_active):
+        if created:
+            user.set_unusable_password()
+        user.first_name = 'Suporte NaBandeja'
+        user.role = 'gerente'
+        user.is_active = user.is_staff = user.is_superuser = True
+        user.save()
+    login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+    return redirect('admin_dashboard')
 
 
 @support_required

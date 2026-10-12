@@ -1,4 +1,1 @@
-<span class="inline-flex items-center gap-2.5 {{ class|default:'' }}">
-  {% include 'brand/_mark.html' with class=mark_class|default:'w-9 h-9' tray=tray %}
-  <span class="font-display font-semibold tracking-[-0.01em] {{ text_class|default:'text-2xl text-carvao' }}"><em class="italic text-tomate">Na</em>Bandeja</span>
-</span>
+{% load static %}<img src="{% static 'brand/nabandeja-logo.svg' %}" alt="NaBandeja" class="{{ class|default:'h-10' }}" style="width:auto;align-self:flex-start">

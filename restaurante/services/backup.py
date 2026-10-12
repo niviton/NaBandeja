@@ -24,25 +24,34 @@ def is_sqlite():
     return settings.DATABASES['default']['ENGINE'].endswith('sqlite3')
 
 
+def db_path():
+    return Path(settings.DATABASES['default']['NAME'])
+
+
+def sqlite_snapshot(source_path, target_path):
+    """Cópia consistente de um banco SQLite, mesmo com o sistema gravando."""
+    source = sqlite3.connect(source_path)
+    destination = sqlite3.connect(target_path)
+    try:
+        source.backup(destination)
+    finally:
+        destination.close()
+        source.close()
+
+
 def run_backup(keep=None):
     """Cria uma cópia do banco e apaga as mais antigas. Retorna o caminho ou None."""
     if not is_sqlite():
         return None
     keep = keep or int(getattr(settings, 'BACKUP_KEEP', 48))
-    source_path = Path(settings.DATABASES['default']['NAME'])
+    source_path = db_path()
     if not source_path.exists():
         return None
 
     folder = backup_dir()
     folder.mkdir(parents=True, exist_ok=True)
     target = folder / f'db_{datetime.now():%Y-%m-%d_%H%M%S}.sqlite3'
-    source = sqlite3.connect(source_path)
-    destination = sqlite3.connect(target)
-    try:
-        source.backup(destination)
-    finally:
-        destination.close()
-        source.close()
+    sqlite_snapshot(source_path, target)
 
     for old in sorted(folder.glob('db_*.sqlite3'))[:-keep]:
         old.unlink(missing_ok=True)

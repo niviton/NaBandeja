@@ -19,12 +19,9 @@ O script faz o seguinte:
 5. cria ou atualiza o atalho na Área de Trabalho ([detalhes](deploy-windows.md#atalho-na-área-de-trabalho));
 6. inicia o servidor e abre o navegador.
 
-Para um cliente específico, troque para a branch dele antes de iniciar:
+Para instalar um cliente, extraia antes, na pasta do sistema, o **instalador gerado pelo [painel master](master.md#instalar-na-loja)**. Ele traz o banco da loja, o `.env` e o backup criptografado já configurados.
 
-```powershell
-git switch cliente/billa-burguer
-.\INICIAR_PC_NOVO.bat
-```
+Fora do Windows (Termux no Android, Railway, VPS, PythonAnywhere), veja [deploy-outros.md](deploy-outros.md).
 
 ## Opção 2: Instalação manual
 
@@ -58,7 +55,7 @@ O usuário inicial é o **`gerente`**. A senha depende de como ela foi definida:
 - **`NABANDEJA_INIT_ADMIN_PASSWORD` definida no `.env`:** é essa senha.
 - **Primeiro início pelo `INICIAR_PC_NOVO.bat` ou `.exe`:** a senha é gerada, aparece na janela do servidor e fica salva no `.env`.
 - **Sem a variável:** o comando `ensure_initial_access` gera uma senha aleatória e mostra no terminal.
-- **Cliente criado com `novo_cliente.py`:** a senha aparece na tela ao final do script.
+- **Cliente criado pelo painel master:** a senha é a definida (ou mostrada) ao criar a empresa.
 
 Para trocar a senha:
 

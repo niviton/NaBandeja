@@ -5,6 +5,7 @@ ASGI: HTTP (Django) e WebSocket (/ws/orders/) no mesmo servidor Daphne.
 import os
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'nabandeja_project.settings')
+os.environ.setdefault('NABANDEJA_SERVIDOR', 'asgi')
 
 from django.core.asgi import get_asgi_application
 

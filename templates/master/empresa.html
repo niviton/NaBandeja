@@ -1,0 +1,115 @@
+{% extends 'master/base_master.html' %}
+
+{% block title %}{{ empresa.nome }} · Painel master{% endblock %}
+
+{% block master_content %}
+<div class="nb-page-head">
+    <div class="min-w-0">
+        <a href="{% url 'master_home' %}" class="inline-flex items-center gap-1.5 text-sm text-fumaca hover:text-carvao mb-3"><i class="bi bi-arrow-left" aria-hidden="true"></i>Empresas</a>
+        <p class="nb-kicker">Empresa · {{ empresa.codigo }}</p>
+        <h1 class="nb-title mt-1">{{ empresa.nome }}</h1>
+        <p class="mt-2">{% include 'master/_situacao.html' %}{% if aberta %} <span class="nb-status-ocupada">Aberta</span>{% endif %}</p>
+    </div>
+    <div class="flex flex-wrap gap-2">
+        <form method="post" action="{% url 'master_enter' empresa.codigo %}" data-loading-form>{% csrf_token %}
+            <button class="nb-btn-primary" data-loading-label="Abrindo…"><i class="bi bi-box-arrow-in-right" aria-hidden="true"></i>{% if empresa.em_producao %}Entrar (somente leitura){% else %}Entrar na empresa{% endif %}</button>
+        </form>
+        {% if aberta %}
+        <form method="post" action="{% url 'master_close' empresa.codigo %}">{% csrf_token %}<button class="nb-btn-secondary">Fechar</button></form>
+        {% endif %}
+    </div>
+</div>
+
+{% if empresa.data.erro %}<p class="nb-alert-error mb-6"><i class="bi bi-x-circle" aria-hidden="true"></i>{{ empresa.data.erro }}</p>{% endif %}
+
+<div class="grid gap-6 lg:grid-cols-2 items-start">
+    <section class="nb-card nb-card-pad min-w-0" aria-labelledby="em-resumo">
+        <h2 id="em-resumo" class="nb-h2">Números</h2>
+        <p class="nb-help mt-1">
+            {% if empresa.em_producao %}Do backup de {% if empresa.data.espelho_de %}{{ empresa.data.espelho_de }} (ponto de restauração){% else %}{{ empresa.ultimo_backup_loja|date:"d/m/Y H:i" }}{% endif %}.
+            {% else %}Do banco de implantação (ainda não instalada na loja).{% endif %}
+        </p>
+        {% with r=empresa.resumo %}
+        <dl class="mt-4 nb-divide text-sm">
+            <div class="flex justify-between gap-4 py-2.5"><dt class="text-fumaca">Nome na loja</dt><dd class="font-semibold text-right">{{ r.loja|default:'—' }}</dd></div>
+            <div class="flex justify-between gap-4 py-2.5"><dt class="text-fumaca">Código de login</dt><dd class="font-mono">{{ r.codigo_login|default:'—' }}</dd></div>
+            <div class="flex justify-between gap-4 py-2.5"><dt class="text-fumaca">Vendas (30 dias)</dt><dd class="nb-money">{% if r.vendas_30d is not None %}R$ {{ r.vendas_30d|floatformat:2 }}{% else %}—{% endif %}</dd></div>
+            <div class="flex justify-between gap-4 py-2.5"><dt class="text-fumaca">Pedidos fechados (30 dias)</dt><dd class="tabular">{{ r.pedidos_30d|default:'0' }}</dd></div>
+            <div class="flex justify-between gap-4 py-2.5"><dt class="text-fumaca">Último pedido</dt><dd class="tabular">{{ r.ultimo_pedido|default:'—' }}</dd></div>
+            <div class="flex justify-between gap-4 py-2.5"><dt class="text-fumaca">Equipe ativa</dt><dd class="tabular">{{ r.equipe|default:'0' }}</dd></div>
+            <div class="flex justify-between gap-4 py-2.5"><dt class="text-fumaca">Produtos</dt><dd class="tabular">{{ r.produtos|default:'0' }}</dd></div>
+        </dl>
+        {% endwith %}
+    </section>
+
+    <section class="nb-card nb-card-pad min-w-0" aria-labelledby="em-backup">
+        <h2 id="em-backup" class="nb-h2">Backup</h2>
+        {% if empresa.tem_repositorio %}
+        <dl class="mt-4 nb-divide text-sm">
+            <div class="py-2.5"><dt class="text-fumaca">Repositório ({% if empresa.data.repo_tipo == 'github' %}GitHub, privado{% else %}pasta{% endif %})</dt><dd class="font-mono text-xs break-all mt-1">{{ empresa.data.repo_master }}</dd></div>
+            <div class="flex justify-between gap-4 py-2.5"><dt class="text-fumaca">Último backup da loja</dt><dd class="tabular">{{ empresa.ultimo_backup_loja|date:"d/m/Y H:i"|default:'nenhum ainda' }}</dd></div>
+            {% if empresa.data.computador %}<div class="flex justify-between gap-4 py-2.5"><dt class="text-fumaca">Computador · versão</dt><dd class="font-mono text-xs">{{ empresa.data.computador }} · v{{ empresa.data.versao_loja }}</dd></div>{% endif %}
+            <div class="flex justify-between gap-4 py-2.5"><dt class="text-fumaca">Verificado em</dt><dd class="tabular">{{ empresa.ultima_verificacao|date:"d/m/Y H:i"|default:'—' }}</dd></div>
+        </dl>
+        <div class="mt-4 flex flex-wrap gap-2">
+            <form method="post" action="{% url 'master_update' empresa.codigo %}" data-loading-form>{% csrf_token %}
+                <button class="nb-btn-dark" data-loading-label="Buscando…"><i class="bi bi-arrow-repeat" aria-hidden="true"></i>Atualizar do Git</button>
+            </form>
+            {% if not empresa.em_producao %}
+            <form method="post" action="{% url 'master_publish' empresa.codigo %}" data-loading-form>{% csrf_token %}
+                <button class="nb-btn-secondary" data-loading-label="Enviando…"><i class="bi bi-cloud-arrow-up" aria-hidden="true"></i>Enviar implantação</button>
+            </form>
+            {% endif %}
+        </div>
+        {% else %}
+        <p class="nb-alert-warn mt-3"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i>Sem repositório de backup. Sem ele não dá para gerar o instalador.</p>
+        <form method="post" action="{% url 'master_setup_backup' empresa.codigo %}" class="mt-4" data-loading-form>{% csrf_token %}
+            <button class="nb-btn-dark" {% if not remote_mode %}disabled{% endif %} data-loading-label="Criando…"><i class="bi bi-shield-check" aria-hidden="true"></i>Criar repositório privado</button>
+        </form>
+        {% if not remote_mode %}<p class="nb-help">Configure o GitHub (ou uma pasta) no .env do master primeiro: docs/master.md.</p>{% endif %}
+        {% endif %}
+    </section>
+
+    <section class="nb-card nb-card-pad min-w-0" aria-labelledby="em-pacote">
+        <h2 id="em-pacote" class="nb-h2">Instalar na loja</h2>
+        <p class="mt-2 text-sm">
+            {% if empresa.em_producao %}Gera um instalador com o <b>último backup</b>: use para reinstalar a loja num PC novo.
+            {% else %}Gera o instalador com o banco de implantação, o <span class="font-mono">.env</span> e a chave de envio desta loja.{% endif %}
+        </p>
+        <p class="nb-help">O zip contém segredos: leve em pendrive ou por canal privado e apague depois de instalar.</p>
+        <form method="post" action="{% url 'master_package' empresa.codigo %}" class="mt-4">{% csrf_token %}
+            <button class="nb-btn-secondary" {% if not empresa.tem_repositorio %}disabled{% endif %}><i class="bi bi-file-earmark-zip" aria-hidden="true"></i>Gerar instalador</button>
+        </form>
+        {% if empresa.ultimo_pacote %}<p class="nb-help">Último gerado em {{ empresa.ultimo_pacote|date:"d/m/Y H:i" }}.</p>{% endif %}
+    </section>
+
+    {% if empresa.data.diarios %}
+    <section class="nb-card min-w-0" aria-labelledby="em-pontos">
+        <h2 id="em-pontos" class="nb-h2 px-6 pt-5">Pontos de restauração</h2>
+        <p class="nb-help px-6 mt-1">Um por dia. Abrir um deles troca a cópia usada em "Entrar" e no instalador.</p>
+        <ul class="mt-3 nb-divide border-t border-linha">
+            {% for arquivo in empresa.data.diarios %}
+            <li class="px-5 py-2.5 flex items-center gap-3">
+                <span class="flex-1 font-mono text-sm">{{ arquivo|cut:".nbk" }}</span>
+                <form method="post" action="{% url 'master_restore' empresa.codigo %}">{% csrf_token %}
+                    <input type="hidden" name="arquivo" value="{{ arquivo }}">
+                    <button class="nb-btn-ghost nb-btn-sm">Abrir</button>
+                </form>
+            </li>
+            {% endfor %}
+        </ul>
+    </section>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.querySelectorAll('[data-loading-form]').forEach((form) => {
+    form.addEventListener('submit', () => {
+        const button = form.querySelector('[data-loading-label]');
+        if (button) { button.disabled = true; button.textContent = button.dataset.loadingLabel; }
+    });
+});
+</script>
+{% endblock %}

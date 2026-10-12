@@ -1,17 +1,15 @@
 /*
  * NaBandeja: utilitários das telas internas.
  *
- * - Tempo real: WebSocket /ws/orders/. Cada evento vira o evento DOM
- *   "nb:event" no <body>; partes da tela com hx-trigger="nb:event from:body"
- *   se atualizam sozinhas (htmx). Sem WebSocket, dispara "nb:event" a cada
- *   POLL_MS (polling).
+ * - Tempo real: WebSocket /ws/orders/ ou polling de /tempo-real/eventos/
+ *   (conforme o servidor). Cada evento vira o evento DOM "nb:event" no <body>;
+ *   partes da tela com hx-trigger="nb:event from:body" se atualizam sozinhas (htmx).
  * - Sons: avisos curtos gerados no navegador (sem arquivos).
  * - Toast: mensagens rápidas, sempre como texto (nunca HTML).
  */
 (function () {
   'use strict';
 
-  const POLL_MS = 8000;
   const NB = (window.NB = window.NB || {});
 
   // ------------------------------------------------------------ toast
@@ -111,16 +109,23 @@
   }, { once: true });
 
   // ------------------------------------------------------------ tempo real
-  let socket = null;
-  let pollTimer = null;
-  let retries = 0;
+  // O mesmo contrato em qualquer servidor: eventos com id crescente.
+  // - WebSocket (ASGI): chegam na hora;
+  // - polling: GET /tempo-real/eventos/?desde=<id> (WSGI, PythonAnywhere ou WebSocket fora do ar).
+  // O cursor evita repetir e perder eventos; cada um vira "nb:event" com o tipo real
+  // (order.created, table.call...), então sons e avisos funcionam nos dois modos.
+  const RT = { mode: 'off', cursor: 0, pollMs: 4000, timer: null, polling: false, inFlight: false, retries: 0, wsFailures: 0, wsPausedUntil: 0, socketOpen: false };
+  const HIDDEN_POLL_MS = 15000;
+  const SAFETY_REFRESH_MS = 60000;
+  const WS_GIVE_UP_AFTER = 3;
+  const WS_PAUSE_MS = 5 * 60000;
 
-  function setStatus(online) {
+  function setStatus(ok) {
     document.querySelectorAll('[data-realtime-status]').forEach((el) => {
-      el.dataset.online = online ? '1' : '0';
-      el.title = online ? 'Tempo real conectado' : 'Atualizando a cada poucos segundos';
-      el.classList.toggle('bg-emerald-500', online);
-      el.classList.toggle('bg-amber-400', !online);
+      el.dataset.online = ok ? '1' : '0';
+      el.title = !ok ? 'Sem conexão: tentando de novo' : RT.socketOpen ? 'Tempo real conectado' : `Atualizando a cada ${RT.pollMs / 1000} s`;
+      el.classList.toggle('bg-emerald-500', ok);
+      el.classList.toggle('bg-amber-400', !ok);
     });
   }
 
@@ -128,42 +133,113 @@
     document.body.dispatchEvent(new CustomEvent('nb:event', { detail }));
   }
 
+  function deliver(event) {
+    if (event.id) {
+      if (event.id <= RT.cursor) return;
+      RT.cursor = event.id;
+    }
+    emit(event);
+  }
+
+  async function pollOnce() {
+    if (RT.inFlight) return;
+    RT.inFlight = true;
+    try {
+      const response = await fetch(`/tempo-real/eventos/?desde=${RT.cursor}`, {
+        credentials: 'same-origin', cache: 'no-store', headers: { Accept: 'application/json' },
+      });
+      if (response.status === 401) { stopPolling(); setStatus(false); return; } // sessão expirou
+      if (!response.ok) { if (!RT.socketOpen) setStatus(false); return; }
+      const data = await response.json();
+      if (data.reset) {
+        RT.cursor = data.cursor || 0;
+        emit({ type: 'poll' }); // ficou muito tempo fora: recarrega tudo
+      } else {
+        (data.events || []).forEach(deliver);
+        if (data.cursor > RT.cursor) RT.cursor = data.cursor;
+      }
+      if (!RT.socketOpen) setStatus(RT.mode === 'polling');
+    } catch (err) {
+      if (!RT.socketOpen) setStatus(false);
+    } finally {
+      RT.inFlight = false;
+    }
+  }
+
+  async function pollLoop() {
+    if (!RT.polling) return;
+    await pollOnce();
+    if (RT.polling) RT.timer = setTimeout(pollLoop, document.hidden ? HIDDEN_POLL_MS : RT.pollMs);
+  }
+
   function startPolling() {
-    if (!pollTimer) pollTimer = setInterval(() => emit({ type: 'poll' }), POLL_MS);
+    if (RT.polling) return;
+    RT.polling = true;
+    pollLoop();
   }
 
   function stopPolling() {
-    clearInterval(pollTimer);
-    pollTimer = null;
+    RT.polling = false;
+    clearTimeout(RT.timer);
   }
 
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && RT.polling) { clearTimeout(RT.timer); pollLoop(); }
+  });
+
   function connect() {
+    const wait = RT.wsPausedUntil - Date.now();
+    if (wait > 0) { setTimeout(connect, wait); return; }
     const scheme = location.protocol === 'https:' ? 'wss' : 'ws';
+    let socket;
+    let opened = false;
     try {
       socket = new WebSocket(`${scheme}://${location.host}/ws/orders/`);
     } catch (err) {
       startPolling();
       return;
     }
-    socket.onopen = () => { retries = 0; stopPolling(); setStatus(true); };
+    socket.onopen = () => {
+      opened = true;
+      RT.socketOpen = true;
+      RT.retries = 0;
+      RT.wsFailures = 0;
+      stopPolling();
+      setStatus(true);
+      pollOnce(); // recupera o que chegou enquanto estava desconectado
+    };
     socket.onmessage = (message) => {
       let data;
       try { data = JSON.parse(message.data); } catch (err) { return; }
       if (data.type === 'connection.ready') return;
-      emit(data);
+      deliver(data);
     };
     socket.onclose = () => {
+      RT.socketOpen = false;
       setStatus(false);
       startPolling();
-      retries += 1;
-      setTimeout(connect, Math.min(30000, 1000 * 2 ** Math.min(retries, 5)));
+      if (!opened && RT.mode === 'auto' && ++RT.wsFailures >= WS_GIVE_UP_AFTER) {
+        // Servidor sem WebSocket: fica no polling e só tenta de novo daqui a pouco.
+        RT.wsFailures = 0;
+        RT.wsPausedUntil = Date.now() + WS_PAUSE_MS;
+      }
+      RT.retries += 1;
+      setTimeout(connect, Math.min(30000, 1000 * 2 ** Math.min(RT.retries, 5)));
     };
   }
 
   NB.startRealtime = function () {
-    if (!document.body.dataset.realtime) return;
+    const body = document.body;
+    let mode = body.dataset.realtime;
+    if (!mode || mode === 'off') return;
+    if (mode === '1') mode = 'auto'; // templates antigos
+    RT.mode = mode;
+    RT.cursor = Number(body.dataset.realtimeCursor || 0);
+    RT.pollMs = Math.max(2, Number(body.dataset.realtimePoll || 4)) * 1000;
     setStatus(false);
-    if ('WebSocket' in window) connect(); else startPolling();
+    // Segurança: atualiza as telas de tempos em tempos mesmo sem eventos.
+    setInterval(() => emit({ type: 'poll' }), SAFETY_REFRESH_MS);
+    if (mode !== 'polling' && 'WebSocket' in window) connect(); else startPolling();
   };
 
   // ------------------------------------------------------------ htmx

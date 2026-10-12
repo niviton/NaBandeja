@@ -1,0 +1,2 @@
+# Só para DB_ENGINE=postgres ou DATABASE_URL (Railway, VPS).
+psycopg2-binary==2.9.13

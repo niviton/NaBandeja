@@ -2,6 +2,7 @@
 
 from functools import wraps
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
@@ -18,6 +19,8 @@ HOME_BY_ROLE = {
 
 
 def home_for(user):
+    if settings.IS_MASTER:
+        return 'master_home'
     return HOME_BY_ROLE.get(getattr(user, 'role', ''), 'waiter_view')
 
 
@@ -61,6 +64,19 @@ def support_required(view):
             raise PermissionDenied('Área do suporte NaBandeja.')
         return view(request, *args, **kwargs)
     return wrapper
+
+
+def master_required(view):
+    """Painel master: só no modo master e só para o administrador (superusuário)."""
+    @login_required
+    @wraps(view)
+    def wrapper(request, *args, **kwargs):
+        if not (settings.IS_MASTER and request.user.is_superuser):
+            raise PermissionDenied('Área do administrador do NaBandeja.')
+        return view(request, *args, **kwargs)
+    return wrapper
+
+
 service_required = role_required('garcom', 'gerente')
 kitchen_required = role_required('cozinha', 'gerente')
 
