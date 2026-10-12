@@ -1,0 +1,54 @@
+{% extends 'restaurante/admin/base_admin.html' %}
+
+{% block title %}Caixa {{ session.opened_at|date:"d/m" }} · {{ app_settings.store_name }}{% endblock %}
+
+{% block admin_content %}
+{% url 'cash_history' as back_url %}
+{% include 'restaurante/admin/_page_head.html' with back=back_url kicker='Caixa' title=session.opened_at|date:"d/m/Y" %}
+
+<div class="nb-card nb-card-pad max-w-2xl">
+    <div class="flex flex-wrap items-start justify-between gap-3">
+        <div>
+            <h2 class="nb-h2">{{ app_settings.store_name }}</h2>
+            <p class="text-sm text-fumaca mt-1">
+                Aberto {{ session.opened_at|date:"d/m H:i" }}{% if session.opened_by %} por {{ session.opened_by.first_name|default:session.opened_by.username }}{% endif %}<br>
+                {% if session.closed_at %}Fechado {{ session.closed_at|date:"d/m H:i" }}{% if session.closed_by %} por {{ session.closed_by.first_name|default:session.closed_by.username }}{% endif %}{% else %}Ainda aberto{% endif %}
+            </p>
+        </div>
+        <button type="button" onclick="window.print()" class="nb-btn-secondary nb-btn-sm print:hidden"><i class="bi bi-printer" aria-hidden="true"></i>Imprimir</button>
+    </div>
+
+    <h3 class="nb-label mt-6">Vendas por forma de pagamento</h3>
+    <dl class="mt-2 space-y-1.5 tabular">
+        {% for method in summary.methods %}
+        <div class="flex justify-between border-b border-linha pb-1.5"><dt>{{ method.label }} <span class="text-sm text-fumaca">· {{ method.count }}</span></dt><dd class="font-semibold">R$ {{ method.total|floatformat:2 }}</dd></div>
+        {% endfor %}
+        <div class="flex justify-between pt-1"><dt class="font-semibold">Total vendido · {{ summary.orders_count }} conta{{ summary.orders_count|pluralize }}</dt><dd class="nb-money text-xl">R$ {{ summary.total_sales|floatformat:2 }}</dd></div>
+    </dl>
+
+    <h3 class="nb-label mt-6">Gaveta</h3>
+    <dl class="mt-2 space-y-1.5 tabular">
+        <div class="flex justify-between"><dt class="text-fumaca">Troco inicial</dt><dd>R$ {{ session.opening_amount|floatformat:2 }}</dd></div>
+        <div class="flex justify-between"><dt class="text-fumaca">+ Dinheiro recebido</dt><dd>R$ {{ summary.cash_sales|floatformat:2 }}</dd></div>
+        <div class="flex justify-between"><dt class="text-fumaca">+ Suprimentos</dt><dd>R$ {{ summary.supplies|floatformat:2 }}</dd></div>
+        <div class="flex justify-between"><dt class="text-fumaca">− Sangrias</dt><dd>R$ {{ summary.withdrawals|floatformat:2 }}</dd></div>
+        <div class="flex justify-between border-t border-linha pt-1.5 font-semibold"><dt>Esperado</dt><dd>R$ {% if session.expected_amount is not None %}{{ session.expected_amount|floatformat:2 }}{% else %}{{ summary.expected_in_drawer|floatformat:2 }}{% endif %}</dd></div>
+        {% if session.closing_amount is not None %}
+        <div class="flex justify-between font-semibold"><dt>Contado</dt><dd>R$ {{ session.closing_amount|floatformat:2 }}</dd></div>
+        <div class="flex justify-between font-semibold {% if session.difference_amount < 0 %}text-pimenta{% elif session.difference_amount > 0 %}text-manjericao{% endif %}"><dt>Diferença</dt><dd>R$ {{ session.difference_amount|floatformat:2 }}</dd></div>
+        {% endif %}
+    </dl>
+
+    {% if summary.movements %}
+    <h3 class="nb-label mt-6">Sangrias e suprimentos</h3>
+    <ul class="mt-2 space-y-1 text-sm">
+        {% for m in summary.movements %}
+        <li class="flex justify-between gap-3"><span>{{ m.created_at|time:"H:i" }} · {{ m.get_kind_display }}{% if m.reason %}: {{ m.reason }}{% endif %}{% if m.created_by %} <span class="text-fumaca">({{ m.created_by.first_name|default:m.created_by.username }})</span>{% endif %}</span>
+            <span class="tabular font-semibold">{% if m.kind == 'sangria' %}−{% else %}+{% endif %}R$ {{ m.amount|floatformat:2 }}</span></li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    {% if session.notes %}<h3 class="nb-label mt-6">Observações</h3><p class="mt-1 text-sm whitespace-pre-line">{{ session.notes }}</p>{% endif %}
+</div>
+{% endblock %}

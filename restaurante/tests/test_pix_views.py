@@ -44,7 +44,7 @@ class PixReceiptTests(TestCase):
         self.assertNotContains(response, 'PAGUE COM PIX')
 
     def test_configuracao_invalida_e_recusada(self):
-        response = self.client.post(reverse('admin_settings'), {
+        response = self.client.post(reverse('admin_settings'), {'aba': 'pagamento',
             'store_name': 'Loja', 'slogan': '', 'primary_color': '#ef4444', 'secondary_color': '#fbbf24',
             'background_color': '#f8f9fa', 'text_color': '#1e293b',
             'pix_key': '111.111.111-11', 'pix_key_type': 'cpf', 'pix_name': 'X', 'pix_city': 'Y',

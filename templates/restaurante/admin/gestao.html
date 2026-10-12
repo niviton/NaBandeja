@@ -1,0 +1,36 @@
+{% extends 'restaurante/admin/base_admin.html' %}
+
+{% block title %}Gestão · {{ app_settings.store_name }}{% endblock %}
+
+{% block admin_content %}
+<div class="nb-page-head">
+    <div>
+        <p class="nb-kicker">Gestão</p>
+        <h1 class="nb-title mt-1">Tudo o que <em>não é</em> o dia a dia</h1>
+        <p class="nb-subtitle mt-1.5">Relatórios, cardápio, equipe e ajustes da loja. A operação fica em Hoje, Salão, Delivery e Cozinha.</p>
+    </div>
+</div>
+
+<div class="grid gap-6 md:grid-cols-2">
+    {% for title, items in admin_nav %}{% if items %}
+    <section class="nb-card" aria-labelledby="g-{{ forloop.counter }}">
+        <h2 id="g-{{ forloop.counter }}" class="nb-kicker px-5 pt-5">{{ title }}</h2>
+        <ul class="mt-2 nb-divide">
+            {% for name, label, icon, key in items %}
+            <li>
+                <a href="{% url name %}" class="flex items-center gap-4 px-5 py-4 hover:bg-creme/60">
+                    <span class="w-10 h-10 rounded-xl bg-creme flex items-center justify-center text-lg" aria-hidden="true"><i class="bi {{ icon }}"></i></span>
+                    <span class="flex-1 font-semibold">{{ label }}</span>
+                    <i class="bi bi-chevron-right text-fumaca" aria-hidden="true"></i>
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+    </section>
+    {% endif %}{% endfor %}
+</div>
+
+{% if user.is_superuser %}
+<a href="{% url 'support_panel' %}" class="nb-alert-info mt-6 font-semibold"><i class="bi bi-shield-lock" aria-hidden="true"></i><span class="flex-1">Suporte NaBandeja: módulos, licença e senhas</span><i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+{% endif %}
+{% endblock %}

@@ -19,5 +19,17 @@
         <a href="{% url 'waiter_view' %}" class="nb-btn-dark nb-btn-lg">Voltar ao salão</a>
         <a href="{% url 'print_order' order.id %}" target="_blank" rel="noopener" class="nb-btn-secondary nb-btn-lg"><i class="bi bi-printer" aria-hidden="true"></i>Imprimir cupom</a>
     </div>
+    {% if can_reopen %}
+    <details class="mt-8 rounded-xl border border-linha">
+        <summary class="cursor-pointer px-4 min-h-[44px] flex items-center font-semibold text-sm">Fechou errado? Reabrir a conta</summary>
+        <form method="post" action="{% url 'reopen_order' order.id %}" class="px-4 pb-4 flex gap-2"
+              data-confirm-message="Reabrir a conta #{{ order.id }}? Os pagamentos dela serão estornados.">
+            {% csrf_token %}
+            <label class="sr-only" for="reopen-reason">Motivo</label>
+            <input id="reopen-reason" name="reason" required placeholder="Motivo" autocomplete="off" class="nb-input">
+            <button type="submit" class="nb-btn-danger">Reabrir</button>
+        </form>
+    </details>
+    {% endif %}
 </div>
 {% endblock %}

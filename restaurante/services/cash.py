@@ -5,7 +5,7 @@ from decimal import Decimal, InvalidOperation
 from django.db.models import Count, Sum
 from django.utils import timezone
 
-from ..models import CashSession, Order, Payment
+from ..models import CashMovement, CashSession, Order, Payment
 
 
 class CashError(Exception):
@@ -43,13 +43,19 @@ def summary(session, until=None):
         for key in labels
     ]
     cash_sales = by_method.get('dinheiro', {}).get('total', Decimal('0'))
+    movements = list(session.movements.select_related('created_by')) if session.pk else []
+    supplies = sum((m.amount for m in movements if m.kind == 'suprimento'), Decimal('0'))
+    withdrawals = sum((m.amount for m in movements if m.kind == 'sangria'), Decimal('0'))
     return {
         'methods': methods,
         'total_sales': sum((m['total'] for m in methods), Decimal('0')),
         'orders_count': payments.values('order').distinct().count(),
         'cash_sales': cash_sales,
+        'movements': movements,
+        'supplies': supplies,
+        'withdrawals': withdrawals,
         # Só dinheiro em espécie fica na gaveta; PIX e cartão vão para o banco.
-        'expected_in_drawer': session.opening_amount + cash_sales,
+        'expected_in_drawer': session.opening_amount + cash_sales + supplies - withdrawals,
     }
 
 
@@ -83,3 +89,19 @@ def close_session(user, counted_amount, notes=''):
         session.notes = f'{session.notes}\n{notes}'.strip()
     session.save()
     return session, totals
+
+
+def add_movement(user, kind, amount, reason):
+    """Sangria (retirada) ou suprimento (troco colocado) no caixa aberto."""
+    session = CashSession.get_open_session()
+    if not session:
+        raise CashError('Abra o caixa antes de registrar sangria ou suprimento.')
+    if kind not in dict(CashMovement.KIND_CHOICES):
+        raise CashError('Tipo de movimentação inválido.')
+    reason = (reason or '').strip()[:200]
+    if not reason:
+        raise CashError('Informe o motivo.')
+    value = parse_amount(amount)
+    if value <= 0:
+        raise CashError('O valor deve ser maior que zero.')
+    return CashMovement.objects.create(session=session, kind=kind, amount=value, reason=reason, created_by=user)

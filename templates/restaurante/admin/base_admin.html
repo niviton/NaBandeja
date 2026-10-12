@@ -1,55 +1,33 @@
-{% extends 'base.html' %}
+{% extends 'app/base_app.html' %}
 
-{% block title %}Painel · {{ app_settings.store_name }}{% endblock %}
-{% block body_class %}min-h-screen bg-creme{% endblock %}
-
-{% block navbar %}
-<header class="sticky top-0 z-40 bg-creme/90 backdrop-blur border-b border-linha">
-    <div class="px-4 sm:px-6 h-16 flex items-center gap-3">
-        <a href="{% url 'admin_dashboard' %}" class="flex items-center gap-2.5 min-w-0 rounded-xl" aria-label="Painel">
-            {% include 'brand/_mark.html' with class='w-8 h-8 shrink-0' %}
-            <span class="min-w-0 leading-tight">
-                <span class="block font-display font-semibold text-[17px] truncate max-w-[12rem] sm:max-w-xs">{{ app_settings.store_name }}</span>
-                <span class="block font-mono text-xs uppercase tracking-[0.12em] text-fumaca">Painel do gerente</span>
-            </span>
-        </a>
-        <div class="flex-1"></div>
-        <form method="post" action="{% url 'toggle_store_status' %}" data-confirm-message="{% if app_settings.is_store_open %}Fechar a loja agora? Novos pedidos ficam bloqueados.{% else %}Abrir a loja agora?{% endif %}">
-            {% csrf_token %}
-            <input type="hidden" name="next" value="{{ request.get_full_path }}">
-            <button type="submit" class="nb-btn-sm {% if app_settings.is_store_open %}nb-btn-secondary{% else %}nb-btn-primary{% endif %} nb-btn">
-                <span class="w-2 h-2 rounded-full {% if app_settings.is_store_open %}bg-manjericao{% else %}bg-white{% endif %}" aria-hidden="true"></span>
-                <span class="hidden sm:inline">{% if app_settings.is_store_open %}Loja aberta · fechar{% else %}Loja fechada · abrir{% endif %}</span>
-                <span class="sm:hidden">{% if app_settings.is_store_open %}Aberta{% else %}Fechada{% endif %}</span>
-            </button>
-        </form>
-        <span class="hidden md:block text-right leading-tight ml-2">
-            <span class="block text-sm font-semibold">{{ user.first_name|default:user.username }}</span>
-            <span class="block font-mono text-xs uppercase tracking-[0.12em] text-fumaca">{% if user.is_superuser %}Suporte{% else %}{{ user.get_role_display }}{% endif %}</span>
-        </span>
-        <a href="{% url 'logout' %}" class="nb-icon-btn" aria-label="Sair"><i class="bi bi-box-arrow-right" aria-hidden="true"></i></a>
-    </div>
-    {% if license_status.show_warning %}
-    <p class="px-4 py-2 text-center text-sm font-semibold {% if license_status.blocks_new_orders %}bg-pimenta text-white{% else %}bg-mostarda-50 text-[#7A4F0F]{% endif %}">
-        <i class="bi bi-shield-exclamation me-1" aria-hidden="true"></i>{{ license_status.message }}
-    </p>
-    {% endif %}
-</header>
-{% endblock %}
+{% block title %}Gestão · {{ app_settings.store_name }}{% endblock %}
+{% block body_attrs %}{% endblock %}
 
 {% block content %}
-<div class="lg:flex min-h-[calc(100vh-4rem)]">
-    <nav class="hidden lg:flex w-64 shrink-0 flex-col gap-1 p-4 border-r border-linha sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto" aria-label="Menu do painel">
-        {% include 'restaurante/admin/_nav_links.html' %}
-        <div class="mt-auto pt-4 space-y-1">
-            <a href="{% url 'waiter_view' %}" class="nb-btn-dark w-full justify-start"><i class="bi bi-grid-3x3-gap" aria-hidden="true"></i>Ir para o salão</a>
-            {% if user.is_superuser %}
-            <a href="{% url 'support_panel' %}" class="nb-nav-link" {% if active_menu == 'support' %}aria-current="page"{% endif %}><i class="bi bi-shield-lock" aria-hidden="true"></i>Suporte NaBandeja</a>
-            {% endif %}
+<div class="lg:flex min-h-[calc(100vh-4rem)] max-w-[1600px] mx-auto">
+    <nav class="hidden lg:flex w-60 shrink-0 flex-col gap-5 p-4 border-r border-linha sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto" aria-label="Gestão">
+        <a href="{% url 'management_home' %}" class="nb-nav-link" {% if active_menu == 'gestao' %}aria-current="page"{% endif %}><i class="bi bi-sliders" aria-hidden="true"></i>Visão geral</a>
+        {% for title, items in admin_nav %}{% if items %}
+        <div>
+            <p class="nb-kicker px-3 mb-1">{{ title }}</p>
+            <div class="flex flex-col gap-0.5">
+                {% for name, label, icon, key in items %}
+                <a href="{% url name %}" class="nb-nav-link" {% if active_menu == key %}aria-current="page"{% endif %}><i class="bi {{ icon }}" aria-hidden="true"></i>{{ label }}</a>
+                {% endfor %}
+            </div>
         </div>
+        {% endif %}{% endfor %}
+        {% if user.is_superuser %}
+        <div class="mt-auto">
+            <a href="{% url 'support_panel' %}" class="nb-nav-link" {% if active_menu == 'support' %}aria-current="page"{% endif %}><i class="bi bi-shield-lock" aria-hidden="true"></i>Suporte NaBandeja</a>
+        </div>
+        {% endif %}
     </nav>
-    <nav class="lg:hidden flex gap-1 overflow-x-auto px-3 py-2 border-b border-linha bg-creme" aria-label="Menu do painel">
-        {% include 'restaurante/admin/_nav_links.html' %}
+    <nav class="lg:hidden flex gap-1 overflow-x-auto px-3 py-2 border-b border-linha bg-creme" aria-label="Gestão">
+        <a href="{% url 'management_home' %}" class="nb-nav-link" {% if active_menu == 'gestao' %}aria-current="page"{% endif %}><i class="bi bi-sliders" aria-hidden="true"></i>Visão geral</a>
+        {% for title, items in admin_nav %}{% for name, label, icon, key in items %}
+        <a href="{% url name %}" class="nb-nav-link whitespace-nowrap" {% if active_menu == key %}aria-current="page"{% endif %}><i class="bi {{ icon }}" aria-hidden="true"></i>{{ label }}</a>
+        {% endfor %}{% endfor %}
         {% if user.is_superuser %}<a href="{% url 'support_panel' %}" class="nb-nav-link" {% if active_menu == 'support' %}aria-current="page"{% endif %}><i class="bi bi-shield-lock" aria-hidden="true"></i>Suporte</a>{% endif %}
     </nav>
 

@@ -89,7 +89,8 @@ class SmokeTests(TestCase):
     def test_telas(self):
         for name, args in [
             ('admin_dashboard', []), ('admin_reports', []), ('admin_menu', []), ('admin_ingredients', []),
-            ('admin_users', []), ('admin_settings', []), ('admin_online_orders', []), ('kitchen_view', []),
+            ('admin_users', []), ('admin_settings', []), ('delivery_board', []), ('kitchen_view', []),
+            ('delivery_board_partial', []), ('management_home', []), ('cash_history', []), ('close_day', []),
             ('waiter_view', []), ('salao_board', []), ('table_order', ['1']),
             ('new_order', ['delivery']), ('new_order', ['balcao']), ('order_panel', [f'pedido:{self.order.pk}']),
             ('close_order', [self.order.pk]), ('print_order', [self.order.pk]), ('kitchen_board', []),

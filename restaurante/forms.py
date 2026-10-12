@@ -72,6 +72,17 @@ class IngredientForm(forms.ModelForm):
         }
 
 
+# Configurações em abas: cada aba salva só os seus campos (checkbox de outra aba não é zerado).
+SETTINGS_TABS = {
+    'loja': ['store_name', 'slogan', 'logo', 'cnpj', 'phone', 'address', 'city',
+             'primary_color', 'secondary_color', 'background_color', 'text_color'],
+    'pagamento': ['pix_key', 'pix_key_type', 'pix_name', 'pix_city', 'show_pix_on_receipt'],
+    'salao': ['quick_notes', 'kitchen_late_minutes', 'kitchen_auto_print'],
+    'cardapio': ['public_menu_enabled', 'wifi_ssid', 'wifi_password'],
+    'delivery': ['online_orders_enabled', 'whatsapp_number', 'min_delivery_order'],
+}
+
+
 class AppSettingsForm(forms.ModelForm):
     """Formulário de configurações"""
     class Meta:
@@ -120,15 +131,21 @@ class AppSettingsForm(forms.ModelForm):
             'show_pix_on_receipt': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if 'slogan' in self.fields:
+            self.fields['slogan'].required = False
+
     def clean(self):
         cleaned = super().clean()
         if cleaned.get('pix_key'):
+            store = self.instance
             try:
                 build_pix_payload(
                     key=cleaned['pix_key'],
                     key_type=cleaned.get('pix_key_type') or 'auto',
-                    name=cleaned.get('pix_name') or cleaned.get('store_name') or '',
-                    city=cleaned.get('pix_city') or cleaned.get('city') or '',
+                    name=cleaned.get('pix_name') or cleaned.get('store_name', store.store_name) or '',
+                    city=cleaned.get('pix_city') or cleaned.get('city', store.city) or '',
                     amount='1.00',
                 )
             except PixError as exc:

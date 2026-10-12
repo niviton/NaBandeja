@@ -7,16 +7,26 @@
     <div>
         <p class="nb-kicker">Configurações</p>
         <h1 class="nb-title mt-1">A cara da <em>sua loja</em></h1>
-        <p class="nb-subtitle mt-1.5">Nome, logo e dados do cupom, PIX e regras do salão e da cozinha.</p>
+        <p class="nb-subtitle mt-1.5">Cada aba salva só o que está nela.</p>
     </div>
 </div>
 
-<div class="grid gap-6 xl:grid-cols-[1fr_320px] items-start">
-<form method="post" enctype="multipart/form-data" class="space-y-6" novalidate>
-    {% csrf_token %}
+<nav class="flex gap-1 overflow-x-auto border-b border-linha mb-6" aria-label="Abas das configurações">
+    {% for key, label, icon in tabs %}
+    <a href="?aba={{ key }}" class="inline-flex items-center gap-2 whitespace-nowrap px-4 min-h-[44px] border-b-2 -mb-px font-semibold text-sm {% if tab == key %}border-tomate text-carvao{% else %}border-transparent text-fumaca hover:text-carvao{% endif %}" {% if tab == key %}aria-current="page"{% endif %}>
+        <i class="bi {{ icon }}" aria-hidden="true"></i>{{ label }}
+    </a>
+    {% endfor %}
+</nav>
 
+<div class="grid gap-6 xl:grid-cols-[1fr_320px] items-start">
+<form method="post" enctype="multipart/form-data" action="?aba={{ tab }}" class="space-y-6" novalidate>
+    {% csrf_token %}
+    <input type="hidden" name="aba" value="{{ tab }}">
+
+    {% if tab == 'loja' %}
     <section class="nb-card nb-card-pad grid gap-4 sm:grid-cols-2" aria-labelledby="s-loja">
-        <h2 id="s-loja" class="nb-h2 sm:col-span-2">Loja</h2>
+        <h2 id="s-loja" class="nb-h2 sm:col-span-2">Loja e cupom</h2>
         <div class="sm:col-span-2 flex items-center gap-4">
             <span class="w-16 h-16 rounded-2xl overflow-hidden bg-creme border border-linha flex items-center justify-center shrink-0">
                 {% if settings.logo %}<img src="{{ settings.logo.url }}" alt="Logo atual" width="64" height="64" class="w-full h-full object-cover">{% else %}<i class="bi bi-image text-fumaca text-xl" aria-hidden="true"></i>{% endif %}
@@ -32,7 +42,18 @@
         <div class="sm:col-span-2"><label class="nb-label" for="s-addr">Endereço (cupom)</label><input id="s-addr" name="address" value="{{ settings.address }}" autocomplete="street-address" class="nb-input"></div>
     </section>
 
-    {% if modules.pix %}
+    <section class="nb-card nb-card-pad" aria-labelledby="s-cores">
+        <h2 id="s-cores" class="nb-h2">Cores das páginas do cliente</h2>
+        <p class="nb-help">Usadas no cardápio digital, nos pedidos online e no app instalado no celular.</p>
+        <div class="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {% for name, label, value in color_fields %}
+            <div><label class="nb-label" for="s-{{ name }}">{{ label }}</label>
+                <input id="s-{{ name }}" type="color" name="{{ name }}" value="{{ value }}" class="h-11 w-full rounded-xl border border-linha bg-papel p-1 cursor-pointer"></div>
+            {% endfor %}
+        </div>
+    </section>
+
+    {% elif tab == 'pagamento' %}
     <section class="nb-card nb-card-pad grid gap-4 sm:grid-cols-2" aria-labelledby="s-pix">
         <div class="sm:col-span-2">
             <h2 id="s-pix" class="nb-h2">PIX com o valor exato</h2>
@@ -60,12 +81,8 @@
         </div>
         {% endif %}
     </section>
-    {% else %}
-    <input type="hidden" name="pix_key" value="{{ settings.pix_key }}"><input type="hidden" name="pix_key_type" value="{{ settings.pix_key_type }}">
-    <input type="hidden" name="pix_name" value="{{ settings.pix_name }}"><input type="hidden" name="pix_city" value="{{ settings.pix_city }}">
-    {% if settings.show_pix_on_receipt %}<input type="hidden" name="show_pix_on_receipt" value="on">{% endif %}
-    {% endif %}
 
+    {% elif tab == 'salao' %}
     <section class="nb-card nb-card-pad grid gap-4 sm:grid-cols-2" aria-labelledby="s-salao">
         <h2 id="s-salao" class="nb-h2 sm:col-span-2">Salão e cozinha</h2>
         <div class="sm:col-span-2"><label class="nb-label" for="s-notes">Observações rápidas (uma por linha)</label>
@@ -76,48 +93,58 @@
             <input type="checkbox" name="kitchen_auto_print" class="nb-check" {% if settings.kitchen_auto_print %}checked{% endif %}>
             <span class="font-semibold">Imprimir comanda automaticamente</span>
         </label>
+        <p class="sm:col-span-2 text-sm text-fumaca">Mesas e QR Codes das mesas ficam em <a href="{% url 'admin_tables' %}" class="underline font-semibold text-carvao">Mesas e QR Code</a>.</p>
     </section>
 
+    {% elif tab == 'cardapio' %}
     <section class="nb-card nb-card-pad grid gap-4 sm:grid-cols-2" aria-labelledby="s-digital">
-        <h2 id="s-digital" class="nb-h2 sm:col-span-2">Cardápio digital e pedidos online</h2>
-        {% if modules.cardapio_digital %}
-        <label class="flex items-start gap-3 cursor-pointer">
+        <h2 id="s-digital" class="nb-h2 sm:col-span-2">Cardápio digital</h2>
+        <label class="sm:col-span-2 flex items-start gap-3 cursor-pointer">
             <input type="checkbox" name="public_menu_enabled" class="nb-check mt-0.5" {% if settings.public_menu_enabled %}checked{% endif %}>
-            <span><span class="font-semibold">Cardápio digital ligado</span><span class="block nb-help mt-0">QR Code na mesa e no suporte de molhos.</span></span>
+            <span><span class="font-semibold">Cardápio digital ligado</span><span class="block nb-help mt-0">O cliente consulta pelo QR Code; o pedido continua com o garçom.</span></span>
         </label>
-        {% elif settings.public_menu_enabled %}<input type="hidden" name="public_menu_enabled" value="on">{% endif %}
-        {% if modules.online %}
-        <label class="flex items-start gap-3 cursor-pointer">
-            <input type="checkbox" name="online_orders_enabled" class="nb-check mt-0.5" {% if settings.online_orders_enabled %}checked{% endif %}>
-            <span><span class="font-semibold">Aceitar pedidos online</span><span class="block nb-help mt-0">Chegam como "aguardando confirmação".</span></span>
-        </label>
-        {% elif settings.online_orders_enabled %}<input type="hidden" name="online_orders_enabled" value="on">{% endif %}
-        <div><label class="nb-label" for="s-wa">WhatsApp da loja</label><input id="s-wa" name="whatsapp_number" value="{{ settings.whatsapp_number }}" inputmode="tel" class="nb-input"></div>
-        <div><label class="nb-label" for="s-min">Pedido mínimo para entrega (R$)</label><input id="s-min" name="min_delivery_order" value="{{ settings.min_delivery_order|stringformat:'s' }}" inputmode="decimal" class="nb-input tabular"></div>
         <div><label class="nb-label" for="s-wifi">Wi-Fi dos clientes</label><input id="s-wifi" name="wifi_ssid" value="{{ settings.wifi_ssid }}" autocomplete="off" class="nb-input"></div>
         <div><label class="nb-label" for="s-wifipw">Senha do Wi-Fi</label><input id="s-wifipw" name="wifi_password" value="{{ settings.wifi_password }}" autocomplete="off" class="nb-input"></div>
-        {% if modules.cardapio_digital %}
         <div class="sm:col-span-2 flex flex-wrap items-center gap-3 rounded-2xl bg-creme p-4">
             <i class="bi bi-qr-code text-2xl" aria-hidden="true"></i>
-            <p class="flex-1 min-w-[14rem] text-sm">Cartão para o suporte de molhos: QR do Wi-Fi + QR do cardápio. O cliente consulta; o pedido continua com o garçom.</p>
-            <a href="{% url 'menu_qr_sheet' %}" target="_blank" rel="noopener" class="nb-btn-dark nb-btn-sm">Imprimir cartões</a>
+            <p class="flex-1 min-w-[14rem] text-sm">Cartões para o suporte de molhos (QR do Wi-Fi + QR do cardápio) e QR de cada mesa.</p>
+            <a href="{% url 'menu_qr_sheet' %}" target="_blank" rel="noopener" class="nb-btn-dark nb-btn-sm">Cartões do suporte</a>
+            <a href="{% url 'tables_qr_sheet' %}" target="_blank" rel="noopener" class="nb-btn-secondary nb-btn-sm">QR das mesas</a>
         </div>
+    </section>
+
+    {% elif tab == 'delivery' %}
+    <section class="nb-card nb-card-pad grid gap-4 sm:grid-cols-2" aria-labelledby="s-delivery">
+        <h2 id="s-delivery" class="nb-h2 sm:col-span-2">Delivery e pedidos online</h2>
+        {% if modules.online %}
+        <label class="sm:col-span-2 flex items-start gap-3 cursor-pointer">
+            <input type="checkbox" name="online_orders_enabled" class="nb-check mt-0.5" {% if settings.online_orders_enabled %}checked{% endif %}>
+            <span><span class="font-semibold">Aceitar pedidos online</span><span class="block nb-help mt-0">Chegam no quadro de Delivery como "aguardando confirmação".</span></span>
+        </label>
+        {% endif %}
+        <div><label class="nb-label" for="s-wa">WhatsApp da loja</label><input id="s-wa" name="whatsapp_number" value="{{ settings.whatsapp_number }}" inputmode="tel" class="nb-input"></div>
+        <div><label class="nb-label" for="s-min">Pedido mínimo para entrega (R$)</label><input id="s-min" name="min_delivery_order" value="{{ settings.min_delivery_order|stringformat:'s' }}" inputmode="decimal" class="nb-input tabular"></div>
+    </section>
+
+    <section class="nb-card nb-card-pad" aria-labelledby="s-zonas">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+            <h2 id="s-zonas" class="nb-h2">Bairros e taxas</h2>
+            <a href="{% url 'delivery_zones' %}" class="nb-btn-secondary nb-btn-sm"><i class="bi bi-pencil" aria-hidden="true"></i>Editar bairros</a>
+        </div>
+        {% if delivery_zones %}
+        <ul class="mt-3 grid sm:grid-cols-2 gap-x-6 gap-y-1 text-sm">
+            {% for zone in delivery_zones %}
+            <li class="flex justify-between border-b border-linha py-1.5 {% if not zone.is_active %}text-fumaca line-through{% endif %}"><span>{{ zone.name }}</span><span class="tabular">R$ {{ zone.fee|floatformat:2 }}</span></li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="mt-2 text-sm text-fumaca">Nenhum bairro cadastrado: os pedidos saem sem taxa de entrega.</p>
         {% endif %}
     </section>
-
-    <section class="nb-card nb-card-pad" aria-labelledby="s-cores">
-        <h2 id="s-cores" class="nb-h2">Cores do cardápio do cliente</h2>
-        <p class="nb-help">Usadas no app instalado no celular e nas páginas do cliente.</p>
-        <div class="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-4">
-            {% for name, label, value in color_fields %}
-            <div><label class="nb-label" for="s-{{ name }}">{{ label }}</label>
-                <input id="s-{{ name }}" type="color" name="{{ name }}" value="{{ value }}" class="h-11 w-full rounded-xl border border-linha bg-papel p-1 cursor-pointer"></div>
-            {% endfor %}
-        </div>
-    </section>
+    {% endif %}
 
     <div class="sticky bottom-0 -mx-1 px-1 py-3 bg-creme/95 backdrop-blur flex justify-end border-t border-linha">
-        <button type="submit" class="nb-btn-primary nb-btn-lg">Salvar configurações</button>
+        <button type="submit" class="nb-btn-primary nb-btn-lg">Salvar</button>
     </div>
 </form>
 

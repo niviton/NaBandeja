@@ -70,6 +70,12 @@
             <span><i class="bi bi-send me-1" aria-hidden="true"></i>Enviar para a cozinha</span>
             <span class="tabular">R$ {{ cart.total|floatformat:2 }}</span>
         </button>
+        {% if target.kind == 'novo' %}
+        <button type="submit" name="pay_now" value="1" class="nb-btn-secondary w-full">
+            <i class="bi bi-cash-coin" aria-hidden="true"></i>Enviar e receber agora
+        </button>
+        <p class="nb-help text-center">{% if target.ref == 'delivery' %}Ou receba na entrega, pelo quadro de Delivery.{% else %}Ou receba quando o cliente for buscar.{% endif %}</p>
+        {% endif %}
     </form>
     {% else %}
     <p class="py-8 text-center text-fumaca">Toque nos produtos do cardápio para adicionar.</p>

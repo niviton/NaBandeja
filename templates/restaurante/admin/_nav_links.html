@@ -1,5 +1,0 @@
-{% for name, label, icon, key in admin_nav %}
-<a href="{% url name %}" class="nb-nav-link" {% if active_menu == key %}aria-current="page"{% endif %}>
-    <i class="bi {{ icon }}" aria-hidden="true"></i>{{ label }}
-</a>
-{% endfor %}

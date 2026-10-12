@@ -1,0 +1,223 @@
+{% extends 'app/base_app.html' %}
+
+{% block title %}Hoje · {{ app_settings.store_name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-[1400px] mx-auto px-3 sm:px-6 py-6">
+    <div class="nb-page-head">
+        <div>
+            <p class="nb-kicker">{% now "l, d \d\e F" %}</p>
+            <h1 class="nb-title mt-1">O <em>dia</em> da loja</h1>
+            <p class="nb-subtitle mt-1">
+                {% if day.is_open %}Dia aberto{% if day.session %} desde {{ day.session.opened_at|time:"H:i" }}{% endif %}.
+                {% elif day.session %}Caixa aberto, mas a loja está pausada.
+                {% elif day.store_open %}A loja está aberta, mas o caixa do dia ainda não foi aberto.
+                {% else %}A loja está fechada.{% endif %}
+            </p>
+        </div>
+        {% if day.is_open or day.session %}
+        <div class="flex flex-wrap gap-2">
+            <form method="post" action="{% url 'toggle_store_status' %}" data-confirm-message="{% if app_settings.is_store_open %}Pausar a loja? Novos pedidos online e pelo QR ficam bloqueados.{% else %}Retomar os pedidos?{% endif %}">
+                {% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
+                <button type="submit" class="nb-btn-secondary">
+                    {% if app_settings.is_store_open %}<i class="bi bi-pause-circle" aria-hidden="true"></i>Pausar pedidos{% else %}<i class="bi bi-play-circle" aria-hidden="true"></i>Retomar pedidos{% endif %}
+                </button>
+            </form>
+            <a href="{% url 'close_day' %}" class="nb-btn-dark"><i class="bi bi-moon-stars" aria-hidden="true"></i>Fechar o dia</a>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if not day.is_open and not day.session %}
+    {# ---------------------------------------------------------------- abrir o dia #}
+    <section class="nb-card nb-card-pad max-w-xl" aria-labelledby="abrir-titulo">
+        <h2 id="abrir-titulo" class="nb-h2">{% if day.store_open %}Abrir o caixa{% else %}Abrir o dia{% endif %}</h2>
+        <p class="nb-subtitle mt-1">
+            {% if day.cash_enabled %}Conte o troco da gaveta. A loja passa a aceitar pedidos e o caixa começa a contar.
+            {% else %}A loja passa a aceitar pedidos do salão, do balcão e online.{% endif %}
+        </p>
+        <form method="post" action="{% url 'open_day' %}" class="mt-5 space-y-4">
+            {% csrf_token %}
+            {% if day.cash_enabled %}
+            <div class="grid sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="nb-label" for="opening_amount">Troco na gaveta</label>
+                    <input id="opening_amount" name="opening_amount" inputmode="decimal" autocomplete="off" value="0,00" class="nb-input tabular">
+                </div>
+                <div>
+                    <label class="nb-label" for="open_notes">Observação <span class="font-normal text-fumaca">(opcional)</span></label>
+                    <input id="open_notes" name="notes" autocomplete="off" class="nb-input">
+                </div>
+            </div>
+            {% endif %}
+            <button type="submit" class="nb-btn-primary w-full sm:w-auto"><i class="bi bi-sunrise" aria-hidden="true"></i>Abrir o dia</button>
+        </form>
+    </section>
+    {% endif %}
+
+    <div id="live" hx-get="{% url 'admin_dashboard' %}" hx-select="#live" hx-target="this" hx-swap="outerHTML" hx-trigger="nb:event[!document.activeElement.closest('#live form')] from:body delay:800ms" class="{% if not day.is_open and not day.session %}mt-8{% endif %}">
+        {% if calls or pending_online or overdue_expenses or low_stock_ingredients %}
+        <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4 mb-6">
+            {% if pending_online %}
+            <a href="{% url 'delivery_board' %}" class="nb-alert-info font-semibold"><i class="bi bi-globe2" aria-hidden="true"></i>
+                <span>{{ pending_online }} pedido{{ pending_online|pluralize }} online aguardando</span></a>
+            {% endif %}
+            {% if calls %}
+            <a href="{% url 'waiter_view' %}" class="nb-alert-warn font-semibold"><i class="bi bi-bell-fill" aria-hidden="true"></i>
+                <span>Mesa{{ calls|length|pluralize }} chamando: {% for call in calls %}{{ call.table.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</span></a>
+            {% endif %}
+            {% if overdue_expenses and modules.financeiro %}
+            <a href="{% url 'expenses' %}" class="nb-alert-error font-semibold"><i class="bi bi-wallet2" aria-hidden="true"></i>
+                <span>{{ overdue_expenses|length }} conta{{ overdue_expenses|length|pluralize }} a pagar vencendo</span></a>
+            {% endif %}
+            {% if low_stock_ingredients and modules.ingredientes %}
+            <a href="{% url 'admin_ingredients' %}" class="nb-alert-warn font-semibold"><i class="bi bi-box-seam" aria-hidden="true"></i>
+                <span>Estoque baixo: {% for i in low_stock_ingredients %}{{ i.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</span></a>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <dl class="nb-card grid grid-cols-2 lg:grid-cols-4 divide-y lg:divide-y-0 lg:divide-x divide-linha mb-6">
+            <div class="p-5 sm:p-6"><dt class="nb-label">Vendas hoje</dt><dd class="nb-money text-[2rem] sm:text-[2.4rem] leading-none mt-2">R$ {{ vendas_hoje|floatformat:2 }}</dd></div>
+            <div class="p-5 sm:p-6 border-l border-linha lg:border-l-0"><dt class="nb-label">Contas fechadas</dt><dd class="nb-money text-[2rem] sm:text-[2.4rem] leading-none mt-2">{{ pedidos_hoje }}</dd>
+                <dd class="text-sm text-fumaca mt-1 tabular">ticket médio R$ {{ ticket_medio|floatformat:2 }}</dd></div>
+            <div class="p-5 sm:p-6"><dt class="nb-label">Em andamento</dt><dd class="nb-money text-[2rem] sm:text-[2.4rem] leading-none mt-2">{{ active_orders|length }}</dd></div>
+            <div class="p-5 sm:p-6 border-l border-linha lg:border-l-0"><dt class="nb-label">Mesas ocupadas</dt><dd class="nb-money text-[2rem] sm:text-[2.4rem] leading-none mt-2">{{ mesas_ativas }}</dd></div>
+        </dl>
+
+        <div class="grid gap-6 lg:grid-cols-[1.4fr_1fr] items-start">
+            <div class="space-y-6">
+                <section class="nb-card" aria-labelledby="ativos-titulo">
+                    <header class="flex items-center justify-between px-5 sm:px-6 pt-5 pb-3">
+                        <h2 id="ativos-titulo" class="nb-h2">Em andamento</h2>
+                        <span class="font-mono text-sm text-fumaca">{{ active_orders|length }}</span>
+                    </header>
+                    {% if active_orders %}
+                    <ul class="nb-divide border-t border-linha">
+                        {% for order in active_orders %}
+                        <li>
+                            <a href="{% url 'order_workspace' order.id %}" class="px-5 sm:px-6 py-3.5 flex items-center gap-3 hover:bg-creme/60">
+                                <span class="w-11 h-11 shrink-0 rounded-xl bg-creme flex items-center justify-center font-display font-semibold text-lg" aria-hidden="true">
+                                    {% if order.order_type == 'delivery' %}<i class="bi bi-scooter text-cebola"></i>{% elif order.mesa == 'SEM MESA' %}<i class="bi bi-bag text-fumaca"></i>{% else %}{{ order.mesa }}{% endif %}
+                                </span>
+                                <span class="flex-1 min-w-0">
+                                    <span class="block font-semibold truncate">{{ order.display_name }}{% if order.platform %} <span class="text-sm font-normal text-fumaca">· {{ order.platform }}</span>{% endif %}</span>
+                                    <span class="block text-sm text-fumaca"><span class="{% if order.status == 'cozinha' %}nb-status-cozinha{% else %}nb-status-pronto{% endif %}">{{ order.get_status_display }}</span>
+                                        {% if order.paid_at %}<span class="nb-status-livre ms-1">Pago</span>{% endif %}
+                                        <span class="tabular ms-1" data-since="{{ order.created_at.isoformat }}"></span></span>
+                                </span>
+                                <span class="tabular font-semibold">R$ {{ order.amount_due|floatformat:2 }}</span>
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <p class="px-6 pb-8 pt-4 text-fumaca">Nenhum pedido em andamento.</p>
+                    {% endif %}
+                </section>
+
+                <section class="nb-card" aria-labelledby="pagas-titulo">
+                    <header class="px-5 sm:px-6 pt-5 pb-3">
+                        <h2 id="pagas-titulo" class="nb-h2">Contas fechadas hoje</h2>
+                        <p class="text-sm text-fumaca mt-0.5">Fechou errado? Reabra enquanto o caixa do dia estiver aberto.</p>
+                    </header>
+                    {% if recent_paid %}
+                    <ul class="nb-divide border-t border-linha">
+                        {% for order in recent_paid %}
+                        <li class="px-5 sm:px-6 py-3 flex flex-wrap items-center gap-3">
+                            <span class="flex-1 min-w-[10rem]">
+                                <span class="block font-semibold">{{ order.display_name }} <span class="font-mono text-xs text-fumaca">#{{ order.id }}</span></span>
+                                <span class="block text-sm text-fumaca">{{ order.closed_at|time:"H:i" }}{% if order.closed_by %} · {{ order.closed_by.first_name|default:order.closed_by.username }}{% endif %}</span>
+                            </span>
+                            <span class="tabular font-semibold">R$ {{ order.amount_due|floatformat:2 }}</span>
+                            {% if order.reopenable %}
+                            <details class="w-full sm:w-auto">
+                                <summary class="nb-btn-ghost nb-btn-sm cursor-pointer list-none">Reabrir</summary>
+                                <form method="post" action="{% url 'reopen_order' order.id %}" class="mt-2 flex gap-2"
+                                      data-confirm-message="Reabrir a conta #{{ order.id }}? Os pagamentos dela serão estornados.">
+                                    {% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                    <label class="sr-only" for="reason-{{ order.id }}">Motivo</label>
+                                    <input id="reason-{{ order.id }}" name="reason" required placeholder="Motivo" autocomplete="off" class="nb-input py-2 text-sm">
+                                    <button type="submit" class="nb-btn-danger nb-btn-sm">Reabrir</button>
+                                </form>
+                            </details>
+                            {% endif %}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <p class="px-6 pb-8 pt-2 text-fumaca">Nenhuma conta fechada ainda.</p>
+                    {% endif %}
+                </section>
+            </div>
+
+            <div class="space-y-6">
+                {% if day.session %}
+                {% with summary=day.summary session=day.session %}
+                <section class="nb-card nb-card-pad" aria-labelledby="caixa-titulo">
+                    <div class="flex items-center justify-between gap-3">
+                        <h2 id="caixa-titulo" class="nb-h2">Caixa</h2>
+                        <span class="nb-status-pronto">Aberto · {{ session.opened_at|time:"H:i" }}</span>
+                    </div>
+                    <dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 text-sm tabular">
+                        {% for method in summary.methods %}
+                        <div class="flex justify-between border-b border-linha pb-2"><dt class="text-fumaca">{{ method.label }}</dt><dd class="font-semibold">R$ {{ method.total|floatformat:2 }}</dd></div>
+                        {% endfor %}
+                    </dl>
+                    <dl class="mt-4 space-y-1 text-sm tabular">
+                        <div class="flex justify-between"><dt class="text-fumaca">Troco inicial</dt><dd>R$ {{ session.opening_amount|floatformat:2 }}</dd></div>
+                        <div class="flex justify-between"><dt class="text-fumaca">+ Dinheiro recebido</dt><dd>R$ {{ summary.cash_sales|floatformat:2 }}</dd></div>
+                        {% if summary.supplies %}<div class="flex justify-between"><dt class="text-fumaca">+ Suprimentos</dt><dd>R$ {{ summary.supplies|floatformat:2 }}</dd></div>{% endif %}
+                        {% if summary.withdrawals %}<div class="flex justify-between"><dt class="text-fumaca">− Sangrias</dt><dd>R$ {{ summary.withdrawals|floatformat:2 }}</dd></div>{% endif %}
+                    </dl>
+                    <p class="mt-3 pt-3 border-t border-linha flex items-baseline justify-between"><span class="font-semibold">Deve haver na gaveta</span><span class="nb-money text-2xl">R$ {{ summary.expected_in_drawer|floatformat:2 }}</span></p>
+
+                    {% if summary.movements %}
+                    <ul class="mt-4 space-y-1 text-sm">
+                        {% for m in summary.movements %}
+                        <li class="flex justify-between gap-3"><span class="text-fumaca truncate">{{ m.created_at|time:"H:i" }} · {{ m.get_kind_display }}{% if m.reason %}: {{ m.reason }}{% endif %}</span><span class="tabular font-semibold {% if m.kind == 'sangria' %}text-pimenta{% else %}text-manjericao{% endif %}">{% if m.kind == 'sangria' %}−{% else %}+{% endif %}R$ {{ m.amount|floatformat:2 }}</span></li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+
+                    <details class="mt-4">
+                        <summary class="nb-btn-secondary nb-btn-sm cursor-pointer list-none w-fit"><i class="bi bi-arrow-left-right" aria-hidden="true"></i>Sangria ou suprimento</summary>
+                        <form method="post" action="{% url 'cash_movement' %}" class="mt-3 space-y-3">
+                            {% csrf_token %}
+                            <fieldset class="flex gap-2">
+                                <legend class="sr-only">Tipo</legend>
+                                <label class="nb-chip cursor-pointer has-[:checked]:bg-carvao has-[:checked]:text-white"><input type="radio" name="kind" value="sangria" checked class="sr-only">Sangria (retirada)</label>
+                                <label class="nb-chip cursor-pointer has-[:checked]:bg-carvao has-[:checked]:text-white"><input type="radio" name="kind" value="suprimento" class="sr-only">Suprimento (reforço)</label>
+                            </fieldset>
+                            <div class="grid grid-cols-[8rem_1fr] gap-2">
+                                <div><label class="nb-label" for="mov_amount">Valor</label><input id="mov_amount" name="amount" required inputmode="decimal" autocomplete="off" placeholder="0,00" class="nb-input tabular"></div>
+                                <div><label class="nb-label" for="mov_reason">Motivo</label><input id="mov_reason" name="reason" required autocomplete="off" placeholder="Ex.: pagamento do gás" class="nb-input"></div>
+                            </div>
+                            <button type="submit" class="nb-btn-dark w-full">Registrar</button>
+                        </form>
+                    </details>
+                </section>
+                {% endwith %}
+                {% endif %}
+
+                <section class="nb-card nb-card-pad" aria-labelledby="mais-titulo">
+                    <h2 id="mais-titulo" class="nb-h2">Mais vendidos hoje</h2>
+                    {% if top_products %}
+                    <ol class="mt-3 space-y-2">
+                        {% for product in top_products %}
+                        <li class="flex items-center gap-3 text-sm">
+                            <span class="font-mono text-xs text-fumaca w-5">{{ forloop.counter }}</span>
+                            <span class="flex-1 truncate">{{ product.product_name }}</span>
+                            <span class="tabular font-semibold">{{ product.total_qty }}</span>
+                        </li>
+                        {% endfor %}
+                    </ol>
+                    {% else %}
+                    <p class="mt-2 text-sm text-fumaca">Nenhuma venda fechada hoje ainda.</p>
+                    {% endif %}
+                </section>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

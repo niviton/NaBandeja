@@ -3,8 +3,8 @@
 {% block title %}Bairros e taxas · {{ app_settings.store_name }}{% endblock %}
 
 {% block admin_content %}
-{% url 'admin_online_orders' as back_url %}
-{% include 'restaurante/admin/_page_head.html' with back=back_url kicker='Delivery' title='Bairros e' emphasis='taxas' subtitle='A taxa é somada ao pedido de entrega conforme o bairro escolhido.' %}
+{% url 'admin_settings' as settings_url %}{% with back_url=settings_url|add:'?aba=delivery' %}
+{% include 'restaurante/admin/_page_head.html' with back=back_url kicker='Delivery' title='Bairros e' emphasis='taxas' subtitle='A taxa é somada ao pedido de entrega conforme o bairro escolhido.' %}{% endwith %}
 
 <form method="post" action="{% url 'delivery_zone_create' %}" class="nb-card nb-card-pad mb-6 flex flex-wrap gap-3 items-end max-w-3xl">
     {% csrf_token %}

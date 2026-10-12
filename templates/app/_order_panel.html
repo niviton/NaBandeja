@@ -8,6 +8,8 @@
                 {% elif order.status == 'pronto' and not order.served_at %}<span class="nb-status-pronto">Pronto p/ servir</span>
                 {% elif order.status == 'cozinha' %}<span class="nb-status-cozinha">Na cozinha</span>
                 {% else %}<span class="nb-status-ocupada">Servida</span>{% endif %}
+                {% if order.paid_at %}<span class="nb-status-livre ms-1"><i class="bi bi-check2" aria-hidden="true"></i>Pago</span>{% endif %}
+                {% if order.dispatched_at %}<span class="nb-status-ocupada ms-1">Na rua</span>{% endif %}
                 <span class="ms-1 tabular" data-since="{{ order.created_at.isoformat }}"></span>{% if order.waiter %} · {{ order.waiter.first_name|default:order.waiter.username }}{% endif %}
             </p>
         </div>
@@ -45,8 +47,25 @@
     </dl>
 
     <div class="px-5 pb-5 grid grid-cols-2 gap-2">
+        {% if order.order_type == 'delivery' %}
+        {% if order.status == 'pronto' and not order.dispatched_at %}
+        <form method="post" action="{% url 'dispatch_order' order.id %}" class="col-span-2">{% csrf_token %}
+            <button class="w-full nb-btn-dark nb-btn-lg"><i class="bi bi-send" aria-hidden="true"></i>Saiu para entrega</button></form>
+        {% elif order.dispatched_at %}
+        <form method="post" action="{% url 'deliver_order' order.id %}" class="col-span-2">{% csrf_token %}
+            <button class="w-full nb-btn-success nb-btn-lg"><i class="bi bi-check2-circle" aria-hidden="true"></i>Entregue{% if order.amount_remaining > 0 %} · receber{% endif %}</button></form>
+        {% endif %}
+        {% if order.amount_remaining > 0 %}
+        <a href="{% url 'close_order' order.id %}" class="col-span-2 {% if order.status == 'pronto' or order.dispatched_at %}nb-btn-secondary{% else %}nb-btn-dark nb-btn-lg{% endif %}"><i class="bi bi-cash-coin" aria-hidden="true"></i>Receber agora</a>
+        {% endif %}
+        {% elif order.paid_at %}
+        <form method="post" action="{% url 'handoff_order' order.id %}" class="col-span-2"
+              {% if order.status != 'pronto' %}data-confirm-message="A cozinha ainda não marcou como pronto. Entregar mesmo assim?"{% endif %}>{% csrf_token %}
+            <button class="w-full nb-btn-success nb-btn-lg"><i class="bi bi-bag-check" aria-hidden="true"></i>Entregar ao cliente</button></form>
+        {% else %}
         <a href="{% url 'close_order' order.id %}" class="col-span-2 nb-btn-dark nb-btn-lg"><i class="bi bi-cash-coin" aria-hidden="true"></i>Fechar conta</a>
-        {% if not order.bill_requested_at %}
+        {% endif %}
+        {% if not order.bill_requested_at and order.order_type == 'dine-in' and order.mesa != 'SEM MESA' %}
         <button hx-post="{% url 'request_bill' order.id %}" hx-target="#order-panel" class="nb-btn-secondary">Pediu a conta</button>
         {% endif %}
         <a href="{% url 'print_order' order.id %}" target="_blank" rel="noopener" class="nb-btn-secondary"><i class="bi bi-printer" aria-hidden="true"></i>Imprimir</a>

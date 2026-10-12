@@ -2,6 +2,20 @@
 
 Mudanças relevantes do NaBandeja. O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [3.1.0] - 2026-10-11
+
+### Fluxo reorganizado
+- Navegação única para todos: **Hoje · Salão · Delivery · Cozinha · Gestão** (cada função vê só as suas áreas).
+  A Gestão agrupa o resto em Vendas, Cardápio, Loja e Sistema.
+- **Hoje** substitui o antigo Painel: **abrir o dia** (caixa + loja juntos), **fechar o dia** com checklist do
+  que ficou aberto e contagem da gaveta, **pausar pedidos**.
+- Caixa: **sangria e suprimento**, **histórico de caixas** e resumo do fechamento para imprimir.
+- **Reabrir conta** fechada por engano (gerente, com motivo, só com o caixa do dia aberto).
+- **Quadro de Delivery**: pedidos online, cozinha, pronto para sair, na rua; botões *Saiu* e *Entregue*.
+- **Balcão**: pagar antes ("Enviar e receber agora") ou ao buscar; *Entregar ao cliente* para pedidos já pagos.
+- **Configurações em abas**; cada aba salva só os seus campos (um checkbox de outra aba não é mais desmarcado).
+- Barra de navegação compacta no celular (ícone + rótulo).
+
 ## [3.0.0] - 2026-10-11
 
 ### Novo visual

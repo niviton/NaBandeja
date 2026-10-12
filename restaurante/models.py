@@ -198,6 +198,9 @@ class Order(models.Model):
     discount_reason = models.CharField(max_length=200, blank=True, verbose_name='Motivo do desconto')
     bill_requested_at = models.DateTimeField(null=True, blank=True, verbose_name='Conta pedida em')
     served_at = models.DateTimeField(null=True, blank=True, verbose_name='Servido em')
+    paid_at = models.DateTimeField(null=True, blank=True, verbose_name='Quitado em')
+    dispatched_at = models.DateTimeField(null=True, blank=True, verbose_name='Saiu para entrega em')
+    delivered_at = models.DateTimeField(null=True, blank=True, verbose_name='Entregue em')
     payment_method = models.CharField(max_length=20, choices=PAYMENT_CHOICES, blank=True, verbose_name='Pagamento')
     waiter = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='orders', verbose_name='Garçom')
     closed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='closed_orders', verbose_name='Fechado por')
@@ -457,6 +460,28 @@ class CashSession(models.Model):
     @classmethod
     def get_open_session(cls):
         return cls.objects.filter(status='open').order_by('-opened_at').first()
+
+
+class CashMovement(models.Model):
+    """Sangria (dinheiro retirado da gaveta) ou suprimento (dinheiro colocado)."""
+    KIND_CHOICES = [('sangria', 'Sangria (retirada)'), ('suprimento', 'Suprimento (entrada)')]
+
+    session = models.ForeignKey(CashSession, on_delete=models.CASCADE, related_name='movements', verbose_name='Caixa')
+    kind = models.CharField(max_length=12, choices=KIND_CHOICES, verbose_name='Tipo')
+    amount = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Valor')
+    reason = models.CharField(max_length=200, verbose_name='Motivo')
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='+')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Movimentação de caixa'
+        verbose_name_plural = 'Movimentações de caixa'
+        ordering = ['created_at']
+        constraints = [models.CheckConstraint(condition=models.Q(amount__gt=0), name='cashmovement_amount_positive')]
+
+    @property
+    def signed_amount(self):
+        return self.amount if self.kind == 'suprimento' else -self.amount
 
 
 class Additional(models.Model):

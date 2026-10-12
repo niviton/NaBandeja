@@ -1,0 +1,33 @@
+{% extends 'restaurante/admin/base_admin.html' %}
+
+{% block title %}Caixas · {{ app_settings.store_name }}{% endblock %}
+
+{% block admin_content %}
+<div class="nb-page-head">
+    <div>
+        <p class="nb-kicker">Vendas</p>
+        <h1 class="nb-title mt-1">Histórico de <em>caixas</em></h1>
+        <p class="nb-subtitle mt-1.5">Cada dia aberto e fechado, com a conferência da gaveta.</p>
+    </div>
+</div>
+
+<div class="nb-card overflow-x-auto">
+    <table class="nb-table">
+        <thead><tr><th>Abertura</th><th>Fechamento</th><th class="text-right">Esperado</th><th class="text-right">Contado</th><th class="text-right">Diferença</th><th><span class="sr-only">Ações</span></th></tr></thead>
+        <tbody>
+        {% for s in sessions %}
+        <tr>
+            <td class="whitespace-nowrap">{{ s.opened_at|date:"d/m H:i" }}<span class="block text-xs text-fumaca">{% if s.opened_by %}{{ s.opened_by.first_name|default:s.opened_by.username }}{% endif %}</span></td>
+            <td class="whitespace-nowrap">{% if s.closed_at %}{{ s.closed_at|date:"d/m H:i" }}<span class="block text-xs text-fumaca">{% if s.closed_by %}{{ s.closed_by.first_name|default:s.closed_by.username }}{% endif %}</span>{% else %}<span class="nb-status-pronto">Aberto</span>{% endif %}</td>
+            <td class="text-right tabular">{% if s.expected_amount is not None %}R$ {{ s.expected_amount|floatformat:2 }}{% else %}—{% endif %}</td>
+            <td class="text-right tabular">{% if s.closing_amount is not None %}R$ {{ s.closing_amount|floatformat:2 }}{% else %}—{% endif %}</td>
+            <td class="text-right tabular font-semibold {% if s.difference_amount < 0 %}text-pimenta{% elif s.difference_amount > 0 %}text-manjericao{% endif %}">{% if s.difference_amount is not None %}R$ {{ s.difference_amount|floatformat:2 }}{% else %}—{% endif %}</td>
+            <td class="text-right"><a href="{% url 'cash_session_detail' s.id %}" class="nb-btn-secondary nb-btn-sm">Ver</a></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" class="text-center text-fumaca py-10">Nenhum caixa registrado ainda.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -8,12 +8,10 @@ from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 from ..modules import module_required
-from ..models import AppSettings, DeliveryZone, Order, Table
+from ..models import AppSettings, DeliveryZone, Table
 from ..permissions import manager_required
-from ..services import orders as order_service
 from ..services import tables as table_service
-from ..services.audit import audit
-from ..services.orders import OrderError, normalize_mesa
+from ..services.orders import normalize_mesa
 from ..services.cash import CashError, parse_amount
 from ..services.menu_qr import public_url, wifi_payload
 from ..services.pix import qr_svg
@@ -108,7 +106,7 @@ def tables_qr_sheet(request):
 def delivery_zones(request):
     return render(request, 'restaurante/admin/delivery_zones.html', {
         'zones': DeliveryZone.objects.all(),
-        'active_menu': 'online',
+        'active_menu': 'settings',
     })
 
 
@@ -148,35 +146,12 @@ def delivery_zone_delete(request, zone_id):
 
 # ------------------------------------------------------------------ pedidos online e delivery
 
-@manager_required
 def admin_online_orders(request):
-    return render(request, 'restaurante/admin/online.html', {
-        'pending': table_service.pending_online_orders(),
-        'deliveries': Order.objects.filter(order_type='delivery', status__in=Order.ACTIVE_STATUSES)
-            .prefetch_related('items').order_by('created_at'),
-        'online_url': request.build_absolute_uri(reverse('online_order')),
-        'active_menu': 'online',
-    })
+    """Endereço antigo: o delivery agora fica no quadro único."""
+    return redirect('delivery_board')
 
 
-@manager_required
-@require_POST
-@module_required('online')
-def online_order_decide(request, order_id, decision):
-    order = get_object_or_404(Order, pk=order_id)
-    try:
-        if decision == 'aceitar':
-            order_service.accept_pending(order, request.user)
-            messages.success(request, f'Pedido #{order.id} aceito e enviado para a cozinha.')
-        else:
-            order_service.reject_pending(order, request.user)
-            messages.warning(request, f'Pedido #{order.id} recusado.')
-    except OrderError as exc:
-        messages.error(request, str(exc))
-    else:
-        audit(request, f'online.{decision}', f'Pedido online #{order.id}: {decision}.', order)
-    return redirect('admin_online_orders')
-
+# ------------------------------------------------------------------ cardápio digital
 
 @manager_required
 @module_required('cardapio_digital')

@@ -96,6 +96,10 @@
   /* navegação do painel */
   .nb-nav-link { @apply flex items-center gap-3 px-3 min-h-[44px] rounded-xl text-[15px] font-medium text-fumaca hover:text-carvao hover:bg-linha/50 whitespace-nowrap; }
   .nb-nav-link[aria-current='page'] { @apply bg-carvao text-white hover:bg-carvao hover:text-white; }
+  /* Barra principal: no celular, ícone em cima e rótulo curto embaixo (cabe as 5 áreas). */
+  .nb-app-link { @apply flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2 px-1.5 sm:px-3 min-h-[48px] sm:min-h-[44px] min-w-[3rem] rounded-xl text-xs sm:text-[15px] font-medium text-fumaca hover:text-carvao hover:bg-linha/50 whitespace-nowrap; }
+  .nb-app-link i { @apply text-lg sm:text-base leading-none; }
+  .nb-app-link[aria-current='page'] { @apply bg-carvao text-white hover:bg-carvao hover:text-white; }
 }
 
 /* ------------------------------------------------------------ animações */

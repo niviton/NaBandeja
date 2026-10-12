@@ -1,100 +1,21 @@
-"""Painel do gerente: dashboard, caixa, loja, delivery, configurações e equipe."""
+"""Gerente: loja aberta/fechada, configurações e equipe."""
 
+from django.conf import settings as django_settings
 from django.contrib import messages
 from django.contrib.auth import update_session_auth_hash
-from django.db.models import F, Sum
+from django.forms import modelform_factory
 from django.shortcuts import get_object_or_404, redirect, render
-from django.utils import timezone
+from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
-from django.conf import settings as django_settings
-
-from ..modules import module_required
-from ..forms import AppSettingsForm, TeamMemberForm
-from ..models import AppSettings, CashSession, Expense, Ingredient, Order, OrderItem, Payment, TableCall, User
+from ..forms import SETTINGS_TABS, AppSettingsForm, TeamMemberForm
+from ..models import AppSettings, DeliveryZone, User
+from ..modules import enabled_modules
 from ..permissions import manager_required
-from ..services import cash as cash_service
 from ..services.audit import audit
 from ..services.pix import pix_preview
 
-
-# ------------------------------------------------------------------ dashboard
-
-@manager_required
-def admin_dashboard(request):
-    store = AppSettings.get_settings()
-    if not store.setup_completed:
-        return redirect('setup_wizard', step='loja')
-    now = timezone.localtime()
-    day_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
-    paid_today = Order.objects.filter(status='finalizado', closed_at__gte=day_start)
-    revenue = Payment.objects.filter(order__in=paid_today).aggregate(total=Sum('amount'))['total'] or 0
-    count_today = paid_today.count()
-
-    active_orders = list(
-        Order.objects.filter(status__in=Order.ACTIVE_STATUSES)
-        .select_related('waiter').prefetch_related('items__product').order_by('-created_at')
-    )
-    cash_session = CashSession.get_open_session()
-
-    return render(request, 'restaurante/admin/dashboard.html', {
-        'vendas_hoje': revenue,
-        'pedidos_hoje': count_today,
-        'ticket_medio': revenue / count_today if count_today else 0,
-        'pedidos_ativos': len(active_orders),
-        'active_orders': active_orders,
-        'mesas_ativas': len({o.mesa for o in active_orders if o.order_type == 'dine-in'}),
-        'low_stock_ingredients': Ingredient.objects.filter(
-            is_active=True, low_stock_alert__gt=0, stock_quantity__lte=F('low_stock_alert'),
-        ).order_by('stock_quantity')[:5],
-        'top_products': OrderItem.objects.filter(order__in=paid_today)
-            .values('product_name').annotate(total_qty=Sum('quantity')).order_by('-total_qty')[:5],
-        'cash_session': cash_session,
-        'cash_summary': cash_service.summary(cash_session) if cash_session else None,
-        'pending_online': Order.objects.filter(status='pendente').count(),
-        'calls': TableCall.objects.filter(resolved_at__isnull=True).select_related('table'),
-        'overdue_expenses': Expense.objects.filter(paid_at__isnull=True, due_date__lte=timezone.localdate()),
-        'active_menu': 'dashboard',
-    })
-
-
-# ------------------------------------------------------------------ caixa
-
-@manager_required
-@require_POST
-@module_required('caixa')
-def open_cash_session(request):
-    try:
-        session = cash_service.open_session(request.user, request.POST.get('opening_amount'), request.POST.get('notes'))
-    except cash_service.CashError as exc:
-        messages.error(request, str(exc))
-        return redirect('admin_dashboard')
-    audit(request, 'cash.open', f'Caixa aberto com R$ {session.opening_amount:.2f}.', session,
-          opening_amount=session.opening_amount)
-    messages.success(request, 'Caixa aberto com sucesso!')
-    return redirect('admin_dashboard')
-
-
-@manager_required
-@require_POST
-@module_required('caixa')
-def close_cash_session(request):
-    try:
-        session, totals = cash_service.close_session(
-            request.user, request.POST.get('closing_amount'), request.POST.get('close_notes')
-        )
-    except cash_service.CashError as exc:
-        messages.error(request, str(exc))
-        return redirect('admin_dashboard')
-    audit(request, 'cash.close', f'Caixa fechado. Diferença: R$ {session.difference_amount:.2f}.', session,
-          closing_amount=session.closing_amount, expected_amount=session.expected_amount,
-          difference_amount=session.difference_amount, total_sales=totals['total_sales'])
-    if session.difference_amount == 0:
-        messages.success(request, 'Caixa fechado sem diferenças.')
-    else:
-        messages.warning(request, f'Caixa fechado com diferença de R$ {session.difference_amount:.2f}.')
-    return redirect('admin_dashboard')
 
 
 # ------------------------------------------------------------------ loja aberta/fechada
@@ -119,16 +40,33 @@ def toggle_store_status(request):
 
 # ------------------------------------------------------------------ configurações
 
+def _settings_tabs(modules):
+    tabs = [('loja', 'Loja', 'bi-shop')]
+    if modules['pix']:
+        tabs.append(('pagamento', 'Pagamento', 'bi-qr-code'))
+    tabs.append(('salao', 'Salão e cozinha', 'bi-fire'))
+    if modules['cardapio_digital']:
+        tabs.append(('cardapio', 'Cardápio digital', 'bi-phone'))
+    if modules['delivery'] or modules['online']:
+        tabs.append(('delivery', 'Delivery', 'bi-scooter'))
+    return tabs
+
+
 @manager_required
 def admin_settings(request):
     store = AppSettings.get_settings()
-    form = AppSettingsForm(request.POST or None, request.FILES or None, instance=store)
+    tabs = _settings_tabs(enabled_modules(store))
+    tab = request.POST.get('aba') or request.GET.get('aba') or 'loja'
+    if tab not in {key for key, _, _ in tabs}:
+        tab = 'loja'
+    form_class = modelform_factory(AppSettings, form=AppSettingsForm, fields=SETTINGS_TABS[tab])
+    form = form_class(request.POST or None, request.FILES or None, instance=store)
     if request.method == 'POST':
         if form.is_valid():
             form.save()
-            audit(request, 'settings.update', 'Configurações da loja atualizadas.', store)
+            audit(request, 'settings.update', 'Configurações da loja atualizadas.', store, aba=tab)
             messages.success(request, 'Configurações salvas!')
-            return redirect('admin_settings')
+            return redirect(f"{reverse('admin_settings')}?aba={tab}")
         for error in form.non_field_errors():
             messages.error(request, error)
         for field_name, errors in form.errors.items():
@@ -141,13 +79,16 @@ def admin_settings(request):
     return render(request, 'restaurante/admin/settings.html', {
         'form': form,
         'settings': store,
+        'tab': tab,
+        'tabs': tabs,
         'active_menu': 'settings',
         'local_ip': local_ip,
         'access_links': {
             'local': f'{scheme}://localhost:{port}',
             'network': f'{scheme}://{local_ip}:{port}',
         },
-        'pix_preview': pix_preview(store),
+        'pix_preview': pix_preview(store) if tab == 'pagamento' else None,
+        'delivery_zones': DeliveryZone.objects.all() if tab == 'delivery' else [],
         'color_fields': [
             ('primary_color', 'Principal', store.primary_color),
             ('secondary_color', 'Destaque', store.secondary_color),

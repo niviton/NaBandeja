@@ -67,8 +67,32 @@ def add_payment(order, method, amount, user):
     payment = Payment.objects.create(order=order, method=method, amount=amount, created_by=user)
     finished = order.amount_remaining <= 0
     if finished:
-        finalize(order, user)
+        finished = settle(order, user)
     return payment, change, finished
+
+
+def waits_after_payment(order):
+    """
+    Pedido quitado que ainda não deve ser encerrado:
+    - balcão pago antes, com itens ainda na cozinha (entrega depois);
+    - delivery pago antes de ser entregue.
+    Mesas encerram ao quitar.
+    """
+    if order.order_type == 'delivery':
+        return order.delivered_at is None
+    if order.mesa == 'SEM MESA':
+        return order.status == 'cozinha' or order.items.filter(pending_quantity__gt=0).exists()
+    return False
+
+
+def settle(order, user):
+    """Conta quitada: encerra, ou marca como paga e aguarda a entrega. Retorna se encerrou."""
+    if waits_after_payment(order):
+        order.paid_at = timezone.now()
+        order.save(update_fields=['paid_at', 'updated_at'])
+        return False
+    finalize(order, user)
+    return True
 
 
 def pay_remaining(order, method, user):
@@ -77,7 +101,7 @@ def pay_remaining(order, method, user):
         raise OrderError('Forma de pagamento inválida.')
     remaining = order.amount_remaining
     if remaining <= 0:
-        finalize(order, user)
+        settle(order, user)
         return None
     payment, _, _ = add_payment(order, method, remaining, user)
     return payment
@@ -87,6 +111,9 @@ def remove_payment(payment):
     order = payment.order
     ensure_active(order)
     payment.delete()
+    if order.paid_at:
+        order.paid_at = None
+        order.save(update_fields=['paid_at', 'updated_at'])
 
 
 def finalize(order, user):
@@ -95,5 +122,7 @@ def finalize(order, user):
     order.payment_method = methods.pop() if len(methods) == 1 else 'misto'
     order.closed_at = timezone.now()
     order.closed_by = user
-    order.save(update_fields=['status', 'payment_method', 'closed_at', 'closed_by', 'updated_at'])
+    order.paid_at = order.paid_at or order.closed_at
+    order.items.filter(pending_quantity__gt=0).update(pending_quantity=0)
+    order.save(update_fields=['status', 'payment_method', 'closed_at', 'closed_by', 'paid_at', 'updated_at'])
     return order

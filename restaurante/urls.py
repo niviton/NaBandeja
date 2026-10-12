@@ -1,7 +1,9 @@
 from django.urls import path
 from django.views.generic import RedirectView
 
-from .views import auth, catalog, finance, manager, operations, orders, public, pwa, reports, support, system
+from .views import (
+    auth, catalog, day, delivery, finance, manager, operations, orders, public, pwa, reports, support, system,
+)
 
 urlpatterns = [
     # PWA
@@ -41,8 +43,17 @@ urlpatterns = [
     path('order/<int:order_id>/pagamento/', orders.add_payment, name='add_payment'),
     path('order/<int:order_id>/pix/', orders.pix_amount, name='pix_amount'),
     path('order/<int:order_id>/pago/', orders.order_paid, name='order_paid'),
+    path('order/<int:order_id>/entregar/', orders.handoff_order, name='handoff_order'),
+    path('order/<int:order_id>/reabrir/', day.reopen_order, name='reopen_order'),
     path('pagamento/<int:payment_id>/estornar/', orders.remove_payment, name='remove_payment'),
     path('order/<int:order_id>/print/', orders.print_order, name='print_order'),
+
+    # Delivery (quadro único: online, cozinha, pronto, na rua)
+    path('delivery/', delivery.delivery_board, name='delivery_board'),
+    path('delivery/painel/', delivery.delivery_board_partial, name='delivery_board_partial'),
+    path('delivery/<int:order_id>/saiu/', delivery.dispatch_order, name='dispatch_order'),
+    path('delivery/<int:order_id>/entregue/', delivery.deliver_order, name='deliver_order'),
+    path('delivery/online/<int:order_id>/<str:decision>/', delivery.decide_online_order, name='decide_online_order'),
 
     # Cozinha
     path('cozinha/', orders.kitchen_view, name='kitchen_view'),
@@ -51,12 +62,15 @@ urlpatterns = [
     path('order/<int:order_id>/comanda/', orders.kitchen_ticket, name='kitchen_ticket'),
 
     # Gerente
-    path('admin-panel/', manager.admin_dashboard, name='admin_dashboard'),
-    path('admin-panel/cash/open/', manager.open_cash_session, name='open_cash_session'),
-    path('admin-panel/cash/close/', manager.close_cash_session, name='close_cash_session'),
+    path('admin-panel/', day.today, name='admin_dashboard'),
+    path('hoje/abrir/', day.open_day, name='open_day'),
+    path('hoje/fechar/', day.close_day, name='close_day'),
+    path('caixa/movimento/', day.cash_movement, name='cash_movement'),
+    path('gestao/', day.management_home, name='management_home'),
+    path('gestao/caixas/', day.cash_history, name='cash_history'),
+    path('gestao/caixas/<int:session_id>/', day.cash_session_detail, name='cash_session_detail'),
     path('admin-panel/store/toggle/', manager.toggle_store_status, name='toggle_store_status'),
     path('admin-panel/online/', operations.admin_online_orders, name='admin_online_orders'),
-    path('admin-panel/online/<int:order_id>/<str:decision>/', operations.online_order_decide, name='online_order_decide'),
     path('admin-panel/entregas/', operations.delivery_zones, name='delivery_zones'),
     path('admin-panel/entregas/nova/', operations.delivery_zone_save, name='delivery_zone_create'),
     path('admin-panel/entregas/<int:zone_id>/', operations.delivery_zone_save, name='delivery_zone_edit'),

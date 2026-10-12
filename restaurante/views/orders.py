@@ -313,8 +313,11 @@ def cart_send(request, key):
         return error_response(str(exc))
 
     cart.clear()
+    if request.POST.get('pay_now') == '1':
+        return hx_redirect(reverse('close_order', args=[order.id]), request, f'{message} Agora receba o pagamento.')
     if target.kind == 'novo':
-        return hx_redirect(reverse('waiter_view'), request, message)
+        board = 'delivery_board' if target.ref == 'delivery' else 'waiter_view'
+        return hx_redirect(reverse(board), request, message)
     return hx_redirect(workspace_url(order), request, message)
 
 
@@ -463,6 +466,13 @@ def add_payment(request, order_id):
         message = f'Conta paga! Troco: R$ {change:.2f}'.replace('.', ',') if change else 'Conta paga e finalizada!'
         return hx_redirect(reverse('order_paid', args=[order.id]), request, message)
 
+    order.refresh_from_db()
+    if order.amount_remaining <= 0:
+        # Quitado, mas ainda não entregue (balcão pago antes ou delivery): aguarda a entrega.
+        target = 'delivery_board' if order.order_type == 'delivery' else 'waiter_view'
+        note = f' Troco: R$ {change:.2f}.'.replace('.', ',') if change else ''
+        return hx_redirect(reverse(target), request, f'Pedido #{order.id} pago.{note} Entregue quando ficar pronto.')
+
     message = f'Recebido R$ {payment.amount:.2f}'.replace('.', ',')
     if change:
         message += f' · troco R$ {change:.2f}'.replace('.', ',')
@@ -499,7 +509,25 @@ def pix_amount(request, order_id):
 @service_required
 def order_paid(request, order_id):
     order = get_order_or_403(request.user, order_id)
-    return render(request, 'app/conta_paga.html', {'order': order})
+    return render(request, 'app/conta_paga.html', {
+        'order': order,
+        'can_reopen': request.user.role == 'gerente' and order_service.can_reopen(order),
+    })
+
+
+@service_required
+@require_POST
+def handoff_order(request, order_id):
+    """Balcão pago antes: entregue ao cliente, encerra o pedido."""
+    order = get_order_or_403(request.user, order_id)
+    try:
+        order_service.handoff(order, request.user)
+    except OrderError as exc:
+        return error_response(str(exc))
+    if is_htmx(request):
+        return with_toast(render(request, 'app/_salao_board.html', _salao_context()), f'Pedido #{order.id} entregue.')
+    messages.success(request, f'Pedido #{order.id} entregue.')
+    return redirect('waiter_view')
 
 
 # ------------------------------------------------------------------ cozinha

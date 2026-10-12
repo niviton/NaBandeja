@@ -4,18 +4,25 @@ from .models import AppSettings
 from .modules import enabled_modules
 from .services import license
 
-# (rota, rótulo, ícone, chave do menu ativo, módulo exigido)
+# Gestão, em grupos: (título, [(rota, rótulo, ícone, chave do menu ativo, módulo exigido)])
 ADMIN_NAV = [
-    ('admin_dashboard', 'Painel', 'bi-grid-1x2', 'dashboard', None),
-    ('admin_reports', 'Relatórios', 'bi-bar-chart', 'reports', None),
-    ('admin_menu', 'Cardápio', 'bi-journal-text', 'menu', None),
-    ('admin_ingredients', 'Ingredientes', 'bi-box-seam', 'ingredients', 'ingredientes'),
-    ('admin_tables', 'Mesas e QR Code', 'bi-grid-3x3', 'tables', None),
-    ('admin_online_orders', 'Delivery e online', 'bi-scooter', 'online', ('delivery', 'online')),
-    ('expenses', 'Contas a pagar', 'bi-wallet2', 'expenses', 'financeiro'),
-    ('admin_users', 'Equipe', 'bi-people', 'users', None),
-    ('admin_settings', 'Configurações', 'bi-sliders', 'settings', None),
-    ('system_status', 'Sistema', 'bi-hdd-stack', 'system', None),
+    ('Vendas', [
+        ('admin_reports', 'Relatórios', 'bi-bar-chart', 'reports', None),
+        ('cash_history', 'Caixas', 'bi-cash-stack', 'cash', 'caixa'),
+        ('expenses', 'Contas a pagar', 'bi-wallet2', 'expenses', 'financeiro'),
+    ]),
+    ('Cardápio', [
+        ('admin_menu', 'Produtos', 'bi-journal-text', 'menu', None),
+        ('admin_ingredients', 'Ingredientes', 'bi-box-seam', 'ingredients', 'ingredientes'),
+    ]),
+    ('Loja', [
+        ('admin_tables', 'Mesas e QR Code', 'bi-grid-3x3', 'tables', None),
+        ('admin_users', 'Equipe', 'bi-people', 'users', None),
+        ('admin_settings', 'Configurações', 'bi-sliders', 'settings', None),
+    ]),
+    ('Sistema', [
+        ('system_status', 'Backup e licença', 'bi-hdd-stack', 'system', None),
+    ]),
 ]
 
 
@@ -39,5 +46,8 @@ def settings_processor(request):
         # Botão aparece mesmo sem credenciais; nesse caso explica o que falta.
         'google_login_visible': modules['google'],
         'nabandeja_version': settings.NABANDEJA_VERSION,
-        'admin_nav': [item[:4] for item in ADMIN_NAV if _visible(item[4], modules)],
+        'admin_nav': [
+            (title, [item[:4] for item in items if _visible(item[4], modules)]) for title, items in ADMIN_NAV
+        ],
+        'delivery_enabled': modules['delivery'] or modules['online'],
     }

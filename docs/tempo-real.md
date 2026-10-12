@@ -6,7 +6,8 @@ As telas principais se atualizam sozinhas, sem recarregar a página:
 
 | Tela | O que atualiza |
 |---|---|
-| **Painel do gerente** | Vendas do dia, pedidos ativos, mesas ocupadas, alertas de estoque |
+| **Hoje** (gerente) | Vendas do dia, pedidos ativos, mesas ocupadas, alertas |
+| **Delivery** | Pedidos online, cozinha, pronto para sair, na rua |
 | **Cozinha** | Pedidos novos aparecem na hora |
 | **Garçom** | Status das mesas e dos pedidos |
 

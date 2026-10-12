@@ -32,7 +32,7 @@ Login: empresa da loja, usuário **`nabandeja`** e a sua senha.
 
 ## O que o suporte faz
 
-Em **Painel → Suporte NaBandeja**:
+Em **Gestão → Suporte NaBandeja**:
 
 - **Código da empresa** usado no login.
 - **Módulos** do cliente (desligado: some do menu e as telas não abrem; os dados ficam guardados):

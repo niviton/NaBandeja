@@ -399,6 +399,80 @@ def transfer(order, target_mesa, user):
     return target
 
 
+# ------------------------------------------------------------------ delivery e balcão
+
+def dispatch(order):
+    """Delivery saiu para entrega."""
+    ensure_active(order)
+    if order.order_type != 'delivery':
+        raise OrderError('Só pedidos de delivery saem para entrega.')
+    if order.status != 'pronto':
+        raise OrderError('A cozinha ainda não marcou este pedido como pronto.')
+    order.dispatched_at = timezone.now()
+    order.save(update_fields=['dispatched_at', 'updated_at'])
+    return order
+
+
+def mark_delivered(order, user):
+    """Entrega concluída. Se já estava pago, o pedido é encerrado."""
+    from .payments import finalize
+
+    ensure_active(order)
+    if order.order_type != 'delivery':
+        raise OrderError('Só pedidos de delivery são entregues.')
+    order.delivered_at = timezone.now()
+    order.dispatched_at = order.dispatched_at or order.delivered_at
+    order.save(update_fields=['delivered_at', 'dispatched_at', 'updated_at'])
+    if order.amount_remaining <= 0:
+        finalize(order, user)
+    return order
+
+
+def handoff(order, user):
+    """Balcão pago antes: entrega ao cliente e encerra."""
+    from .payments import finalize
+
+    ensure_active(order)
+    if order.amount_remaining > 0:
+        raise OrderError('Ainda falta receber o pagamento deste pedido.')
+    return finalize(order, user)
+
+
+def can_reopen(order):
+    """Conta paga só pode ser reaberta enquanto o caixa em que foi paga estiver aberto."""
+    from ..models import CashSession
+    from ..modules import is_enabled
+
+    if order.status != 'finalizado' or not order.closed_at:
+        return False
+    if is_enabled('caixa'):
+        session = CashSession.get_open_session()
+        return bool(session and order.closed_at >= session.opened_at)
+    return timezone.localdate(order.closed_at) == timezone.localdate()
+
+
+def reopen(order, user, reason):
+    """Desfaz o fechamento (forma de pagamento errada, cliente voltou...)."""
+    reason = (reason or '').strip()
+    if not reason:
+        raise OrderError('Informe o motivo para reabrir a conta.')
+    if not can_reopen(order):
+        raise OrderError('Só dá para reabrir contas pagas no caixa que ainda está aberto.')
+    order.payments.all().delete()
+    order.status = 'pronto'
+    order.payment_method = ''
+    order.closed_at = None
+    order.closed_by = None
+    order.paid_at = None
+    order.bill_requested_at = None
+    note = f'Reaberto por {user.username}: {reason}'
+    order.observacoes = f'{order.observacoes} | {note}'.strip(' |')
+    order.save(update_fields=['status', 'payment_method', 'closed_at', 'closed_by', 'paid_at',
+                              'bill_requested_at', 'observacoes', 'updated_at'])
+    sync_kitchen_status(order)
+    return order
+
+
 # ------------------------------------------------------------------ pedidos online
 
 def accept_pending(order, user):

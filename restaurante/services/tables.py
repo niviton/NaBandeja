@@ -3,7 +3,7 @@
 from dataclasses import dataclass, field
 from datetime import timedelta
 
-from django.db.models import Prefetch, Q
+from django.db.models import Prefetch
 from django.utils import timezone
 
 from ..models import Order, OrderItem, Table, TableCall
@@ -84,10 +84,10 @@ def board():
 
 
 def counter_orders():
-    """Pedidos ativos fora do mapa: delivery e balcão (sem mesa)."""
+    """Pedidos de balcão (sem mesa) ainda abertos. Delivery tem quadro próprio."""
     return (
-        Order.objects.filter(status__in=Order.ACTIVE_STATUSES)
-        .filter(Q(order_type='delivery') | Q(mesa='SEM MESA'))
+        Order.objects.filter(status__in=Order.ACTIVE_STATUSES, order_type='dine-in', mesa='SEM MESA')
+        .prefetch_related('payments')
         .order_by('created_at')
     )
 

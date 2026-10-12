@@ -96,7 +96,7 @@ class PublicTests(TestCase):
 
         manager = f.user()
         self.client.force_login(manager)
-        self.client.post(reverse('online_order_decide', args=[order.pk, 'aceitar']))
+        self.client.post(reverse('decide_online_order', args=[order.pk, 'aceitar']))
         order.refresh_from_db()
         self.assertEqual(order.status, 'cozinha')
         self.assertEqual(Product.objects.get(pk=self.burger.pk).stock, 4)

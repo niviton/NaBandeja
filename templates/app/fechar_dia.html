@@ -1,0 +1,68 @@
+{% extends 'app/base_app.html' %}
+
+{% block title %}Fechar o dia · {{ app_settings.store_name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-3 sm:px-6 py-6">
+    {% url 'admin_dashboard' as back_url %}
+    {% include 'restaurante/admin/_page_head.html' with back=back_url kicker='Hoje' title='Fechar o dia' %}
+
+    <ol class="space-y-6">
+        <li class="nb-card nb-card-pad">
+            <h2 class="nb-h2"><span class="font-mono text-sm text-fumaca me-2">1</span>Confira o que ficou aberto</h2>
+            {% if pending %}
+            <p class="nb-alert-warn mt-3"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+                <span>Ainda há pedidos em aberto. O ideal é receber ou cancelar cada um antes de fechar.</span></p>
+            {% for label, orders in pending %}
+            <h3 class="nb-label mt-5">{{ label }} · {{ orders|length }}</h3>
+            <ul class="nb-divide border border-linha rounded-xl mt-1">
+                {% for order in orders %}
+                <li><a href="{% if order.status == 'pendente' %}{% url 'delivery_board' %}{% else %}{% url 'order_workspace' order.id %}{% endif %}" class="flex items-center gap-3 px-4 py-3 hover:bg-creme/60">
+                    <span class="flex-1 min-w-0 truncate font-semibold">{{ order.display_name }} <span class="font-mono text-xs text-fumaca">#{{ order.id }}</span></span>
+                    <span class="text-sm text-fumaca">{{ order.get_status_display }}</span>
+                    <span class="tabular font-semibold">R$ {{ order.amount_due|floatformat:2 }}</span>
+                    <i class="bi bi-chevron-right text-fumaca" aria-hidden="true"></i>
+                </a></li>
+                {% endfor %}
+            </ul>
+            {% endfor %}
+            {% else %}
+            <p class="mt-3 text-manjericao font-semibold"><i class="bi bi-check-circle" aria-hidden="true"></i> Nenhum pedido em aberto. Tudo certo.</p>
+            {% endif %}
+        </li>
+
+        <li class="nb-card nb-card-pad">
+            <form method="post" class="space-y-4" data-confirm-message="Fechar o dia agora? A loja para de receber pedidos{% if day.session %} e o caixa é encerrado{% endif %}.">
+                {% csrf_token %}
+                {% if day.session %}
+                <h2 class="nb-h2"><span class="font-mono text-sm text-fumaca me-2">2</span>Conte a gaveta</h2>
+                <p class="flex items-baseline justify-between border-b border-linha pb-3">
+                    <span class="text-fumaca">O sistema espera na gaveta</span>
+                    <span class="nb-money text-2xl">R$ {{ day.summary.expected_in_drawer|floatformat:2 }}</span>
+                </p>
+                <div class="grid sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="nb-label" for="closing_amount">Dinheiro contado</label>
+                        <input id="closing_amount" name="closing_amount" required inputmode="decimal" autocomplete="off" placeholder="0,00" class="nb-input tabular text-lg">
+                    </div>
+                    <div>
+                        <label class="nb-label" for="notes">Observação <span class="font-normal text-fumaca">(opcional)</span></label>
+                        <input id="notes" name="notes" autocomplete="off" class="nb-input">
+                    </div>
+                </div>
+                {% else %}
+                <h2 class="nb-h2"><span class="font-mono text-sm text-fumaca me-2">2</span>Encerrar</h2>
+                <p class="nb-subtitle">A loja fecha para novos pedidos.</p>
+                {% endif %}
+                {% if pending %}
+                <label class="flex items-start gap-3 text-sm">
+                    <input type="checkbox" name="force" value="1" required class="nb-check mt-0.5">
+                    <span>Estou ciente: fechar mesmo com pedidos em aberto.</span>
+                </label>
+                {% endif %}
+                <button type="submit" class="nb-btn-dark w-full"><i class="bi bi-moon-stars" aria-hidden="true"></i>Fechar o dia</button>
+            </form>
+        </li>
+    </ol>
+</div>
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends 'app/base_app.html' %}
+
+{% block title %}Delivery · {{ app_settings.store_name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-[1600px] mx-auto px-3 sm:px-6 py-6">
+    <div class="nb-page-head">
+        <div>
+            <p class="nb-kicker">Delivery</p>
+            <h1 class="nb-title mt-1">Pedidos para <em>entregar</em></h1>
+            <p class="nb-subtitle mt-1">Do pedido ao portão do cliente: aceite, acompanhe a cozinha, despache e confirme a entrega.</p>
+        </div>
+        {% if modules.delivery %}
+        <a href="{% url 'new_order' 'delivery' %}" class="nb-btn-primary"><i class="bi bi-plus-lg" aria-hidden="true"></i>Novo delivery</a>
+        {% endif %}
+    </div>
+
+    {% if modules.online %}
+    {% if app_settings.online_orders_enabled %}
+    <p class="nb-alert-info mb-6"><i class="bi bi-globe2 text-lg" aria-hidden="true"></i>
+        <span><b>Link de pedidos online:</b> <span class="font-mono break-all">{{ online_url }}</span></span></p>
+    {% elif user.role == 'gerente' %}
+    <p class="nb-alert-warn mb-6"><i class="bi bi-globe2 text-lg" aria-hidden="true"></i>
+        <span>Pedidos online estão desligados. Ligue em <a href="{% url 'admin_settings' %}?aba=delivery" class="underline font-semibold">Configurações · Delivery</a>.</span></p>
+    {% endif %}
+    {% endif %}
+
+    <div id="delivery-board" hx-get="{% url 'delivery_board_partial' %}" hx-trigger="nb:event[!document.activeElement.closest('#delivery-board form')] from:body delay:500ms" hx-swap="innerHTML">
+        {% include 'app/_delivery_board.html' %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    document.body.addEventListener('nb:event', (event) => {
+        const data = event.detail || {};
+        if (data.type === 'order.created' && data.order && data.order.status === 'pendente') {
+            NB.beep('call');
+            NB.toast('Novo pedido online aguardando', 'warning', 6000);
+        } else if (data.type === 'order.status_changed' && data.order && data.order.status === 'pronto' && data.order.order_type === 'delivery') {
+            NB.beep('ready');
+            NB.toast(`Delivery #${data.order.id} pronto para sair`, 'success', 6000);
+        }
+    });
+});
+</script>
+{% endblock %}
