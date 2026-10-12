@@ -1,0 +1,9 @@
+{# Cabeçalho padrão das páginas do painel: kicker, título (com ênfase) e linha de apoio. #}
+<div class="nb-page-head">
+    <div class="min-w-0">
+        {% if back %}<a href="{{ back }}" class="inline-flex items-center gap-1.5 text-sm text-fumaca hover:text-carvao mb-3"><i class="bi bi-arrow-left" aria-hidden="true"></i>Voltar</a>{% endif %}
+        <p class="nb-kicker">{{ kicker }}</p>
+        <h1 class="nb-title mt-1">{{ title }}{% if emphasis %} <em>{{ emphasis }}</em>{% endif %}</h1>
+        {% if subtitle %}<p class="nb-subtitle mt-1.5 max-w-2xl">{{ subtitle }}</p>{% endif %}
+    </div>
+</div>

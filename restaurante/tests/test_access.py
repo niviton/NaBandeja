@@ -17,7 +17,7 @@ class LoginTests(TestCase):
         f.user('ana', role='garcom')
 
     def login(self, password):
-        return self.client.post(reverse('login'), {'username': 'ana', 'password': password}, follow=True)
+        return self.client.post(reverse('login'), {'empresa': 'Meu Restaurante', 'username': 'ana', 'password': password}, follow=True)
 
     def test_login_leva_para_tela_da_funcao(self):
         self.assertRedirects(self.login('senha-forte-123'), reverse('waiter_view'))

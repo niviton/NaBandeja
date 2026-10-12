@@ -14,11 +14,11 @@ CALL_COOLDOWN = timedelta(minutes=2)
 
 # status -> (rótulo, classes Tailwind do cartão)
 STATUS_STYLE = {
-    'livre': ('Livre', 'bg-white border-slate-200 text-slate-700'),
-    'ocupada': ('Ocupada', 'bg-sky-50 border-sky-300 text-sky-900'),
-    'cozinha': ('Na cozinha', 'bg-amber-50 border-amber-300 text-amber-900'),
-    'pronto': ('Pronto p/ servir', 'bg-emerald-50 border-emerald-400 text-emerald-900'),
-    'conta': ('Pediu a conta', 'bg-violet-50 border-violet-400 text-violet-900'),
+    'livre': ('Livre', 'bg-papel border-linha text-carvao'),
+    'ocupada': ('Servida', 'bg-cebola-50 border-cebola/40 text-cebola'),
+    'cozinha': ('Na cozinha', 'bg-mostarda-50 border-mostarda text-[#7A4F0F]'),
+    'pronto': ('Pronto p/ servir', 'bg-manjericao-50 border-manjericao text-manjericao'),
+    'conta': ('Pediu a conta', 'bg-uva-50 border-uva text-uva'),
 }
 
 

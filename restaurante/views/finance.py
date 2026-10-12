@@ -10,6 +10,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
+from ..modules import module_required
 from ..models import Expense, Payment
 from ..permissions import manager_required
 from ..services.audit import audit
@@ -41,6 +42,7 @@ def _month(request):
 
 
 @manager_required
+@module_required('financeiro')
 def expenses(request):
     month_start = _month(request)
     next_month = add_months(month_start, 1)
@@ -81,6 +83,7 @@ def expenses(request):
 
 
 @manager_required
+@module_required('financeiro')
 def expense_edit(request, expense_id=None):
     expense = get_object_or_404(Expense, pk=expense_id) if expense_id else None
     form = ExpenseForm(request.POST or None, instance=expense)
@@ -99,6 +102,7 @@ def expense_edit(request, expense_id=None):
 
 @manager_required
 @require_POST
+@module_required('financeiro')
 def expense_pay(request, expense_id):
     expense = get_object_or_404(Expense, pk=expense_id)
     expense.paid_at = None if expense.paid_at else timezone.localdate()
@@ -109,6 +113,7 @@ def expense_pay(request, expense_id):
 
 @manager_required
 @require_POST
+@module_required('financeiro')
 def expense_delete(request, expense_id):
     expense = get_object_or_404(Expense, pk=expense_id)
     audit(request, 'expense.delete', f'Conta "{expense.description}" excluída.', expense, amount=expense.amount)

@@ -1,7 +1,7 @@
 from django.urls import path
 from django.views.generic import RedirectView
 
-from .views import auth, catalog, finance, manager, operations, orders, public, pwa, reports, system
+from .views import auth, catalog, finance, manager, operations, orders, public, pwa, reports, support, system
 
 urlpatterns = [
     # PWA
@@ -75,7 +75,10 @@ urlpatterns = [
     path('admin-panel/sistema/', system.system_status, name='system_status'),
     path('admin-panel/sistema/backup/', system.backup_now, name='backup_now'),
     path('admin-panel/sistema/backup/baixar/', system.backup_download, name='backup_download'),
-    path('admin-panel/sistema/licenca/', system.license_install, name='license_install'),
+    path('suporte/', support.support_panel, name='support_panel'),
+    path('suporte/salvar/', support.support_save, name='support_save'),
+    path('suporte/licenca/', support.support_license, name='license_install'),
+    path('suporte/senha/<int:user_id>/', support.support_reset_password, name='support_reset_password'),
     path('admin-panel/configuracao-inicial/pular/', system.setup_skip, name='setup_skip'),
     path('admin-panel/configuracao-inicial/<str:step>/', system.setup_wizard, name='setup_wizard'),
     path('admin-panel/settings/', manager.admin_settings, name='admin_settings'),

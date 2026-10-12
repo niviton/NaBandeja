@@ -1,68 +1,55 @@
 {% extends 'restaurante/admin/base_admin.html' %}
 
-{% block title %}Mesas - {{ app_settings.store_name }}{% endblock %}
+{% block title %}Mesas · {{ app_settings.store_name }}{% endblock %}
 
 {% block admin_content %}
-<div class="max-w-5xl mx-auto">
-    <div class="flex flex-wrap items-end gap-4 mb-6">
-        <div class="flex-1 min-w-[240px]">
-            <h1 class="admin-brand-title text-4xl text-[var(--admin-text)]">Mesas e QR Code</h1>
-            <p class="text-[var(--admin-muted)]">O QR Code de cada mesa abre o cardápio digital com os botões "Chamar garçom" e "Pedir a conta".</p>
-        </div>
-        <a href="{% url 'menu_qr_sheet' %}" target="_blank" class="px-4 py-3 rounded-xl bg-white border border-[var(--admin-line)] font-bold"><i class="bi bi-book me-1"></i>Cartão só do cardápio</a>
-        <a href="{% url 'tables_qr_sheet' %}" target="_blank" class="px-4 py-3 rounded-xl bg-slate-900 text-white font-bold"><i class="bi bi-qr-code me-1"></i>QR por mesa</a>
+<div class="nb-page-head">
+    <div>
+        <p class="nb-kicker">Salão</p>
+        <h1 class="nb-title mt-1">Mesas e <em>QR Codes</em></h1>
+        <p class="nb-subtitle mt-1.5">As mesas aparecem no mapa do garçom. Cada uma tem um QR Code que abre o cardápio digital.</p>
     </div>
-
-    {% if not app_settings.public_menu_enabled %}
-    <p class="mb-4 rounded-2xl bg-amber-50 border border-amber-200 p-4 text-sm font-semibold text-amber-900">
-        O cardápio digital está desligado. Ative em <a href="{% url 'admin_settings' %}" class="underline">Configurações</a> para os QR Codes funcionarem.
-    </p>
+    {% if modules.cardapio_digital %}
+    <div class="flex flex-wrap gap-2">
+        <a href="{% url 'menu_qr_sheet' %}" target="_blank" rel="noopener" class="nb-btn-secondary"><i class="bi bi-book" aria-hidden="true"></i>Cartão do cardápio</a>
+        <a href="{% url 'tables_qr_sheet' %}" target="_blank" rel="noopener" class="nb-btn-dark"><i class="bi bi-qr-code" aria-hidden="true"></i>QR por mesa</a>
+    </div>
     {% endif %}
-
-    <form method="post" action="{% url 'tables_quick_create' %}" class="mb-6 rounded-3xl bg-[var(--admin-card)] border border-[var(--admin-line)] p-5 flex flex-wrap items-end gap-3">
-        {% csrf_token %}
-        <div>
-            <label class="block text-xs font-bold uppercase tracking-wider text-[var(--admin-muted)] mb-1">Criar mesas</label>
-            <input type="number" name="count" min="1" max="200" value="10" class="w-28 px-3 py-2.5 rounded-xl border border-[var(--admin-line)] bg-white">
-        </div>
-        <div>
-            <label class="block text-xs font-bold uppercase tracking-wider text-[var(--admin-muted)] mb-1">A partir do número</label>
-            <input type="number" name="start" min="1" value="{{ tables|length|add:1 }}" class="w-28 px-3 py-2.5 rounded-xl border border-[var(--admin-line)] bg-white">
-        </div>
-        <button class="px-4 py-2.5 rounded-xl bg-[var(--admin-accent)] text-white font-bold">Criar</button>
-        <p class="text-xs text-[var(--admin-muted)] w-full">Mesas que já existem são ignoradas.</p>
-    </form>
-
-    <div class="rounded-3xl bg-[var(--admin-card)] border border-[var(--admin-line)] overflow-hidden">
-        <div class="overflow-x-auto">
-        <table class="min-w-full text-sm">
-            <thead class="bg-[#f4ece0] text-left text-[var(--admin-muted)]">
-                <tr>
-                    <th class="px-4 py-3">Mesa</th><th class="px-4 py-3">Lugares</th><th class="px-4 py-3">Área</th><th class="px-4 py-3">Ativa</th><th class="px-4 py-3"></th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for table in tables %}
-                <tr class="border-t border-[var(--admin-line)]">
-                    <td colspan="5" class="p-0">
-                        <form method="post" action="{% url 'table_edit' table.id %}" class="flex flex-wrap items-center gap-2 px-4 py-2">
-                            {% csrf_token %}
-                            <input name="name" value="{{ table.name }}" maxlength="20" class="w-24 px-2 py-1.5 rounded-lg border border-[var(--admin-line)] font-black">
-                            <input name="seats" type="number" min="1" value="{{ table.seats }}" class="w-20 px-2 py-1.5 rounded-lg border border-[var(--admin-line)]">
-                            <input name="area" value="{{ table.area }}" placeholder="Salão, Varanda..." class="flex-1 min-w-[120px] px-2 py-1.5 rounded-lg border border-[var(--admin-line)]">
-                            <label class="inline-flex items-center gap-1 text-xs font-bold"><input type="checkbox" name="is_active" {% if table.is_active %}checked{% endif %}> ativa</label>
-                            <input type="hidden" name="is_active_sent" value="1">
-                            <button class="px-3 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-bold">Salvar</button>
-                            <a href="{% url 'table_menu' table.public_token %}" target="_blank" class="px-3 py-1.5 rounded-lg bg-slate-100 text-xs font-bold" title="Abrir o cardápio desta mesa"><i class="bi bi-box-arrow-up-right"></i></a>
-                        </form>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr><td colspan="5" class="px-4 py-10 text-center text-[var(--admin-muted)]">Nenhuma mesa ainda. Use "Criar mesas" acima.</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        </div>
-    </div>
 </div>
+
+{% if modules.cardapio_digital and not app_settings.public_menu_enabled %}
+<p class="nb-alert-warn mb-6"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i>O cardápio digital está desligado. Ligue em <a href="{% url 'admin_settings' %}" class="underline font-semibold">Configurações</a> para os QR Codes funcionarem.</p>
+{% endif %}
+
+<form method="post" action="{% url 'tables_quick_create' %}" class="nb-card nb-card-pad mb-6 flex flex-wrap items-end gap-3">
+    {% csrf_token %}
+    <div><label class="nb-label" for="t-count">Criar mesas</label><input id="t-count" type="number" name="count" min="1" max="200" value="10" class="nb-input w-28 tabular"></div>
+    <div><label class="nb-label" for="t-start">A partir do número</label><input id="t-start" type="number" name="start" min="1" value="{{ tables|length|add:1 }}" class="nb-input w-28 tabular"></div>
+    <button class="nb-btn-primary">Criar</button>
+    <p class="nb-help w-full mt-0">Mesas que já existem são ignoradas.</p>
+</form>
+
+<ul class="nb-card nb-divide">
+    {% for table in tables %}
+    <li class="px-4 sm:px-5 py-3">
+        <form method="post" action="{% url 'table_edit' table.id %}" class="flex flex-wrap items-center gap-2">
+            {% csrf_token %}
+            <label class="sr-only" for="tn-{{ table.id }}">Mesa</label>
+            <input id="tn-{{ table.id }}" name="name" value="{{ table.name }}" maxlength="20" class="nb-input w-24 font-display text-lg font-semibold">
+            <label class="sr-only" for="ts-{{ table.id }}">Lugares</label>
+            <input id="ts-{{ table.id }}" name="seats" type="number" min="1" value="{{ table.seats }}" class="nb-input w-20 tabular" title="Lugares">
+            <label class="sr-only" for="ta-{{ table.id }}">Área</label>
+            <input id="ta-{{ table.id }}" name="area" value="{{ table.area }}" placeholder="Salão, varanda…" class="nb-input flex-1 min-w-[9rem]">
+            <label class="inline-flex items-center gap-2 text-sm"><input type="checkbox" name="is_active" class="nb-check" {% if table.is_active %}checked{% endif %}> ativa</label>
+            <input type="hidden" name="is_active_sent" value="1">
+            <button class="nb-btn-dark nb-btn-sm">Salvar</button>
+            {% if modules.cardapio_digital %}
+            <a href="{% url 'table_menu' table.public_token %}" target="_blank" rel="noopener" class="nb-icon-btn w-9 h-9" aria-label="Abrir cardápio da mesa {{ table.name }}"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></a>
+            {% endif %}
+        </form>
+    </li>
+    {% empty %}
+    <li class="px-5 py-10 text-center text-fumaca">Nenhuma mesa ainda. Use "Criar mesas" acima.</li>
+    {% endfor %}
+</ul>
 {% endblock %}

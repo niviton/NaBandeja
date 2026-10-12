@@ -12,13 +12,14 @@ from decimal import Decimal
 
 from django.contrib import messages
 from django.db.models import Prefetch
-from django.http import HttpResponse
+from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.views.decorators.http import require_POST
 
+from ..modules import is_enabled
 from ..models import AppSettings, Category, DeliveryZone, Order, OrderItem, Payment, Product, Table
 from ..permissions import (
     get_order_or_403,
@@ -182,6 +183,8 @@ def order_workspace(request, order_id):
 def new_order(request, kind):
     if kind not in ('balcao', 'delivery'):
         return redirect('waiter_view')
+    if kind == 'delivery' and not is_enabled('delivery'):
+        raise Http404('Delivery desativado para esta loja.')
     return _workspace(request, Target(f'novo:{kind}'), None)
 
 

@@ -1,24 +1,26 @@
 {% extends 'app/base_app.html' %}
 
-{% block title %}Cozinha - {{ app_settings.store_name }}{% endblock %}
-{% block body_class %}bg-slate-900 min-h-screen text-slate-100{% endblock %}
+{% block title %}Cozinha · {{ app_settings.store_name }}{% endblock %}
+{% block body_class %}min-h-screen bg-carvao text-creme{% endblock %}
 
 {% block content %}
-<div class="max-w-[1800px] mx-auto p-3 sm:p-5">
-    <div class="flex flex-wrap items-center gap-3 mb-4">
-        <h1 class="text-2xl font-black flex-1">Cozinha</h1>
-        <label class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-800 text-sm font-bold cursor-pointer">
-            <input type="checkbox" id="soundToggle" class="w-4 h-4" checked> <i class="bi bi-volume-up"></i> Som
-        </label>
-        <label class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-800 text-sm font-bold cursor-pointer" title="Imprime a comanda de cada pedido novo neste computador">
-            <input type="checkbox" id="printToggle" class="w-4 h-4" {% if auto_print %}checked{% endif %}> <i class="bi bi-printer"></i> Imprimir automático
-        </label>
+<div class="max-w-[1800px] mx-auto px-3 sm:px-5 py-5">
+    <div class="flex flex-wrap items-end justify-between gap-3 mb-5">
+        <div>
+            <p class="nb-kicker">Cozinha</p>
+            <h1 class="font-display text-[2rem] font-semibold leading-tight">Fila de <em class="italic text-tomate">preparo</em></h1>
+        </div>
+        <div class="flex gap-2">
+            <label class="inline-flex items-center gap-2 px-3 min-h-[44px] rounded-xl bg-carvao-800 border border-carvao-700 text-sm font-medium cursor-pointer">
+                <input type="checkbox" id="soundToggle" class="nb-check" checked> Som
+            </label>
+            <label class="inline-flex items-center gap-2 px-3 min-h-[44px] rounded-xl bg-carvao-800 border border-carvao-700 text-sm font-medium cursor-pointer">
+                <input type="checkbox" id="printToggle" class="nb-check" {% if auto_print %}checked{% endif %}> Imprimir automático
+            </label>
+        </div>
     </div>
 
-    <div id="kitchen-board"
-         hx-get="{% url 'kitchen_board' %}"
-         hx-trigger="nb:event from:body delay:500ms"
-         hx-swap="innerHTML">
+    <div id="kitchen-board" hx-get="{% url 'kitchen_board' %}" hx-trigger="nb:event from:body delay:500ms" hx-swap="innerHTML">
         {% include 'app/_cozinha_board.html' %}
     </div>
 </div>

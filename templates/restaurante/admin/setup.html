@@ -1,62 +1,74 @@
 {% extends 'base.html' %}
 
-{% block title %}Configuração inicial - NaBandeja{% endblock %}
-{% block body_class %}bg-slate-100 min-h-screen{% endblock %}
+{% block title %}Primeiros passos · NaBandeja{% endblock %}
+{% block body_class %}min-h-screen bg-creme{% endblock %}
 
 {% block content %}
-<div class="max-w-xl mx-auto p-4 sm:p-8">
-    <div class="text-center mb-6">
-        <p class="text-sm font-bold text-slate-500">Passo {{ step_number }} de {{ steps_total }}</p>
-        <div class="mt-2 h-2 rounded-full bg-slate-200 overflow-hidden"><div class="h-full bg-emerald-500" style="width: {% widthratio step_number steps_total 100 %}%"></div></div>
-    </div>
+<div class="max-w-xl mx-auto px-5 py-10">
+    {% include 'brand/_wordmark.html' with mark_class='w-9 h-9' text_class='text-2xl text-carvao' %}
 
-    <form method="post" enctype="multipart/form-data" class="rounded-3xl bg-white border border-slate-200 p-6 sm:p-8 space-y-4 shadow-sm">
+    <ol class="mt-10 flex gap-2" aria-label="Etapas">
+        {% for name in step_names %}
+        <li class="flex-1">
+            <span class="block h-1.5 rounded-full {% if forloop.counter <= step_number %}bg-tomate{% else %}bg-linha{% endif %}" aria-hidden="true"></span>
+            <span class="mt-2 block font-mono text-xs uppercase tracking-[0.12em] {% if forloop.counter == step_number %}text-carvao{% else %}text-fumaca{% endif %}"
+                {% if forloop.counter == step_number %}aria-current="step"{% endif %}>{{ name }}</span>
+        </li>
+        {% endfor %}
+    </ol>
+
+    <form method="post" enctype="multipart/form-data" class="mt-8 nb-card nb-card-pad space-y-4" novalidate>
         {% csrf_token %}
         {% if step == 'loja' %}
-        <h1 class="text-2xl font-black">Bem-vindo ao NaBandeja! 🍽️</h1>
-        <p class="text-slate-500">Vamos deixar o sistema com a cara da sua loja. Leva 2 minutos.</p>
+        <p class="nb-kicker">Passo 1 de {{ steps_total }}</p>
+        <h1 class="nb-title">Bem-vindo ao <em>NaBandeja.</em></h1>
+        <p class="nb-subtitle">Vamos deixar o sistema com a cara da sua loja. Leva dois minutos.</p>
         {% elif step == 'pix' %}
-        <h1 class="text-2xl font-black">PIX no cupom</h1>
-        <p class="text-slate-500">Com a chave PIX, cada conta sai com um QR Code do valor exato. Pode pular e configurar depois.</p>
+        <p class="nb-kicker">Passo 2 de {{ steps_total }}</p>
+        <h1 class="nb-title">PIX com o <em>valor certo</em></h1>
+        <p class="nb-subtitle">Cada conta sai com um QR Code do valor exato. Pode pular e configurar depois.</p>
         {% elif step == 'mesas' %}
-        <h1 class="text-2xl font-black">Mesas</h1>
-        <p class="text-slate-500">Quantas mesas tem o salão? Elas aparecem no mapa do garçom e ganham um QR Code. {% if tables_count %}Você já tem {{ tables_count }}.{% endif %}</p>
-        <input type="number" name="count" min="0" max="200" value="{% if tables_count %}0{% else %}10{% endif %}" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-2xl font-black">
+        <p class="nb-kicker">Passo 3 de {{ steps_total }}</p>
+        <h1 class="nb-title">Quantas <em>mesas?</em></h1>
+        <p class="nb-subtitle">Elas aparecem no mapa do garçom. {% if tables_count %}Você já tem {{ tables_count }}.{% endif %}</p>
+        <label class="nb-label" for="w-count">Número de mesas</label>
+        <input id="w-count" type="number" name="count" min="0" max="200" value="{% if tables_count %}0{% else %}10{% endif %}" class="nb-input text-2xl font-display font-semibold tabular">
         {% elif step == 'cardapio' %}
-        <h1 class="text-2xl font-black">Categorias do cardápio</h1>
-        <p class="text-slate-500">Separe por vírgula. Depois você cadastra os produtos de cada uma.</p>
-        <input name="categories" value="{% if not categories %}Lanches, Porções, Bebidas, Sobremesas{% endif %}" class="w-full px-4 py-3 rounded-xl border border-slate-200 font-bold">
-        {% if categories %}<p class="text-sm text-slate-500">Já cadastradas: {{ categories|join:", " }}</p>{% endif %}
+        <p class="nb-kicker">Passo 4 de {{ steps_total }}</p>
+        <h1 class="nb-title">Categorias do <em>cardápio</em></h1>
+        <p class="nb-subtitle">Separe por vírgula. Depois você cadastra os produtos de cada uma.</p>
+        <label class="nb-label" for="w-cats">Categorias</label>
+        <input id="w-cats" name="categories" value="{% if not categories %}Lanches, Porções, Bebidas, Sobremesas{% endif %}" class="nb-input">
+        {% if categories %}<p class="nb-help">Já cadastradas: {{ categories|join:", " }}</p>{% endif %}
         {% endif %}
 
         {% if form %}
-        {% for error in form.non_field_errors %}<p class="rounded-xl bg-red-50 text-red-700 text-sm font-bold p-3">{{ error }}</p>{% endfor %}
+        {% for error in form.non_field_errors %}<p class="nb-alert-error">{{ error }}</p>{% endfor %}
         {% for field in form %}
         <div>
-            <label for="{{ field.id_for_label }}" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">{{ field.label }}</label>
+            <label for="{{ field.id_for_label }}" class="nb-label">{{ field.label }}</label>
             {% if field.name == 'pix_key_type' %}
-            <select name="pix_key_type" id="{{ field.id_for_label }}" class="w-full px-4 py-3 rounded-xl border border-slate-200">
-                {% for value, label in key_types %}<option value="{{ value }}" {% if field.value == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
-            </select>
+            <select name="pix_key_type" id="{{ field.id_for_label }}" class="nb-select">{% for value, label in key_types %}<option value="{{ value }}" {% if field.value == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
             {% elif field.name == 'logo' %}
-            <input type="file" name="logo" accept="image/*" id="{{ field.id_for_label }}" class="w-full text-sm">
+            <input type="file" name="logo" accept="image/*" id="{{ field.id_for_label }}" class="nb-input file:mr-3 file:rounded-lg file:border-0 file:bg-carvao file:text-white file:px-3 file:py-1.5">
             {% elif field.name == 'primary_color' %}
-            <input type="color" name="primary_color" value="{{ field.value|default:'#ef4444' }}" class="h-12 w-24 rounded-xl border border-slate-200">
+            <input type="color" name="primary_color" id="{{ field.id_for_label }}" value="{{ field.value|default:'#D9442B' }}" class="h-11 w-24 rounded-xl border border-linha bg-papel p-1">
             {% else %}
-            <input name="{{ field.html_name }}" id="{{ field.id_for_label }}" value="{{ field.value|default_if_none:'' }}" class="w-full px-4 py-3 rounded-xl border border-slate-200">
+            <input name="{{ field.html_name }}" id="{{ field.id_for_label }}" value="{{ field.value|default_if_none:'' }}" class="nb-input"
+                autocomplete="{% if field.name == 'store_name' %}organization{% elif field.name == 'phone' %}tel{% elif field.name == 'city' %}address-level2{% else %}off{% endif %}">
             {% endif %}
-            {% for error in field.errors %}<p class="text-xs text-red-600 mt-1">{{ error }}</p>{% endfor %}
+            {% for error in field.errors %}<p class="nb-error">{{ error }}</p>{% endfor %}
         </div>
         {% endfor %}
         {% endif %}
 
-        <div class="flex gap-3 pt-2">
-            {% if step != 'loja' %}<a href="javascript:history.back()" class="px-5 py-3 rounded-xl bg-slate-100 font-bold">Voltar</a>{% endif %}
-            <button class="flex-1 py-3 rounded-xl bg-slate-900 text-white font-black">{% if step == 'cardapio' %}Concluir{% else %}Continuar{% endif %}</button>
+        <div class="flex gap-2 pt-2">
+            {% if step != 'loja' %}<a href="javascript:history.back()" class="nb-btn-secondary">Voltar</a>{% endif %}
+            <button class="nb-btn-primary flex-1">{% if step == 'cardapio' %}Concluir{% else %}Continuar{% endif %}</button>
         </div>
     </form>
     <form method="post" action="{% url 'setup_skip' %}" class="text-center mt-4">
-        {% csrf_token %}<button class="text-sm font-bold text-slate-500 underline">Pular configuração inicial</button>
+        {% csrf_token %}<button class="nb-btn-ghost nb-btn-sm">Pular e configurar depois</button>
     </form>
 </div>
 {% endblock %}

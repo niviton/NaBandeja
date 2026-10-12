@@ -353,6 +353,8 @@ class AppSettings(models.Model):
     wifi_password = models.CharField(max_length=64, blank=True, verbose_name='Senha do Wi-Fi dos clientes')
     min_delivery_order = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name='Pedido mínimo para delivery')
 
+    company_code = models.CharField(max_length=40, blank=True, verbose_name='Código da empresa (login)')
+    modules = models.JSONField(default=dict, blank=True, verbose_name='Módulos ligados')
     setup_completed = models.BooleanField(default=False, verbose_name='Configuração inicial concluída')
     license_key = models.TextField(blank=True, verbose_name='Licença')
 

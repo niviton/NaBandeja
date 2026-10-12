@@ -10,7 +10,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         user_model = get_user_model()
-        if user_model.objects.filter(role='gerente', is_active=True).exists():
+        if user_model.objects.filter(role='gerente', is_active=True, is_superuser=False).exists():
             self.stdout.write('Já existe gerente ativo; nada a fazer.')
             return
 
@@ -23,8 +23,8 @@ class Command(BaseCommand):
         user, _ = user_model.objects.get_or_create(username=username)
         user.role = 'gerente'
         user.is_active = True
-        user.is_staff = True
-        user.is_superuser = True
+        user.is_staff = False
+        user.is_superuser = False
         user.set_password(password)
         user.save()
 

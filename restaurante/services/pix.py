@@ -192,7 +192,9 @@ def qr_svg(payload, box_size=10, border=2):
 
 
 def _build_for_settings(store_settings, amount, txid):
-    if not store_settings.pix_key:
+    from ..modules import is_enabled
+
+    if not store_settings.pix_key or not is_enabled('pix', store_settings):
         return None
     try:
         payload = build_payload(

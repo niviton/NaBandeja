@@ -10,6 +10,7 @@ from django.views.decorators.http import require_POST
 
 from django.conf import settings as django_settings
 
+from ..modules import module_required
 from ..forms import AppSettingsForm, TeamMemberForm
 from ..models import AppSettings, CashSession, Expense, Ingredient, Order, OrderItem, Payment, TableCall, User
 from ..permissions import manager_required
@@ -62,6 +63,7 @@ def admin_dashboard(request):
 
 @manager_required
 @require_POST
+@module_required('caixa')
 def open_cash_session(request):
     try:
         session = cash_service.open_session(request.user, request.POST.get('opening_amount'), request.POST.get('notes'))
@@ -76,6 +78,7 @@ def open_cash_session(request):
 
 @manager_required
 @require_POST
+@module_required('caixa')
 def close_cash_session(request):
     try:
         session, totals = cash_service.close_session(
@@ -145,6 +148,12 @@ def admin_settings(request):
             'network': f'{scheme}://{local_ip}:{port}',
         },
         'pix_preview': pix_preview(store),
+        'color_fields': [
+            ('primary_color', 'Principal', store.primary_color),
+            ('secondary_color', 'Destaque', store.secondary_color),
+            ('background_color', 'Fundo', store.background_color),
+            ('text_color', 'Texto', store.text_color),
+        ],
     })
 
 
@@ -153,7 +162,7 @@ def admin_settings(request):
 @manager_required
 def admin_users(request):
     return render(request, 'restaurante/admin/users.html', {
-        'users': User.objects.filter(is_active=True).prefetch_related('socialaccount_set').order_by('role', 'username'),
+        'users': User.objects.filter(is_active=True, is_superuser=False).prefetch_related('socialaccount_set').order_by('role', 'username'),
         'active_menu': 'users',
     })
 
@@ -165,7 +174,7 @@ def user_create(request):
 
 @manager_required
 def user_edit(request, user_id):
-    return _member_edit(request, get_object_or_404(User, pk=user_id, is_active=True))
+    return _member_edit(request, get_object_or_404(User, pk=user_id, is_active=True, is_superuser=False))
 
 
 def _member_edit(request, member):
@@ -196,8 +205,8 @@ def user_delete(request, user_id):
     if request.user.id == user_id:
         messages.error(request, 'Você não pode desativar a si mesmo.')
         return redirect('admin_users')
-    user = get_object_or_404(User, pk=user_id, is_active=True)
-    if user.role == 'gerente' and not User.objects.filter(role='gerente', is_active=True).exclude(pk=user.pk).exists():
+    user = get_object_or_404(User, pk=user_id, is_active=True, is_superuser=False)
+    if user.role == 'gerente' and not User.objects.filter(role='gerente', is_active=True, is_superuser=False).exclude(pk=user.pk).exists():
         messages.error(request, 'É preciso manter pelo menos um gerente ativo.')
         return redirect('admin_users')
     user.is_active = False

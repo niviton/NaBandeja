@@ -1,61 +1,29 @@
 {% extends 'restaurante/admin/base_admin.html' %}
 
-{% block title %}{% if category %}Editar{% else %}Nova{% endif %} Categoria - {{ app_settings.store_name }}{% endblock %}
+{% block title %}{{ title }} · {{ app_settings.store_name }}{% endblock %}
 
 {% block admin_content %}
-<div class="max-w-[500px] mx-auto">
-    <!-- Título -->
-    <div class="mb-8">
-        <a href="{% url 'admin_menu' %}" class="text-slate-400 hover:text-slate-600 transition-all inline-flex items-center gap-2 mb-4">
-            <i class="bi bi-arrow-left"></i>Voltar
-        </a>
-        <h1 class="text-3xl font-black text-slate-800">{% if category %}Editar Categoria{% else %}Nova Categoria{% endif %}</h1>
-    </div>
-    
-    <!-- Formulário -->
-    <form method="post" class="bg-white rounded-3xl p-8 border border-slate-200">
-        {% csrf_token %}
-        
-        <div class="space-y-6">
-            <div>
-                <label class="text-xs font-bold text-slate-400 uppercase tracking-widest block mb-2">Nome da Categoria</label>
-                <input 
-                    type="text" 
-                    name="name"
-                    value="{{ category.name|default:'' }}"
-                    class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-800 placeholder:text-slate-400 focus:ring-2 focus:ring-red-500/50 focus:border-red-500 outline-none transition-all font-medium"
-                    placeholder="Ex: Hambúrgueres"
-                    required
-                />
-                {% if form.name.errors %}
-                <p class="mt-2 text-sm font-medium text-red-600">{{ form.name.errors.0 }}</p>
-                {% endif %}
-            </div>
+{% url 'admin_menu' as back_url %}
+{% include 'restaurante/admin/_page_head.html' with back=back_url kicker='Cardápio' title=title %}
 
-            <div class="grid grid-cols-2 gap-4 mt-6">
-                <div>
-                    <label class="text-xs font-bold text-slate-400 uppercase tracking-widest block mb-2">Emoji</label>
-                    <input name="icon" maxlength="10" value="{{ form.icon.value|default:'🍽️' }}" class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-800 placeholder:text-slate-400 focus:ring-2 focus:ring-red-500/50 focus:border-red-500 outline-none transition-all font-medium">
-                </div>
-                <div>
-                    <label class="text-xs font-bold text-slate-400 uppercase tracking-widest block mb-2">Ordem no cardápio</label>
-                    <input type="number" name="order" value="{{ form.order.value|default:0 }}" class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-800 placeholder:text-slate-400 focus:ring-2 focus:ring-red-500/50 focus:border-red-500 outline-none transition-all font-medium">
-                </div>
-            </div>
-            <label class="flex items-center gap-3 mt-6 cursor-pointer">
-                <input type="checkbox" name="is_active" class="w-5 h-5" {% if form.is_active.value %}checked{% endif %}>
-                <span class="font-semibold text-slate-700">Categoria visível no cardápio</span>
-            </label>
-        </div>
-        
-        <div class="flex gap-4 mt-8 pt-6 border-t border-slate-100">
-            <a href="{% url 'admin_menu' %}" class="flex-1 py-4 bg-slate-100 text-slate-600 rounded-xl font-bold text-center hover:bg-slate-200 transition-all">
-                Cancelar
-            </a>
-            <button type="submit" class="flex-1 py-4 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-xl font-bold hover:shadow-lg hover:shadow-red-500/30 transition-all">
-                <i class="bi bi-check-lg me-2"></i>{% if category %}Salvar{% else %}Criar Categoria{% endif %}
-            </button>
-        </div>
-    </form>
-</div>
+<form method="post" class="nb-card nb-card-pad max-w-xl space-y-4" novalidate>
+    {% csrf_token %}
+    <div>
+        <label class="nb-label" for="c-name">Nome da categoria</label>
+        <input id="c-name" name="name" required maxlength="100" value="{{ form.name.value|default_if_none:'' }}" placeholder="Ex.: Hambúrgueres" class="nb-input" autocomplete="off">
+        {% for error in form.name.errors %}<p class="nb-error">{{ error }}</p>{% endfor %}
+    </div>
+    <div class="grid grid-cols-2 gap-4">
+        <div><label class="nb-label" for="c-icon">Emoji</label><input id="c-icon" name="icon" maxlength="10" value="{{ form.icon.value|default:'🍽️' }}" class="nb-input"></div>
+        <div><label class="nb-label" for="c-order">Ordem no cardápio</label><input id="c-order" type="number" name="order" value="{{ form.order.value|default:0 }}" class="nb-input tabular"></div>
+    </div>
+    <label class="flex items-center gap-3 cursor-pointer">
+        <input type="checkbox" name="is_active" class="nb-check" {% if form.is_active.value %}checked{% endif %}>
+        <span class="font-semibold">Visível no cardápio</span>
+    </label>
+    <div class="flex gap-2 justify-end pt-2">
+        <a href="{% url 'admin_menu' %}" class="nb-btn-secondary">Cancelar</a>
+        <button type="submit" class="nb-btn-primary">{% if category %}Salvar{% else %}Criar categoria{% endif %}</button>
+    </div>
+</form>
 {% endblock %}

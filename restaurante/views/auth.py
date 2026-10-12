@@ -5,6 +5,8 @@ from django.shortcuts import redirect, render
 from django.views.decorators.cache import never_cache
 
 from .. import security
+from ..models import AppSettings
+from ..services import company
 from ..forms import LoginForm
 from ..permissions import home_for
 
@@ -19,6 +21,9 @@ def login_view(request):
         username = request.POST.get('username', '')
         if security.is_locked(request, username):
             messages.error(request, 'Muitas tentativas erradas. Aguarde alguns minutos e tente de novo.')
+        elif not company.matches(request.POST.get('empresa', ''), AppSettings.get_settings()):
+            security.register_failure(request, username)
+            messages.error(request, 'Empresa, usuário ou senha incorretos.')
         elif form.is_valid():
             security.reset(request, username)
             user = form.get_user()
@@ -27,7 +32,7 @@ def login_view(request):
             return redirect(home_for(user))
         else:
             security.register_failure(request, username)
-            messages.error(request, 'Usuário ou senha incorretos.')
+            messages.error(request, 'Empresa, usuário ou senha incorretos.')
 
     return render(request, 'restaurante/login.html', {'form': form})
 

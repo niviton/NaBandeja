@@ -12,6 +12,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 
+from ..modules import module_required
 from ..models import AppSettings, DeliveryZone, Order, Product, Table
 from ..services import orders as order_service
 from ..services import tables as table_service
@@ -39,6 +40,7 @@ def _store_or_404(flag):
 
 # ------------------------------------------------------------------ cardápio da mesa
 
+@module_required('cardapio_digital')
 def table_menu(request, token):
     store = _store_or_404('public_menu_enabled')
     table = get_object_or_404(Table, public_token=token, is_active=True)
@@ -50,6 +52,7 @@ def table_menu(request, token):
     })
 
 
+@module_required('cardapio_digital')
 def public_menu(request):
     store = _store_or_404('public_menu_enabled')
     return render(request, 'public/cardapio.html', {
@@ -61,6 +64,7 @@ def public_menu(request):
 
 
 @require_POST
+@module_required('cardapio_digital')
 def table_call(request, token, kind):
     _store_or_404('public_menu_enabled')
     table = get_object_or_404(Table, public_token=token, is_active=True)
@@ -75,6 +79,7 @@ def table_call(request, token, kind):
 
 # ------------------------------------------------------------------ pedido online
 
+@module_required('online')
 def online_order(request):
     store = _store_or_404('online_orders_enabled')
     return render(request, 'public/pedir.html', {
@@ -95,6 +100,7 @@ def _online_cart(request, message=None, kind='success'):
 
 
 @require_POST
+@module_required('online')
 def online_cart_add(request, product_id):
     _store_or_404('online_orders_enabled')
     cart = SessionCart(request.session, ONLINE_CART)
@@ -107,6 +113,7 @@ def online_cart_add(request, product_id):
 
 
 @require_POST
+@module_required('online')
 def online_cart_change(request):
     _store_or_404('online_orders_enabled')
     cart = SessionCart(request.session, ONLINE_CART)
@@ -118,6 +125,7 @@ def online_cart_change(request):
 
 
 @require_POST
+@module_required('online')
 def online_checkout(request):
     store = _store_or_404('online_orders_enabled')
     cart = SessionCart(request.session, ONLINE_CART)
@@ -161,6 +169,7 @@ def online_checkout(request):
     return hx_redirect(reverse('online_order_sent', args=[order.id]))
 
 
+@module_required('online')
 def online_order_sent(request, order_id):
     if request.session.get('online_last_order') != order_id:
         return redirect('online_order')

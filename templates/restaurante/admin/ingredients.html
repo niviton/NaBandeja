@@ -1,77 +1,41 @@
 {% extends 'restaurante/admin/base_admin.html' %}
 
-{% block title %}Ingredientes - {{ app_settings.store_name }}{% endblock %}
+{% block title %}Ingredientes · {{ app_settings.store_name }}{% endblock %}
 
 {% block admin_content %}
-<div class="max-w-[1200px] mx-auto">
-    <div class="flex items-center justify-between mb-8">
-        <div>
-            <h1 class="text-3xl font-black text-slate-800">Ingredientes</h1>
-            <p class="text-slate-500">Controle o estoque real da produção</p>
-        </div>
-        <a href="{% url 'ingredient_create' %}" class="px-5 py-3 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-xl font-bold hover:shadow-lg hover:shadow-red-500/30 transition-all">
-            <i class="bi bi-plus-lg me-2"></i>Novo Ingrediente
-        </a>
+<div class="nb-page-head">
+    <div>
+        <p class="nb-kicker">Estoque</p>
+        <h1 class="nb-title mt-1">Ingredientes e <em>receitas</em></h1>
+        <p class="nb-subtitle mt-1.5">A cada venda, o sistema dá baixa dos ingredientes da receita. O custo de cada um entra no relatório de lucro.</p>
     </div>
+    <a href="{% url 'ingredient_create' %}" class="nb-btn-primary"><i class="bi bi-plus-lg" aria-hidden="true"></i>Ingrediente</a>
+</div>
 
-    <div class="bg-white rounded-3xl border border-slate-200 overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="min-w-full">
-                <thead class="bg-slate-50 border-b border-slate-200">
-                    <tr>
-                        <th class="text-left py-4 px-5 text-xs font-bold text-slate-400 uppercase tracking-widest">Ingrediente</th>
-                        <th class="text-left py-4 px-5 text-xs font-bold text-slate-400 uppercase tracking-widest">Estoque</th>
-                        <th class="text-left py-4 px-5 text-xs font-bold text-slate-400 uppercase tracking-widest">Custo</th>
-                        <th class="text-left py-4 px-5 text-xs font-bold text-slate-400 uppercase tracking-widest">Status</th>
-                        <th class="text-right py-4 px-5 text-xs font-bold text-slate-400 uppercase tracking-widest">Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for ingredient in ingredients %}
-                    <tr class="border-b border-slate-100 last:border-b-0">
-                        <td class="py-4 px-5">
-                            <p class="font-bold text-slate-800">{{ ingredient.name }}</p>
-                            <p class="text-xs text-slate-400">Unidade: {{ ingredient.get_unit_display }}</p>
-                        </td>
-                        <td class="py-4 px-5">
-                            <span class="font-semibold text-slate-700">{{ ingredient.stock_quantity }} {{ ingredient.unit }}</span>
-                            {% if ingredient.low_stock_alert and ingredient.stock_quantity <= ingredient.low_stock_alert %}
-                            <span class="ml-2 px-2 py-0.5 rounded-full text-xs font-bold bg-orange-100 text-orange-700">
-                                <i class="bi bi-exclamation-triangle-fill me-1"></i>Estoque baixo
-                            </span>
-                            {% endif %}
-                        </td>
-                        <td class="py-4 px-5 font-semibold text-slate-700">R$ {{ ingredient.cost_price }}</td>
-                        <td class="py-4 px-5">
-                            {% if ingredient.is_active %}
-                            <span class="px-2 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">Ativo</span>
-                            {% else %}
-                            <span class="px-2 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-500">Inativo</span>
-                            {% endif %}
-                        </td>
-                        <td class="py-4 px-5 text-right">
-                            <a href="{% url 'ingredient_edit' ingredient.id %}" class="inline-flex items-center px-3 py-2 bg-slate-100 text-slate-600 rounded-lg text-sm font-bold hover:bg-slate-200 transition-all me-2">
-                                <i class="bi bi-pencil me-1"></i>Editar
-                            </a>
-                            <form method="post" action="{% url 'ingredient_delete' ingredient.id %}" class="inline" data-confirm-message="Remover este ingrediente?">
-                                {% csrf_token %}
-                                <button type="submit" class="inline-flex items-center px-3 py-2 bg-slate-100 text-slate-400 rounded-lg text-sm hover:bg-red-100 hover:text-red-600 transition-all">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </form>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="5" class="text-center py-14">
-                            <i class="bi bi-box-seam text-4xl text-slate-300"></i>
-                            <p class="text-slate-400 mt-2">Nenhum ingrediente cadastrado</p>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
+<div class="nb-card overflow-x-auto">
+    <table class="nb-table min-w-[640px]">
+        <thead><tr><th scope="col">Ingrediente</th><th scope="col" class="text-right">Estoque</th><th scope="col" class="text-right">Alerta abaixo de</th><th scope="col" class="text-right">Custo / unidade</th><th scope="col"><span class="sr-only">Ações</span></th></tr></thead>
+        <tbody>
+            {% for ingredient in ingredients %}
+            <tr class="{% if not ingredient.is_active %}opacity-60{% endif %}">
+                <td><span class="font-semibold">{{ ingredient.name }}</span>
+                    {% if not ingredient.is_active %}<span class="nb-status-livre ms-1">inativo</span>{% endif %}</td>
+                <td class="text-right tabular">
+                    <span class="{% if ingredient.low_stock_alert and ingredient.stock_quantity <= ingredient.low_stock_alert %}nb-status-erro{% endif %}">{{ ingredient.stock_quantity|floatformat:"-3" }} {{ ingredient.unit }}</span>
+                </td>
+                <td class="text-right tabular text-fumaca">{% if ingredient.low_stock_alert %}{{ ingredient.low_stock_alert|floatformat:"-3" }} {{ ingredient.unit }}{% else %}—{% endif %}</td>
+                <td class="text-right tabular">R$ {{ ingredient.cost_price|floatformat:2 }}</td>
+                <td class="text-right whitespace-nowrap">
+                    <a href="{% url 'ingredient_edit' ingredient.id %}" class="nb-btn-secondary nb-btn-sm">Editar</a>
+                    <form method="post" action="{% url 'ingredient_delete' ingredient.id %}" class="inline" data-confirm-message="Remover {{ ingredient.name }}? Se estiver em receitas ou no histórico, será desativado.">
+                        {% csrf_token %}<button class="nb-icon-btn w-9 h-9" aria-label="Remover {{ ingredient.name }}"><i class="bi bi-trash" aria-hidden="true"></i></button>
+                    </form>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" class="text-center py-10 text-fumaca">Nenhum ingrediente cadastrado.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </div>
 {% endblock %}

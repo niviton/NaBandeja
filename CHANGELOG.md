@@ -2,6 +2,26 @@
 
 Mudanças relevantes do NaBandeja. O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [3.0.0] - 2026-10-11
+
+### Novo visual
+- Identidade **NaBandeja** (marca com cloche e bandeja) e design system documentado em `DESIGN.md`:
+  fundo creme, destaque tomate, títulos em Fraunces, rótulos em mono, componentes `nb-*`.
+- Todas as telas refeitas (salão, pedido, conta, cozinha, painel, relatórios, cardápio, configurações,
+  páginas do cliente) com foco em toque no celular e leitura rápida.
+- Acessibilidade: rótulos em todos os campos, foco visível, nomes acessíveis, `prefers-reduced-motion`,
+  confirmação com `<dialog>` nativo, texto mínimo de 12 px, sem rolagem lateral no celular.
+
+### Adicionado
+- Login com **empresa + usuário + senha**; tela inicial só com a marca NaBandeja.
+- **Superusuário de suporte** (`suporte_nabandeja`) com página própria: código da empresa,
+  **módulos ligados por cliente**, licença e redefinição de senhas.
+- Painel e delivery atualizam em tempo real.
+
+### Alterado
+- Gerentes das lojas deixam de ser superusuários do Django (só o suporte acessa `/admin/`).
+- Lucro bruto só aparece quando há custo cadastrado.
+
 ## [2.3.0] - 2026-10-11
 
 ### Adicionado

@@ -1,45 +1,47 @@
 {% extends 'public/base_public.html' %}
 
-{% block title %}Pedir - {{ store.store_name }}{% endblock %}
+{% block title %}Pedir · {{ store.store_name }}{% endblock %}
 
 {% block content %}
-<div class="max-w-5xl mx-auto px-4 pb-10 grid gap-6 lg:grid-cols-[1fr_380px] items-start">
-    <section>
-        <nav class="sticky top-0 z-20 bg-stone-50/95 backdrop-blur py-3 flex gap-2 overflow-x-auto">
+<div class="max-w-5xl mx-auto px-4 pb-10">
+    <div class="mt-6">
+        <p class="nb-kicker">Entrega</p>
+        <h1 class="nb-title mt-1">Peça e receba <em>em casa</em></h1>
+    </div>
+    <div class="mt-5 grid gap-6 lg:grid-cols-[1fr_380px] items-start">
+        <section aria-label="Cardápio">
+            <nav class="sticky top-0 z-20 bg-creme/95 backdrop-blur py-3 flex gap-2 overflow-x-auto" aria-label="Categorias">
+                {% for category in categories %}<a href="#c{{ category.id }}" class="nb-chip shrink-0">{{ category.icon }} {{ category.name }}</a>{% endfor %}
+            </nav>
             {% for category in categories %}
-            <a href="#c{{ category.id }}" class="whitespace-nowrap px-3 py-1.5 rounded-full bg-white border border-stone-200 text-sm font-bold">{{ category.icon }} {{ category.name }}</a>
-            {% endfor %}
-        </nav>
-        {% for category in categories %}
-        <div id="c{{ category.id }}" class="scroll-mt-16 mt-4">
-            <h2 class="text-lg font-black mb-2">{{ category.icon }} {{ category.name }}</h2>
-            <div class="space-y-2">
-                {% for product in category.products.all %}
-                {% with stock=product.available_stock %}
-                <div class="rounded-2xl bg-white border border-stone-200 p-3 flex gap-3 items-center">
-                    <span class="w-16 h-16 shrink-0 rounded-xl overflow-hidden bg-stone-100 flex items-center justify-center text-3xl">
-                        {% if product.image %}<img src="{{ product.image.url }}" alt="" class="w-full h-full object-cover" loading="lazy">{% else %}{{ product.icon|default:'🍽️' }}{% endif %}
-                    </span>
-                    <span class="flex-1 min-w-0">
-                        <span class="block font-bold">{{ product.name }}</span>
-                        <span class="block font-black text-slate-700">R$ {{ product.price|floatformat:2 }}</span>
-                    </span>
-                    {% if stock > 0 %}
-                    <button hx-post="{% url 'online_cart_add' product.id %}" hx-target="#onlineCart"
-                        class="w-11 h-11 rounded-xl bg-emerald-600 text-white text-xl"><i class="bi bi-plus"></i></button>
-                    {% else %}
-                    <span class="text-xs font-black uppercase text-red-600">Esgotado</span>
-                    {% endif %}
-                </div>
-                {% endwith %}
-                {% endfor %}
+            <div id="c{{ category.id }}" class="scroll-mt-16 mt-5">
+                <h2 class="nb-h2 mb-2">{{ category.name }}</h2>
+                <ul class="nb-card nb-divide">
+                    {% for product in category.products.all %}
+                    {% with stock=product.available_stock %}
+                    <li class="px-4 py-3 flex gap-3 items-center">
+                        <span class="w-16 h-16 shrink-0 rounded-xl overflow-hidden bg-creme flex items-center justify-center text-3xl" aria-hidden="true">
+                            {% if product.image %}<img src="{{ product.image.url }}" alt="" width="64" height="64" class="w-full h-full object-cover" loading="lazy">{% else %}{{ product.icon|default:'🍽️' }}{% endif %}
+                        </span>
+                        <span class="flex-1 min-w-0">
+                            <span class="block font-semibold">{{ product.name }}</span>
+                            {% if product.description %}<span class="block text-sm text-fumaca leading-snug">{{ product.description }}</span>{% endif %}
+                            <span class="block tabular font-semibold text-tomate mt-0.5">R$ {{ product.price|floatformat:2 }}</span>
+                        </span>
+                        {% if stock > 0 %}
+                        <button hx-post="{% url 'online_cart_add' product.id %}" hx-target="#onlineCart" class="nb-btn-primary w-11 px-0" aria-label="Adicionar {{ product.name }}"><i class="bi bi-plus-lg" aria-hidden="true"></i></button>
+                        {% else %}<span class="nb-status-erro">Esgotado</span>{% endif %}
+                    </li>
+                    {% endwith %}
+                    {% endfor %}
+                </ul>
             </div>
-        </div>
-        {% endfor %}
-    </section>
-
-    <aside id="onlineCart" class="lg:sticky lg:top-4 rounded-3xl bg-white border border-stone-200 p-5">
-        {% include 'public/_cart.html' %}
-    </aside>
+            {% endfor %}
+        </section>
+        <aside id="onlineCart" class="nb-card nb-card-pad lg:sticky lg:top-4" aria-label="Seu pedido">
+            {% include 'public/_cart.html' %}
+        </aside>
+    </div>
 </div>
+{% include 'public/_footer.html' %}
 {% endblock %}

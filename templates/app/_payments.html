@@ -1,71 +1,67 @@
 {% load nabandeja %}
-<div class="flex items-end justify-between gap-3 mb-4">
+<div class="flex items-end justify-between gap-3">
     <div>
-        <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Falta pagar</p>
-        <p class="text-4xl font-black text-slate-900">R$ {{ remaining|floatformat:2 }}</p>
+        <p class="nb-label">Falta pagar</p>
+        <p class="nb-money text-[2.6rem] leading-none" data-remaining-display>R$ {{ remaining|floatformat:2 }}</p>
     </div>
-    {% if order.amount_paid %}
-    <p class="text-sm font-bold text-sky-700">Pago: R$ {{ order.amount_paid|floatformat:2 }}</p>
-    {% endif %}
+    {% if order.amount_paid %}<p class="text-sm font-semibold text-cebola tabular">Pago: R$ {{ order.amount_paid|floatformat:2 }}</p>{% endif %}
 </div>
 
 {% if order.payments.all %}
-<ul class="mb-4 rounded-2xl bg-slate-50 divide-y divide-slate-200 text-sm">
+<ul class="mt-4 rounded-2xl bg-creme nb-divide text-sm">
     {% for payment in order.payments.all %}
     <li class="px-4 py-2.5 flex items-center gap-3">
-        <i class="bi bi-check-circle-fill text-emerald-600"></i>
-        <span class="flex-1">{{ payment.get_method_display }}<span class="text-slate-400"> · {{ payment.created_at|time:"H:i" }}</span></span>
-        <span class="font-bold">R$ {{ payment.amount|floatformat:2 }}</span>
+        <i class="bi bi-check-circle-fill text-manjericao" aria-hidden="true"></i>
+        <span class="flex-1">{{ payment.get_method_display }} <span class="text-fumaca">· {{ payment.created_at|time:"H:i" }}</span></span>
+        <span class="tabular font-semibold">R$ {{ payment.amount|floatformat:2 }}</span>
         {% if user.role == 'gerente' %}
-        <button hx-post="{% url 'remove_payment' payment.id %}" hx-target="#payments" hx-confirm="Estornar este pagamento?"
-            class="text-slate-400 hover:text-red-600" title="Estornar"><i class="bi bi-arrow-counterclockwise"></i></button>
+        <button hx-post="{% url 'remove_payment' payment.id %}" hx-target="#payments" hx-confirm="Estornar este pagamento de R$ {{ payment.amount|floatformat:2 }}?"
+            class="nb-icon-btn w-9 h-9" aria-label="Estornar pagamento"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i></button>
         {% endif %}
     </li>
     {% endfor %}
 </ul>
 {% endif %}
 
-<div class="mb-4">
-    <p class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Dividir a conta</p>
-    <div class="flex flex-wrap gap-2">
+<div class="mt-5">
+    <p class="nb-label">Dividir igualmente</p>
+    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
         {% for people in split_options %}
         {% with parts=remaining|split_evenly:people %}
-        <button type="button" data-fill="{{ parts.0|floatformat:2 }}"
-            class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-sm font-bold">
-            {{ people }} pessoas · R$ {{ parts.0|floatformat:2 }}
-        </button>
+        <button type="button" class="nb-chip justify-center" data-fill="{{ parts.0|floatformat:2 }}">{{ people }} pessoas · <span class="tabular">R$ {{ parts.0|floatformat:2 }}</span></button>
         {% endwith %}
         {% endfor %}
     </div>
 </div>
 
 <form id="paymentForm" hx-post="{% url 'add_payment' order.id %}" hx-target="#payments" hx-disabled-elt="find button[type=submit]"
-      data-remaining="{{ remaining|stringformat:'s' }}" data-pix-url="{% url 'pix_amount' order.id %}" class="space-y-3">
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-        {% for key, label in methods.items %}
-        <label class="cursor-pointer">
-            <input type="radio" name="method" value="{{ key }}" class="peer hidden" {% if forloop.first %}checked{% endif %}>
-            <span class="block text-center px-2 py-3 rounded-xl border-2 border-slate-200 font-bold text-sm peer-checked:border-slate-900 peer-checked:bg-slate-900 peer-checked:text-white">
-                {% if key == 'dinheiro' %}💵{% elif key == 'pix' %}📱{% else %}💳{% endif %} {{ label }}
-            </span>
-        </label>
-        {% endfor %}
-    </div>
+      data-remaining="{{ remaining|stringformat:'s' }}" data-pix-url="{% url 'pix_amount' order.id %}" class="mt-5 space-y-4">
+    <fieldset>
+        <legend class="nb-label">Forma de pagamento</legend>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {% for key, label in methods.items %}
+            <label class="cursor-pointer">
+                <input type="radio" name="method" value="{{ key }}" class="peer sr-only" {% if forloop.first %}checked{% endif %}>
+                <span class="flex flex-col items-center gap-1 rounded-xl border-2 border-linha bg-papel px-2 py-3 text-sm font-semibold
+                    peer-checked:border-carvao peer-checked:bg-carvao peer-checked:text-white peer-focus-visible:ring-2 peer-focus-visible:ring-tomate">
+                    <i class="bi {% if key == 'dinheiro' %}bi-cash{% elif key == 'pix' %}bi-qr-code{% else %}bi-credit-card{% endif %} text-lg" aria-hidden="true"></i>{{ label }}
+                </span>
+            </label>
+            {% endfor %}
+        </div>
+    </fieldset>
 
     <div>
-        <label class="text-xs font-bold uppercase tracking-wider text-slate-400">Valor recebido</label>
-        <div class="flex gap-2 mt-1">
-            <input name="amount" required inputmode="decimal" value="{{ remaining|floatformat:2 }}"
-                class="flex-1 min-w-0 px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-xl font-black outline-none focus:ring-2 focus:ring-slate-900/20">
-            <button type="button" data-fill="{{ remaining|floatformat:2 }}" class="px-3 rounded-xl bg-slate-100 text-sm font-bold">Tudo</button>
+        <label for="valorRecebido" class="nb-label">Valor recebido</label>
+        <div class="flex gap-2">
+            <input id="valorRecebido" name="amount" required inputmode="decimal" autocomplete="off" value="{{ remaining|floatformat:2 }}" class="nb-input text-xl font-semibold tabular">
+            <button type="button" class="nb-btn-secondary" data-fill="{{ remaining|floatformat:2 }}">Tudo</button>
         </div>
-        <p data-change class="mt-1 text-sm font-black text-emerald-700"></p>
+        <p data-change class="mt-1.5 font-semibold text-manjericao" aria-live="polite"></p>
     </div>
 
-    <div id="pixBox" class="hidden"></div>
+    <div id="pixBox" hidden></div>
 
-    <button type="submit" class="w-full py-4 rounded-2xl bg-emerald-600 text-white font-black text-lg hover:bg-emerald-700 disabled:opacity-60">
-        <i class="bi bi-check2-circle me-1"></i>Registrar pagamento
-    </button>
-    <p class="text-xs text-slate-500 text-center">Quando o valor pago cobrir a conta, o pedido é finalizado sozinho.</p>
+    <button type="submit" class="nb-btn-primary nb-btn-lg w-full"><i class="bi bi-check2-circle" aria-hidden="true"></i>Registrar pagamento</button>
+    <p class="nb-help text-center">Quando o valor pago cobrir a conta, o pedido é finalizado sozinho.</p>
 </form>

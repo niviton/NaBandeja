@@ -1,4 +1,4 @@
-<div class="max-w-3xl mx-auto py-2 text-center">
-    <p class="font-black text-emerald-700"><i class="bi bi-check-circle-fill me-1"></i>{% if kind == 'conta' %}Conta pedida! Já levamos para você.{% else %}Garçom chamado! Já estamos indo.{% endif %}</p>
-    <button onclick="location.reload()" class="mt-1 text-sm font-bold text-slate-500 underline">Voltar</button>
+<div class="max-w-3xl mx-auto py-2 text-center" role="status">
+    <p class="font-semibold text-manjericao"><i class="bi bi-check-circle-fill me-1" aria-hidden="true"></i>{% if kind == 'conta' %}Conta pedida! Já levamos para você.{% else %}Garçom chamado! Já estamos indo.{% endif %}</p>
+    <button onclick="location.reload()" class="nb-btn-ghost nb-btn-sm mt-1">Voltar</button>
 </div>

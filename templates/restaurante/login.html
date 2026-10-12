@@ -1,76 +1,110 @@
 {% extends 'base.html' %}
-{% load static socialaccount %}
+{% load socialaccount %}
 
-{% block title %}Login - {{ app_settings.store_name }}{% endblock %}
+{% block title %}Entrar · NaBandeja{% endblock %}
+{% block body_class %}min-h-screen bg-creme{% endblock %}
 
 {% block content %}
-<div class="min-h-screen flex items-center justify-center bg-slate-900 p-4 relative overflow-hidden">
-    <!-- Background blobs -->
-    <div class="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-purple-600 rounded-full blur-[150px] opacity-20 animate-blob"></div>
-    <div class="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-red-600 rounded-full blur-[150px] opacity-20 animate-blob animation-delay-2000"></div>
+<div class="min-h-screen grid lg:grid-cols-[1.1fr_1fr]">
+    <section class="relative hidden lg:flex flex-col justify-between p-12 xl:p-16 border-r border-linha overflow-hidden">
+        {% include 'brand/_wordmark.html' with mark_class='w-10 h-10' text_class='text-[1.7rem] text-carvao' %}
 
-    <div class="bg-white/10 backdrop-blur-xl p-10 rounded-[2.5rem] shadow-2xl w-full max-w-md border border-white/20 z-10">
-        <div class="text-center mb-10">
-            <div class="w-28 h-28 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner ring-4 ring-white/10 overflow-hidden">
-                {% if app_settings.logo %}
-                <img src="{{ app_settings.logo.url }}" alt="Logo" class="w-full h-full object-cover" />
-                {% else %}
-                <i class="bi bi-shop text-5xl text-white"></i>
-                {% endif %}
-            </div>
-            <h1 class="text-4xl font-black text-white tracking-tight">{{ app_settings.store_name }}</h1>
-            <p class="text-white/60 font-medium mt-1">{{ app_settings.slogan }}</p>
+        <div class="max-w-xl">
+            <p class="nb-kicker">Sistema para restaurantes</p>
+            <h1 class="font-display text-[3.4rem] xl:text-[4rem] font-semibold leading-[1.02] tracking-[-0.02em] mt-4">
+                O salão inteiro,<br><em class="italic text-tomate">na bandeja.</em>
+            </h1>
+            <p class="mt-6 text-lg text-fumaca leading-relaxed max-w-md">
+                Mesas, cozinha, conta dividida e PIX com o valor certo. Funciona na rede da loja, mesmo sem internet.
+            </p>
         </div>
 
-        <form method="post" class="space-y-6">
-            {% csrf_token %}
-            
-            <div class="space-y-2">
-                <label class="text-xs font-bold text-white/50 uppercase tracking-widest ml-1">Usuário</label>
-                <input 
-                    type="text" 
-                    name="username"
-                    class="w-full px-5 py-4 bg-slate-800/50 border border-white/10 rounded-2xl text-white placeholder:text-white/30 focus:ring-2 focus:ring-red-500/50 outline-none transition-all font-medium"
-                    placeholder="Digite seu usuário"
-                    required
-                />
-            </div>
-            
-            <div class="space-y-2">
-                <label class="text-xs font-bold text-white/50 uppercase tracking-widest ml-1">Senha</label>
-                <input 
-                    type="password" 
-                    name="password"
-                    class="w-full px-5 py-4 bg-slate-800/50 border border-white/10 rounded-2xl text-white placeholder:text-white/30 focus:ring-2 focus:ring-red-500/50 outline-none transition-all font-medium"
-                    placeholder="••••••••"
-                    required
-                />
-            </div>
-            
-            <button 
-                type="submit" 
-                class="w-full py-5 bg-gradient-to-r from-red-600 to-orange-600 text-white rounded-[1.5rem] font-bold shadow-xl hover:shadow-red-600/30 hover:scale-[1.02] active:scale-[0.98] transition-all"
-            >
-                Entrar no Sistema
-            </button>
-        </form>
+        <dl class="grid grid-cols-3 gap-6 max-w-lg border-t border-linha pt-6">
+            <div><dt class="nb-label">Pedido</dt><dd class="font-display text-2xl font-semibold">na hora</dd></div>
+            <div><dt class="nb-label">PIX</dt><dd class="font-display text-2xl font-semibold">valor exato</dd></div>
+            <div><dt class="nb-label">Internet</dt><dd class="font-display text-2xl font-semibold">opcional</dd></div>
+        </dl>
 
-        {% if google_login_enabled %}
-        <div class="flex items-center gap-3 my-6">
-            <span class="h-px flex-1 bg-white/15"></span>
-            <span class="text-xs font-bold text-white/40 uppercase tracking-widest">ou</span>
-            <span class="h-px flex-1 bg-white/15"></span>
+        <svg viewBox="0 0 48 48" class="absolute -right-24 bottom-24 w-[26rem] h-[26rem] opacity-[0.06]" aria-hidden="true">
+            <circle cx="24" cy="11.5" r="3" fill="#D9442B"/><path d="M7 33a17 17 0 0 1 34 0z" fill="#D9442B"/><rect x="3" y="35" width="42" height="4.5" rx="2.25" fill="#1F1A17"/>
+        </svg>
+    </section>
+
+    <section class="flex flex-col justify-center px-5 py-10 sm:px-10">
+        <div class="w-full max-w-sm mx-auto">
+            <div class="lg:hidden mb-10">
+                {% include 'brand/_wordmark.html' with mark_class='w-10 h-10' text_class='text-[1.7rem] text-carvao' %}
+            </div>
+
+            <p class="nb-kicker">Acesso da equipe</p>
+            <h2 class="nb-title mt-2">Bom te ver <em>de novo.</em></h2>
+            <p class="nb-subtitle mt-2">Entre com a empresa, o seu usuário e a senha.</p>
+
+            <form method="post" class="mt-8 space-y-4" novalidate>
+                {% csrf_token %}
+                <div>
+                    <label for="empresa" class="nb-label">Empresa</label>
+                    <input id="empresa" name="empresa" class="nb-input" required autocomplete="organization"
+                        autocapitalize="none" spellcheck="false" placeholder="ex.: billa-burger" value="{{ request.POST.empresa|default:'' }}">
+                </div>
+                <div>
+                    <label for="usuario" class="nb-label">Usuário</label>
+                    <input id="usuario" name="username" class="nb-input" required autocomplete="username"
+                        autocapitalize="none" spellcheck="false" value="{{ request.POST.username|default:'' }}">
+                </div>
+                <div>
+                    <label for="senha" class="nb-label">Senha</label>
+                    <div class="relative">
+                        <input id="senha" name="password" type="password" class="nb-input pr-12" required autocomplete="current-password">
+                        <button type="button" class="absolute right-1 top-1/2 -translate-y-1/2 nb-icon-btn w-10 h-10" aria-label="Mostrar senha" aria-pressed="false" data-toggle-password="senha">
+                            <i class="bi bi-eye" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                </div>
+                <button type="submit" class="nb-btn-primary nb-btn-lg w-full mt-2">Entrar</button>
+            </form>
+
+            {% if google_login_enabled %}
+            <div class="flex items-center gap-3 my-6" aria-hidden="true">
+                <span class="h-px flex-1 bg-linha"></span><span class="nb-label mb-0">ou</span><span class="h-px flex-1 bg-linha"></span>
+            </div>
+            <form method="post" action="{% provider_login_url 'google' process='login' %}">
+                {% csrf_token %}
+                <button type="submit" class="nb-btn-secondary nb-btn-lg w-full">
+                    <svg aria-hidden="true" width="20" height="20" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>
+                    Entrar com Google
+                </button>
+            </form>
+            {% endif %}
+
+            <p class="mt-10 font-mono text-xs uppercase tracking-[0.14em] text-fumaca">NaBandeja · v{{ nabandeja_version }}</p>
         </div>
-        <form method="post" action="{% provider_login_url 'google' process='login' %}">
-            {% csrf_token %}
-            <button type="submit"
-                class="w-full py-4 bg-white text-slate-800 rounded-[1.5rem] font-bold flex items-center justify-center gap-3 shadow-xl hover:bg-slate-100 active:scale-[0.98] transition-all">
-                <svg aria-hidden="true" width="20" height="20" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>
-                Entrar com Google
-            </button>
-        </form>
-        <p class="text-[11px] text-white/40 text-center mt-3">Funciona para usuários com e-mail cadastrado pelo gerente.</p>
-        {% endif %}
-    </div>
+    </section>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const empresa = document.getElementById('empresa');
+    const usuario = document.getElementById('usuario');
+    try {
+        if (!empresa.value) empresa.value = localStorage.getItem('nb.empresa') || '';
+    } catch (err) { /* sem storage */ }
+    (empresa.value ? usuario : empresa).focus();
+    empresa.form.addEventListener('submit', () => {
+        try { localStorage.setItem('nb.empresa', empresa.value.trim()); } catch (err) { /* sem storage */ }
+    });
+    document.querySelectorAll('[data-toggle-password]').forEach((button) => {
+        button.addEventListener('click', () => {
+            const input = document.getElementById(button.dataset.togglePassword);
+            const show = input.type === 'password';
+            input.type = show ? 'text' : 'password';
+            button.setAttribute('aria-pressed', String(show));
+            button.setAttribute('aria-label', show ? 'Esconder senha' : 'Mostrar senha');
+            button.querySelector('i').className = `bi ${show ? 'bi-eye-slash' : 'bi-eye'}`;
+        });
+    });
+});
+</script>
 {% endblock %}

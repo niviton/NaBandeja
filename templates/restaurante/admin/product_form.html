@@ -1,256 +1,137 @@
 {% extends 'restaurante/admin/base_admin.html' %}
 {% load l10n %}
 
-{% block title %}{% if product %}Editar{% else %}Novo{% endif %} Produto - {{ app_settings.store_name }}{% endblock %}
+{% block title %}{{ title }} · {{ app_settings.store_name }}{% endblock %}
 
 {% block admin_content %}
-<div class="max-w-[600px] mx-auto">
-    <!-- Título -->
-    <div class="mb-8">
-        <a href="{% url 'admin_menu' %}" class="text-slate-400 hover:text-slate-600 transition-all inline-flex items-center gap-2 mb-4">
-            <i class="bi bi-arrow-left"></i>Voltar
-        </a>
-        <h1 class="text-3xl font-black text-slate-800">{% if product %}Editar Produto{% else %}Novo Produto{% endif %}</h1>
-    </div>
-    
-    <!-- Formulário -->
-    <form method="post" enctype="multipart/form-data" autocomplete="off" class="bg-white rounded-3xl p-8 border border-slate-200">
-        {% csrf_token %}
-        
-        <div class="space-y-6">
-            <div>
-                <label class="text-xs font-bold text-slate-400 uppercase tracking-widest block mb-2">Nome do Produto</label>
-                <input 
-                    type="text" 
-                    name="name"
-                    value="{{ product.name|default:'' }}"
-                    class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-800 placeholder:text-slate-400 focus:ring-2 focus:ring-red-500/50 focus:border-red-500 outline-none transition-all font-medium"
-                    placeholder="Ex: X-Bacon Especial"
-                    required
-                />
-            </div>
-            
-            <div>
-                <label class="text-xs font-bold text-slate-400 uppercase tracking-widest block mb-2">Categoria</label>
-                <select 
-                    name="category"
-                    class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-800 focus:ring-2 focus:ring-red-500/50 focus:border-red-500 outline-none transition-all font-medium"
-                    required
-                >
-                    <option value="">Selecione...</option>
-                    {% for category in categories %}
-                    <option value="{{ category.id }}" {% if product.category.id == category.id %}selected{% endif %}>{{ category.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label class="text-xs font-bold text-slate-400 uppercase tracking-widest block mb-2">Preço (R$)</label>
-                    <input 
-                        type="number" 
-                        name="price"
-                        value="{{ product.price|unlocalize|default:'' }}"
-                        step="0.01"
-                        min="0"
-                        class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-800 placeholder:text-slate-400 focus:ring-2 focus:ring-red-500/50 focus:border-red-500 outline-none transition-all font-medium"
-                        placeholder="0.00"
-                        required
-                    />
-                </div>
+{% url 'admin_menu' as back_url %}
+{% include 'restaurante/admin/_page_head.html' with back=back_url kicker='Cardápio' title=title %}
 
-                <div class="md:col-span-2">
-                    <label class="text-xs font-bold text-slate-400 uppercase tracking-widest block mb-2">Descrição no cardápio digital (opcional)</label>
-                    <input name="description" maxlength="300"
-                        value="{% if form.is_bound %}{{ form.data.description }}{% else %}{{ product.description|default:'' }}{% endif %}"
-                        class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-800 placeholder:text-slate-400 focus:ring-2 focus:ring-red-500/50 focus:border-red-500 outline-none transition-all font-medium" placeholder="Ex.: pão brioche, 180 g de carne, cheddar e bacon">
-                </div>
+<form method="post" enctype="multipart/form-data" class="max-w-3xl space-y-6" novalidate>
+    {% csrf_token %}
+    {% if form.non_field_errors %}<p class="nb-alert-error">{{ form.non_field_errors|join:" " }}</p>{% endif %}
 
-                <div>
-                    <label class="text-xs font-bold text-slate-400 uppercase tracking-widest block mb-2">Custo por unidade (R$)</label>
-                    <input type="number" name="cost_price" step="0.01" min="0"
-                        value="{% if form.is_bound %}{{ form.data.cost_price }}{% else %}{{ product.cost_price|unlocalize|default:'0' }}{% endif %}"
-                        class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-800 placeholder:text-slate-400 focus:ring-2 focus:ring-red-500/50 focus:border-red-500 outline-none transition-all font-medium" placeholder="0.00">
-                    <p class="text-xs text-slate-400 mt-2">Usado no relatório de lucro. Com receita, o custo vem dos ingredientes.</p>
-                </div>
-
-                <div>
-                    <label class="text-xs font-bold text-slate-400 uppercase tracking-widest block mb-2">Estoque Manual</label>
-                    <input
-                        id="manualStockInput"
-                        type="number"
-                        name="stock"
-                        value="{% if form.data.stock %}{{ form.data.stock }}{% else %}{{ product.stock|unlocalize|default:'0' }}{% endif %}"
-                        min="0"
-                        class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-800 placeholder:text-slate-400 focus:ring-2 focus:ring-red-500/50 focus:border-red-500 outline-none transition-all font-medium"
-                        placeholder="0"
-                    />
-                </div>
-            </div>
-
-            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200">
-                <label class="inline-flex items-center gap-3 cursor-pointer">
-                    <input type="checkbox" name="is_active" class="w-4 h-4"
-                        {% if form.is_bound %}{% if form.data.is_active %}checked{% endif %}{% elif not product or product.is_active %}checked{% endif %} />
-                    <span class="font-semibold text-slate-700">Disponível no cardápio</span>
-                </label>
-                <p class="text-xs text-slate-400 mt-2">Desmarque para esconder o produto do garçom sem perder o histórico de vendas.</p>
-            </div>
-
-            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200">
-                <label class="inline-flex items-center gap-3 cursor-pointer">
-                    <input
-                        id="useIngredientStockCheckbox"
-                        type="checkbox"
-                        name="use_ingredient_stock"
-                        class="w-4 h-4"
-                        {% if form.data.use_ingredient_stock or product.use_ingredient_stock %}checked{% endif %}
-                    />
-                    <span class="font-semibold text-slate-700">Controlar estoque por ingredientes (receita)</span>
-                </label>
-                <p class="text-xs text-slate-400 mt-2">Desmarcado: usa estoque manual do produto. Marcado: calcula disponibilidade pelo estoque dos ingredientes.</p>
-            </div>
-
-            <div id="recipeSection">
-                <div class="flex items-center justify-between mb-3">
-                    <label class="text-xs font-bold text-slate-400 uppercase tracking-widest">Receita (Ingredientes por unidade)</label>
-                    <button type="button" id="addRecipeRowBtn" class="px-3 py-2 bg-slate-100 text-slate-700 rounded-lg text-xs font-bold hover:bg-slate-200 transition-all">
-                        <i class="bi bi-plus-lg me-1"></i>Adicionar ingrediente
-                    </button>
-                </div>
-                <div id="recipeRows" class="space-y-2">
-                    {% for item in recipe_items %}
-                    <div class="grid grid-cols-12 gap-2 recipe-row">
-                        <div class="col-span-7">
-                            <select name="recipe_ingredient[]" class="recipe-ingredient-select w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-medium" required>
-                                <option value="">Ingrediente...</option>
-                                {% for ingredient in ingredients %}
-                                <option value="{{ ingredient.id }}" {% if ingredient.id == item.ingredient.id %}selected{% endif %}>{{ ingredient.name }} ({{ ingredient.get_unit_display }})</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="col-span-4">
-                            <input type="number" name="recipe_quantity[]" value="{{ item.quantity|unlocalize }}" step="0.001" min="0.001" class="recipe-quantity-input w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-medium" placeholder="Qtd" required />
-                        </div>
-                        <div class="col-span-1">
-                            <button type="button" class="remove-recipe-row w-full h-full rounded-xl bg-slate-100 text-slate-500 hover:bg-red-100 hover:text-red-600 transition-all">
-                                <i class="bi bi-x-lg"></i>
-                            </button>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-                <p class="text-xs text-slate-400 mt-2">Se não definir receita, o sistema continua usando o estoque legado do produto.</p>
-            </div>
-            
-            <div>
-                <label class="text-xs font-bold text-slate-400 uppercase tracking-widest block mb-2">Emoji (ícone)</label>
-                <input 
-                    type="text" 
-                    name="icon"
-                    value="{{ product.icon|default:'🍔' }}"
-                    class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-800 placeholder:text-slate-400 focus:ring-2 focus:ring-red-500/50 focus:border-red-500 outline-none transition-all font-medium text-2xl"
-                    placeholder="🍔"
-                />
-            </div>
-            
-            <div>
-                <label class="text-xs font-bold text-slate-400 uppercase tracking-widest block mb-2">Imagem (opcional)</label>
-                <div class="flex items-center gap-4">
-                    <div class="w-20 h-20 rounded-2xl bg-slate-100 flex items-center justify-center overflow-hidden border border-slate-200">
-                        {% if product.image %}
-                        <img src="{{ product.image.url }}" class="w-full h-full object-cover" />
-                        {% else %}
-                        <i class="bi bi-image text-3xl text-slate-300"></i>
-                        {% endif %}
-                    </div>
-                    <div class="flex-1">
-                        <input 
-                            type="file" 
-                            name="image"
-                            accept="image/*"
-                            class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:font-bold file:bg-slate-900 file:text-white hover:file:bg-slate-800"
-                        />
-                    </div>
-                </div>
-            </div>
+    <section class="nb-card nb-card-pad grid gap-4 sm:grid-cols-2" aria-labelledby="dados-titulo">
+        <h2 id="dados-titulo" class="nb-h2 sm:col-span-2">Dados do produto</h2>
+        <div class="sm:col-span-2">
+            <label class="nb-label" for="p-name">Nome</label>
+            <input id="p-name" name="name" required maxlength="200" value="{{ form.name.value|default_if_none:'' }}" class="nb-input" autocomplete="off">
+            {% for error in form.name.errors %}<p class="nb-error">{{ error }}</p>{% endfor %}
         </div>
-        
-        <div class="flex gap-4 mt-8 pt-6 border-t border-slate-100">
-            <a href="{% url 'admin_menu' %}" class="flex-1 py-4 bg-slate-100 text-slate-600 rounded-xl font-bold text-center hover:bg-slate-200 transition-all">
-                Cancelar
-            </a>
-            <button type="submit" class="flex-1 py-4 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-xl font-bold hover:shadow-lg hover:shadow-red-500/30 transition-all">
-                <i class="bi bi-check-lg me-2"></i>{% if product %}Salvar{% else %}Criar Produto{% endif %}
-            </button>
+        <div class="sm:col-span-2">
+            <label class="nb-label" for="p-desc">Descrição no cardápio digital (opcional)</label>
+            <input id="p-desc" name="description" maxlength="300" value="{{ form.description.value|default_if_none:'' }}" class="nb-input" placeholder="Ex.: pão brioche, 180 g de carne, cheddar e bacon" autocomplete="off">
         </div>
-    </form>
-</div>
-<template id="recipeRowTemplate">
-    <div class="grid grid-cols-12 gap-2 recipe-row">
-        <div class="col-span-7">
-            <select name="recipe_ingredient[]" class="recipe-ingredient-select w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-medium" required>
-                <option value="">Ingrediente...</option>
-                {% for ingredient in ingredients %}
-                <option value="{{ ingredient.id }}">{{ ingredient.name }} ({{ ingredient.get_unit_display }})</option>
-                {% endfor %}
+        <div>
+            <label class="nb-label" for="p-cat">Categoria</label>
+            <select id="p-cat" name="category" required class="nb-select">
+                <option value="">Escolha…</option>
+                {% for category in categories %}<option value="{{ category.id }}" {% if form.category.value|stringformat:'s' == category.id|stringformat:'s' %}selected{% endif %}>{{ category.icon }} {{ category.name }}</option>{% endfor %}
             </select>
+            {% for error in form.category.errors %}<p class="nb-error">{{ error }}</p>{% endfor %}
         </div>
-        <div class="col-span-4">
-            <input type="number" name="recipe_quantity[]" step="0.001" min="0.001" class="recipe-quantity-input w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-medium" placeholder="Qtd" required />
+        <div>
+            <label class="nb-label" for="p-icon">Emoji (sem foto)</label>
+            <input id="p-icon" name="icon" maxlength="10" value="{{ form.icon.value|default_if_none:'🍽️' }}" class="nb-input">
         </div>
-        <div class="col-span-1">
-            <button type="button" class="remove-recipe-row w-full h-full rounded-xl bg-slate-100 text-slate-500 hover:bg-red-100 hover:text-red-600 transition-all">
-                <i class="bi bi-x-lg"></i>
-            </button>
+        <div>
+            <label class="nb-label" for="p-price">Preço de venda (R$)</label>
+            <input id="p-price" type="number" name="price" step="0.01" min="0" required value="{{ form.price.value|default_if_none:''|unlocalize }}" class="nb-input tabular">
+            {% for error in form.price.errors %}<p class="nb-error">{{ error }}</p>{% endfor %}
         </div>
+        <div>
+            <label class="nb-label" for="p-cost">Custo por unidade (R$)</label>
+            <input id="p-cost" type="number" name="cost_price" step="0.01" min="0" value="{{ form.cost_price.value|default_if_none:'0'|unlocalize }}" class="nb-input tabular">
+            <p class="nb-help">Usado no lucro. Com receita, o custo vem dos ingredientes.</p>
+        </div>
+        <div class="sm:col-span-2">
+            <label class="nb-label" for="p-image">Foto</label>
+            <div class="flex items-center gap-4">
+                {% if product.image %}<img src="{{ product.image.url }}" alt="Foto atual" width="64" height="64" class="w-16 h-16 rounded-xl object-cover border border-linha">{% endif %}
+                <input id="p-image" type="file" name="image" accept="image/*" class="nb-input file:mr-3 file:rounded-lg file:border-0 file:bg-carvao file:text-white file:px-3 file:py-1.5">
+            </div>
+        </div>
+        <label class="sm:col-span-2 flex items-start gap-3 cursor-pointer">
+            <input type="checkbox" name="is_active" class="nb-check mt-0.5" {% if form.is_bound %}{% if form.data.is_active %}checked{% endif %}{% elif not product or product.is_active %}checked{% endif %}>
+            <span><span class="font-semibold">Disponível no cardápio</span><span class="block nb-help mt-0">Desmarque para esconder sem perder o histórico de vendas.</span></span>
+        </label>
+    </section>
+
+    <section class="nb-card nb-card-pad space-y-4" aria-labelledby="estoque-titulo">
+        <h2 id="estoque-titulo" class="nb-h2">Estoque</h2>
+        <div class="max-w-xs">
+            <label class="nb-label" for="manualStockInput">Estoque manual (unidades)</label>
+            <input id="manualStockInput" type="number" name="stock" min="0" value="{{ form.stock.value|default_if_none:'0' }}" class="nb-input tabular">
+        </div>
+        {% if modules.ingredientes %}
+        <label class="flex items-start gap-3 cursor-pointer">
+            <input id="useIngredientStockCheckbox" type="checkbox" name="use_ingredient_stock" class="nb-check mt-0.5" {% if form.use_ingredient_stock.value %}checked{% endif %}>
+            <span><span class="font-semibold">Controlar pela receita</span><span class="block nb-help mt-0">A disponibilidade é calculada pelo estoque dos ingredientes.</span></span>
+        </label>
+        <div id="recipeSection" class="space-y-3">
+            <div class="flex items-center justify-between">
+                <p class="nb-label mb-0">Receita (por unidade)</p>
+                <button type="button" id="addRecipeRowBtn" class="nb-btn-secondary nb-btn-sm"><i class="bi bi-plus-lg" aria-hidden="true"></i>Ingrediente</button>
+            </div>
+            <div id="recipeRows" class="space-y-2">
+                {% for item in recipe_items %}
+                <div class="recipe-row grid grid-cols-[1fr_8rem_auto] gap-2">
+                    <select name="recipe_ingredient[]" aria-label="Ingrediente" class="recipe-ingredient-select nb-select">
+                        {% for ingredient in ingredients %}<option value="{{ ingredient.id }}" {% if ingredient.id == item.ingredient_id %}selected{% endif %}>{{ ingredient.name }} ({{ ingredient.get_unit_display }})</option>{% endfor %}
+                    </select>
+                    <input type="number" name="recipe_quantity[]" aria-label="Quantidade" value="{{ item.quantity|unlocalize }}" step="0.001" min="0.001" class="recipe-quantity-input nb-input tabular">
+                    <button type="button" class="remove-recipe-row nb-icon-btn border border-linha" aria-label="Tirar ingrediente"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </section>
+
+    <div class="flex gap-2 justify-end">
+        <a href="{% url 'admin_menu' %}" class="nb-btn-secondary">Cancelar</a>
+        <button type="submit" class="nb-btn-primary">Salvar produto</button>
+    </div>
+</form>
+
+<template id="recipeRowTemplate">
+    <div class="recipe-row grid grid-cols-[1fr_8rem_auto] gap-2">
+        <select name="recipe_ingredient[]" aria-label="Ingrediente" class="recipe-ingredient-select nb-select">
+            {% for ingredient in ingredients %}<option value="{{ ingredient.id }}">{{ ingredient.name }} ({{ ingredient.get_unit_display }})</option>{% endfor %}
+        </select>
+        <input type="number" name="recipe_quantity[]" aria-label="Quantidade" step="0.001" min="0.001" placeholder="Qtd." class="recipe-quantity-input nb-input tabular">
+        <button type="button" class="remove-recipe-row nb-icon-btn border border-linha" aria-label="Tirar ingrediente"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
     </div>
 </template>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    const recipeRows = document.getElementById('recipeRows');
-    const addButton = document.getElementById('addRecipeRowBtn');
+document.addEventListener('DOMContentLoaded', () => {
+    const toggle = document.getElementById('useIngredientStockCheckbox');
+    if (!toggle) return;
+    const rows = document.getElementById('recipeRows');
+    const section = document.getElementById('recipeSection');
+    const stock = document.getElementById('manualStockInput');
     const template = document.getElementById('recipeRowTemplate');
-    const useIngredientStockCheckbox = document.getElementById('useIngredientStockCheckbox');
-    const manualStockInput = document.getElementById('manualStockInput');
-    const recipeSection = document.getElementById('recipeSection');
 
-    function updateStockModeUI() {
-        const useIngredientStock = useIngredientStockCheckbox.checked;
-        recipeSection.classList.toggle('hidden', !useIngredientStock);
-        manualStockInput.readOnly = useIngredientStock;
-        if (useIngredientStock && (!manualStockInput.value || Number(manualStockInput.value) < 0)) {
-            manualStockInput.value = '0';
-        }
-        manualStockInput.classList.toggle('opacity-50', useIngredientStock);
+    const update = () => {
+        section.hidden = !toggle.checked;
+        stock.readOnly = toggle.checked;
+        stock.classList.toggle('opacity-50', toggle.checked);
+        section.querySelectorAll('select, input').forEach((field) => { field.required = toggle.checked; });
+    };
+    const bind = (button) => button.addEventListener('click', () => button.closest('.recipe-row').remove());
 
-        recipeSection.querySelectorAll('.recipe-ingredient-select, .recipe-quantity-input').forEach(function (field) {
-            field.required = useIngredientStock;
-        });
-    }
-
-    function bindRemove(button) {
-        button.addEventListener('click', function () {
-            const row = button.closest('.recipe-row');
-            if (row) row.remove();
-        });
-    }
-
-    recipeRows.querySelectorAll('.remove-recipe-row').forEach(bindRemove);
-
-    addButton.addEventListener('click', function () {
+    rows.querySelectorAll('.remove-recipe-row').forEach(bind);
+    document.getElementById('addRecipeRowBtn').addEventListener('click', () => {
         const node = template.content.cloneNode(true);
-        const button = node.querySelector('.remove-recipe-row');
-        bindRemove(button);
-        recipeRows.appendChild(node);
-        updateStockModeUI();
+        bind(node.querySelector('.remove-recipe-row'));
+        rows.appendChild(node);
+        update();
     });
-
-    useIngredientStockCheckbox.addEventListener('change', updateStockModeUI);
-    updateStockModeUI();
+    toggle.addEventListener('change', update);
+    update();
 });
 </script>
 {% endblock %}

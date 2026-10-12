@@ -1,67 +1,84 @@
 {% extends 'restaurante/admin/base_admin.html' %}
 
-{% block title %}Delivery e online - {{ app_settings.store_name }}{% endblock %}
+{% block title %}Delivery e online · {{ app_settings.store_name }}{% endblock %}
+{% block body_attrs %}data-realtime="1"{% endblock %}
 
 {% block admin_content %}
-<div class="max-w-6xl mx-auto">
-    <div class="flex flex-wrap items-end gap-3 mb-6">
-        <div class="flex-1 min-w-[240px]">
-            <h1 class="admin-brand-title text-4xl text-[var(--admin-text)]">Delivery e pedidos online</h1>
-            <p class="text-[var(--admin-muted)]">Confirme pedidos feitos pelo site e acompanhe as entregas.</p>
-        </div>
-        <a href="{% url 'delivery_zones' %}" class="px-4 py-3 rounded-xl bg-white border border-[var(--admin-line)] font-bold"><i class="bi bi-geo-alt me-1"></i>Bairros e taxas</a>
-        <a href="{% url 'new_order' 'delivery' %}" class="px-4 py-3 rounded-xl bg-slate-900 text-white font-bold"><i class="bi bi-plus-lg me-1"></i>Novo delivery</a>
+<div class="nb-page-head">
+    <div>
+        <p class="nb-kicker">Delivery e online</p>
+        <h1 class="nb-title mt-1">Pedidos para <em>entregar</em></h1>
     </div>
-
-    <div class="mb-6 rounded-3xl bg-[var(--admin-card)] border border-[var(--admin-line)] p-5">
-        {% if app_settings.online_orders_enabled %}
-        <p class="text-sm"><b>Link de pedidos online:</b> <span class="font-mono break-all">{{ online_url }}</span></p>
-        <p class="text-xs text-[var(--admin-muted)] mt-1">Funciona para quem está no Wi-Fi da loja. Para receber pedidos pela internet, veja <b>docs/pedidos-online.md</b>.</p>
-        {% else %}
-        <p class="text-sm">Os pedidos online estão <b>desligados</b>. Ative em <a href="{% url 'admin_settings' %}" class="underline font-bold">Configurações</a>.</p>
+    <div class="flex gap-2">
+        {% if modules.delivery %}
+        <a href="{% url 'delivery_zones' %}" class="nb-btn-secondary"><i class="bi bi-geo-alt" aria-hidden="true"></i>Bairros e taxas</a>
+        <a href="{% url 'new_order' 'delivery' %}" class="nb-btn-primary"><i class="bi bi-plus-lg" aria-hidden="true"></i>Novo delivery</a>
         {% endif %}
     </div>
+</div>
 
-    <h2 class="text-xl font-black mb-3">Aguardando confirmação ({{ pending|length }})</h2>
-    <div class="grid gap-3 md:grid-cols-2 mb-8">
+<div id="live" hx-get="{% url 'admin_online_orders' %}" hx-select="#live" hx-target="this" hx-swap="outerHTML" hx-trigger="nb:event from:body delay:800ms">
+    {% if modules.online %}
+    <div class="{% if app_settings.online_orders_enabled %}nb-alert-info{% else %}nb-alert-warn{% endif %} mb-6">
+        <i class="bi bi-globe2 text-lg" aria-hidden="true"></i>
+        <div>
+            {% if app_settings.online_orders_enabled %}
+            <p><b>Link de pedidos:</b> <span class="font-mono break-all">{{ online_url }}</span></p>
+            <p class="text-sm mt-0.5">Abre para quem está no Wi-Fi da loja. Para a internet, veja docs/pedidos-online.md.</p>
+            {% else %}
+            <p>Pedidos online estão desligados. Ligue em <a href="{% url 'admin_settings' %}" class="underline font-semibold">Configurações</a>.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <h2 class="nb-h2 mb-3">Aguardando confirmação <span class="font-mono text-sm text-fumaca">{{ pending|length }}</span></h2>
+    {% if pending %}
+    <ul class="grid gap-4 md:grid-cols-2 mb-10">
         {% for order in pending %}
-        <article class="rounded-3xl bg-white border-2 border-sky-300 p-5">
-            <div class="flex items-start gap-2">
-                <div class="flex-1">
-                    <p class="font-black text-lg">#{{ order.id }} · {{ order.cliente }}</p>
-                    <p class="text-sm text-slate-600"><i class="bi bi-telephone"></i> {{ order.customer_phone }} · <span data-since="{{ order.created_at.isoformat }}"></span></p>
-                    <p class="text-sm text-slate-600"><i class="bi bi-geo-alt"></i> {{ order.address }}</p>
+        <li class="nb-card nb-card-pad border-2 border-cebola/40">
+            <div class="flex items-start gap-3">
+                <div class="flex-1 min-w-0">
+                    <p class="font-semibold text-lg">{{ order.cliente }} <span class="font-mono text-xs text-fumaca">#{{ order.id }}</span></p>
+                    <p class="text-sm text-fumaca"><i class="bi bi-telephone" aria-hidden="true"></i> {{ order.customer_phone }} · <span class="tabular" data-since="{{ order.created_at.isoformat }}"></span></p>
+                    <p class="text-sm text-fumaca"><i class="bi bi-geo-alt" aria-hidden="true"></i> {{ order.address }}</p>
                 </div>
-                <p class="text-xl font-black">R$ {{ order.amount_due|floatformat:2 }}</p>
+                <p class="nb-money text-xl">R$ {{ order.amount_due|floatformat:2 }}</p>
             </div>
-            <ul class="mt-3 text-sm">{% for item in order.items.all %}<li>{{ item.quantity }}× {{ item.name }}</li>{% endfor %}</ul>
-            {% if order.observacoes %}<p class="mt-2 text-sm bg-slate-50 rounded-xl px-3 py-2">{{ order.observacoes }}</p>{% endif %}
+            <ul class="mt-3 text-sm space-y-0.5">{% for item in order.items.all %}<li><span class="tabular">{{ item.quantity }}×</span> {{ item.name }}</li>{% endfor %}</ul>
+            {% if order.observacoes %}<p class="mt-3 rounded-xl bg-creme px-3 py-2 text-sm">{{ order.observacoes }}</p>{% endif %}
             <div class="mt-4 grid grid-cols-2 gap-2">
-                <form method="post" action="{% url 'online_order_decide' order.id 'recusar' %}" data-confirm-message="Recusar o pedido #{{ order.id }}?">
-                    {% csrf_token %}<button class="w-full py-3 rounded-xl bg-slate-100 font-bold text-red-600">Recusar</button>
+                <form method="post" action="{% url 'online_order_decide' order.id 'recusar' %}" data-confirm-message="Recusar o pedido #{{ order.id }} de {{ order.cliente }}?">
+                    {% csrf_token %}<button class="nb-btn-danger w-full border border-pimenta/30">Recusar</button>
                 </form>
                 <form method="post" action="{% url 'online_order_decide' order.id 'aceitar' %}">
-                    {% csrf_token %}<button class="w-full py-3 rounded-xl bg-emerald-600 text-white font-black">Aceitar e preparar</button>
+                    {% csrf_token %}<button class="nb-btn-success w-full">Aceitar e preparar</button>
                 </form>
             </div>
-        </article>
-        {% empty %}
-        <p class="text-[var(--admin-muted)]">Nenhum pedido aguardando.</p>
+        </li>
         {% endfor %}
-    </div>
+    </ul>
+    {% else %}
+    <p class="nb-card nb-card-pad text-fumaca mb-10">Nenhum pedido aguardando.</p>
+    {% endif %}
+    {% endif %}
 
-    <h2 class="text-xl font-black mb-3">Entregas em andamento ({{ deliveries|length }})</h2>
-    <div class="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+    <h2 class="nb-h2 mb-3">Entregas em andamento <span class="font-mono text-sm text-fumaca">{{ deliveries|length }}</span></h2>
+    {% if deliveries %}
+    <ul class="nb-card nb-divide">
         {% for order in deliveries %}
-        <a href="{% url 'order_workspace' order.id %}" class="rounded-2xl bg-white border border-[var(--admin-line)] p-4 hover:shadow-md">
-            <p class="font-black">#{{ order.id }} · {{ order.cliente }}</p>
-            <p class="text-xs text-slate-500">{{ order.get_status_display }}{% if order.platform %} · {{ order.platform }}{% endif %} · <span data-since="{{ order.created_at.isoformat }}"></span></p>
-            <p class="text-sm text-slate-600 truncate">{{ order.address }}</p>
-            <p class="mt-1 font-black">R$ {{ order.amount_due|floatformat:2 }}</p>
-        </a>
-        {% empty %}
-        <p class="text-[var(--admin-muted)]">Nenhuma entrega em andamento.</p>
+        <li>
+            <a href="{% url 'order_workspace' order.id %}" class="flex items-center gap-4 px-5 py-4 hover:bg-creme/60">
+                <span class="flex-1 min-w-0">
+                    <span class="block font-semibold truncate">{{ order.cliente }} <span class="font-mono text-xs text-fumaca">#{{ order.id }}</span></span>
+                    <span class="block text-sm text-fumaca truncate">{{ order.get_status_display }}{% if order.platform %} · {{ order.platform }}{% endif %} · {{ order.address }}</span>
+                </span>
+                <span class="nb-money text-lg">R$ {{ order.amount_due|floatformat:2 }}</span>
+            </a>
+        </li>
         {% endfor %}
-    </div>
+    </ul>
+    {% else %}
+    <p class="nb-card nb-card-pad text-fumaca">Nenhuma entrega em andamento.</p>
+    {% endif %}
 </div>
 {% endblock %}

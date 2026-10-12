@@ -1,0 +1,72 @@
+{% extends 'restaurante/admin/base_admin.html' %}
+
+{% block title %}Suporte NaBandeja · {{ store.store_name }}{% endblock %}
+
+{% block admin_content %}
+<div class="nb-page-head">
+    <div>
+        <p class="nb-kicker">Suporte NaBandeja · só você vê esta página</p>
+        <h1 class="nb-title mt-1">Configuração do <em>cliente</em></h1>
+        <p class="nb-subtitle mt-1.5">{{ store.store_name }} · ligue e desligue módulos, defina o código de login e instale a licença.</p>
+    </div>
+</div>
+
+<div class="grid gap-6 xl:grid-cols-[1.3fr_1fr] items-start">
+    <form method="post" action="{% url 'support_save' %}" class="nb-card nb-card-pad space-y-6">
+        {% csrf_token %}
+        <div class="max-w-sm">
+            <label class="nb-label" for="sup-code">Código da empresa (login)</label>
+            <input id="sup-code" name="company_code" required maxlength="40" value="{{ store.company_code }}" class="nb-input font-mono" autocapitalize="none" spellcheck="false">
+            <p class="nb-help">É o que a equipe digita no campo "Empresa". Acentos, espaços e maiúsculas não importam.</p>
+        </div>
+
+        <fieldset>
+            <legend class="nb-h2">Módulos</legend>
+            <p class="nb-help mt-0 mb-3">Desligado, o módulo some do menu e as telas dele deixam de abrir. Os dados são mantidos.</p>
+            <ul class="nb-divide border-y border-linha">
+                {% for key, label, help_text, enabled in modules %}
+                <li>
+                    <label class="flex items-start gap-3 py-3 cursor-pointer">
+                        <input type="checkbox" name="module_{{ key }}" class="nb-check mt-0.5" {% if enabled %}checked{% endif %}>
+                        <span><span class="font-semibold">{{ label }}</span><span class="block nb-help mt-0">{{ help_text }}</span></span>
+                    </label>
+                </li>
+                {% endfor %}
+            </ul>
+        </fieldset>
+        <button class="nb-btn-primary">Salvar configuração do cliente</button>
+    </form>
+
+    <div class="space-y-6">
+        <section class="nb-card nb-card-pad" aria-labelledby="sup-lic">
+            <h2 id="sup-lic" class="nb-h2">Licença</h2>
+            {% if license.state == 'sem_licenca' %}<p class="mt-2 text-sm text-fumaca">Nenhuma licença instalada.</p>
+            {% elif license.state == 'invalida' %}<p class="nb-alert-error mt-2">Licença inválida.</p>
+            {% else %}<p class="mt-2 text-sm">{{ license.client }} · válida até <b>{{ license.expires|date:"d/m/Y" }}</b></p>{% endif %}
+            <form method="post" action="{% url 'license_install' %}" class="mt-4 space-y-2">
+                {% csrf_token %}
+                <label class="nb-label" for="sup-key">Nova licença</label>
+                <textarea id="sup-key" name="license_key" rows="3" required class="nb-textarea font-mono text-xs" placeholder="Gerada com scripts/licenca.py emitir"></textarea>
+                <button class="nb-btn-dark">Instalar licença</button>
+            </form>
+        </section>
+
+        <section class="nb-card" aria-labelledby="sup-team">
+            <h2 id="sup-team" class="nb-h2 px-6 pt-5 pb-2">Senhas da equipe</h2>
+            <ul class="nb-divide border-t border-linha">
+                {% for member in team %}
+                <li class="px-5 py-3 flex items-center gap-3">
+                    <span class="flex-1 min-w-0">
+                        <span class="block font-semibold truncate">{{ member.first_name|default:member.username }} <span class="font-mono text-xs text-fumaca">@{{ member.username }}</span></span>
+                        <span class="text-sm text-fumaca">{{ member.get_role_display }}{% if not member.is_active %} · desativado{% endif %}</span>
+                    </span>
+                    <form method="post" action="{% url 'support_reset_password' member.id %}" data-confirm-message="Gerar uma senha nova para {{ member.username }}? A senha atual deixa de funcionar.">
+                        {% csrf_token %}<button class="nb-btn-secondary nb-btn-sm">Nova senha</button>
+                    </form>
+                </li>
+                {% endfor %}
+            </ul>
+        </section>
+    </div>
+</div>
+{% endblock %}

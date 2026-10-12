@@ -1,66 +1,43 @@
 {% extends 'restaurante/admin/base_admin.html' %}
 
-{% block title %}Equipe - {{ app_settings.store_name }}{% endblock %}
+{% block title %}Equipe · {{ app_settings.store_name }}{% endblock %}
 
 {% block admin_content %}
-<div class="max-w-[1000px] mx-auto">
-    <!-- Título -->
-    <div class="flex items-center justify-between mb-8">
-        <div>
-            <h1 class="text-3xl font-black text-slate-800">Equipe</h1>
-            <p class="text-slate-500">Gerencie os membros do seu time</p>
-        </div>
-        <a href="{% url 'user_create' %}" class="px-5 py-3 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-xl font-bold hover:shadow-lg hover:shadow-red-500/30 transition-all">
-            <i class="bi bi-person-plus me-2"></i>Novo Membro
-        </a>
+<div class="nb-page-head">
+    <div>
+        <p class="nb-kicker">Equipe</p>
+        <h1 class="nb-title mt-1">Quem <em>trabalha</em> aqui</h1>
+        <p class="nb-subtitle mt-1.5">Cada pessoa com o seu usuário. Com o e-mail cadastrado, ela também pode entrar com o Google.</p>
     </div>
-    
-    <!-- Lista de Usuários -->
-    <div class="bg-white rounded-3xl border border-slate-200 overflow-hidden">
-        {% for member in users %}
-        <div class="flex items-center gap-6 p-6 {% if not forloop.last %}border-b border-slate-100{% endif %} hover:bg-slate-50 transition-all">
-            <div class="w-14 h-14 rounded-2xl bg-gradient-to-br {% if member.role == 'gerente' %}from-purple-500 to-indigo-600{% elif member.role == 'cozinha' %}from-orange-500 to-red-600{% else %}from-emerald-500 to-green-600{% endif %} flex items-center justify-center text-white text-xl font-black">
-                {{ member.username|slice:":1"|upper }}
-            </div>
-            <div class="flex-1">
-                <h3 class="font-bold text-lg text-slate-800">{{ member.first_name|default:member.username }}{% if member.first_name %} <span class="text-sm font-medium text-slate-400">@{{ member.username }}</span>{% endif %}</h3>
-                {% if member.email %}<p class="text-sm text-slate-500">{{ member.email }}</p>{% endif %}
-                <span class="inline-block px-3 py-1 rounded-full text-xs font-bold mt-1 {% if member.role == 'gerente' %}bg-purple-100 text-purple-600{% elif member.role == 'cozinha' %}bg-orange-100 text-orange-600{% else %}bg-emerald-100 text-emerald-600{% endif %}">
-                    {% if member.role == 'gerente' %}
-                    <i class="bi bi-shield-check me-1"></i>Gerente
-                    {% elif member.role == 'cozinha' %}
-                    <i class="bi bi-fire me-1"></i>Cozinha
-                    {% else %}
-                    <i class="bi bi-person-badge me-1"></i>Garçom
-                    {% endif %}
-                </span>
-                {% if member.socialaccount_set.all %}
-                <span class="inline-block px-3 py-1 rounded-full text-xs font-bold mt-1 bg-sky-100 text-sky-700"><i class="bi bi-google me-1"></i>Google vinculado</span>
-                {% endif %}
-            </div>
-            <a href="{% url 'user_edit' member.id %}" class="p-3 bg-slate-100 text-slate-500 rounded-xl hover:bg-slate-200 transition-all" title="Editar">
-                <i class="bi bi-pencil"></i>
-            </a>
-            {% if member.username != request.user.username %}
-            <form method="post" action="{% url 'user_delete' member.id %}" class="inline" data-confirm-message="Desativar este usuário? O histórico de vendas dele é mantido.">
-                {% csrf_token %}
-                <button type="submit" class="p-3 bg-slate-100 text-slate-400 rounded-xl hover:bg-red-100 hover:text-red-600 transition-all">
-                    <i class="bi bi-trash"></i>
-                </button>
-            </form>
-            {% else %}
-            <span class="px-3 py-1 bg-slate-100 text-slate-400 rounded-full text-xs font-bold">
-                Você
-            </span>
-            {% endif %}
-        </div>
-        {% empty %}
-        <div class="text-center py-20">
-            <i class="bi bi-people text-6xl text-slate-300"></i>
-            <h3 class="text-xl font-bold text-slate-400 mt-4">Nenhum membro cadastrado</h3>
-            <p class="text-slate-400 mt-2">Adicione membros à sua equipe</p>
-        </div>
-        {% endfor %}
-    </div>
+    <a href="{% url 'user_create' %}" class="nb-btn-primary"><i class="bi bi-person-plus" aria-hidden="true"></i>Novo membro</a>
 </div>
+
+<ul class="nb-card nb-divide">
+    {% for member in users %}
+    <li class="flex flex-wrap items-center gap-4 px-4 sm:px-5 py-4">
+        <span class="w-11 h-11 rounded-full flex items-center justify-center font-display text-lg font-semibold
+            {% if member.role == 'gerente' %}bg-carvao text-white{% elif member.role == 'cozinha' %}bg-mostarda-50 text-[#7A4F0F]{% else %}bg-tomate-50 text-brasa{% endif %}" aria-hidden="true">
+            {{ member.first_name|default:member.username|slice:":1"|upper }}
+        </span>
+        <span class="flex-1 min-w-[12rem]">
+            <span class="block font-semibold">{{ member.first_name|default:member.username }} <span class="font-mono text-xs text-fumaca">@{{ member.username }}</span></span>
+            <span class="flex flex-wrap items-center gap-2 mt-0.5 text-sm text-fumaca">
+                <span class="nb-status-livre">{{ member.get_role_display }}</span>
+                {% if member.email %}<span>{{ member.email }}</span>{% endif %}
+                {% if member.socialaccount_set.all %}<span class="nb-status-ocupada"><i class="bi bi-google" aria-hidden="true"></i>Google vinculado</span>{% endif %}
+            </span>
+        </span>
+        <a href="{% url 'user_edit' member.id %}" class="nb-btn-secondary nb-btn-sm">Editar</a>
+        {% if member.id != request.user.id %}
+        <form method="post" action="{% url 'user_delete' member.id %}" data-confirm-message="Desativar {{ member.username }}? O histórico de vendas dele é mantido.">
+            {% csrf_token %}<button class="nb-btn-danger nb-btn-sm">Desativar</button>
+        </form>
+        {% else %}
+        <span class="font-mono text-xs uppercase tracking-[0.12em] text-fumaca">você</span>
+        {% endif %}
+    </li>
+    {% empty %}
+    <li class="px-5 py-10 text-center text-fumaca">Nenhum membro ativo.</li>
+    {% endfor %}
+</ul>
 {% endblock %}

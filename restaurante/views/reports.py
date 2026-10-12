@@ -74,6 +74,7 @@ def admin_reports(request):
 
     return render(request, 'restaurante/admin/reports.html', {
         'filter_type': period.filter_type,
+        'filter_options': [('day', 'Dia'), ('month', 'Mês'), ('year', 'Ano'), ('range', 'Intervalo')],
         'selected_day': period.day,
         'selected_month': period.month,
         'selected_year': period.year,

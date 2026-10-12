@@ -1,69 +1,47 @@
 {% extends 'restaurante/admin/base_admin.html' %}
 {% load l10n %}
 
-{% block title %}{{ title }} - {{ app_settings.store_name }}{% endblock %}
+{% block title %}{{ title }} · {{ app_settings.store_name }}{% endblock %}
 
 {% block admin_content %}
-<div class="max-w-[620px] mx-auto">
-    <div class="mb-8">
-        <a href="{% url 'admin_ingredients' %}" class="text-slate-400 hover:text-slate-600 transition-all inline-flex items-center gap-2 mb-4">
-            <i class="bi bi-arrow-left"></i>Voltar
-        </a>
-        <h1 class="text-3xl font-black text-slate-800">{{ title }}</h1>
+{% url 'admin_ingredients' as back_url %}
+{% include 'restaurante/admin/_page_head.html' with back=back_url kicker='Estoque' title=title %}
+
+<form method="post" class="nb-card nb-card-pad max-w-2xl grid gap-4 sm:grid-cols-2" novalidate>
+    {% csrf_token %}
+    {% if form.non_field_errors %}<p class="nb-alert-error sm:col-span-2">{{ form.non_field_errors|join:" " }}</p>{% endif %}
+    <div class="sm:col-span-2">
+        <label class="nb-label" for="i-name">Nome</label>
+        <input id="i-name" name="name" required maxlength="120" value="{{ form.name.value|default_if_none:'' }}" class="nb-input" autocomplete="off">
+        {% for error in form.name.errors %}<p class="nb-error">{{ error }}</p>{% endfor %}
     </div>
-
-    <form method="post" class="bg-white rounded-3xl p-8 border border-slate-200">
-        {% csrf_token %}
-
-        <div class="space-y-6">
-            <div>
-                <label class="text-xs font-bold text-slate-400 uppercase tracking-widest block mb-2">Nome</label>
-                <input type="text" name="name" value="{{ form.name.value|default:'' }}" class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-800 focus:ring-2 focus:ring-red-500/50 focus:border-red-500 outline-none transition-all font-medium" required />
-            </div>
-
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label class="text-xs font-bold text-slate-400 uppercase tracking-widest block mb-2">Unidade</label>
-                    <select name="unit" class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-800 font-medium" required>
-                        {% for value, label in form.fields.unit.choices %}
-                        <option value="{{ value }}" {% if ingredient.unit == value or form.data.unit == value %}selected{% endif %}>{{ label }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div>
-                    <label class="text-xs font-bold text-slate-400 uppercase tracking-widest block mb-2">Estoque</label>
-                    <input type="number" name="stock_quantity" value="{{ form.stock_quantity.value|unlocalize|default:'0' }}" step="0.001" min="0" class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-800 font-medium" required />
-                </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label class="text-xs font-bold text-slate-400 uppercase tracking-widest block mb-2">Alerta de Estoque Baixo</label>
-                    <input type="number" name="low_stock_alert" value="{{ form.low_stock_alert.value|unlocalize|default:'0' }}" step="0.001" min="0" class="w-full px-5 py-4 bg-slate-50 border border-orange-300 rounded-2xl text-slate-800 font-medium focus:ring-2 focus:ring-orange-400/50 focus:border-orange-400 outline-none transition-all" />
-                    <p class="text-xs text-slate-400 mt-2">Alerta aparece quando o estoque ficar abaixo deste valor (0 = sem alerta)</p>
-                </div>
-                <div>
-                    <label class="text-xs font-bold text-slate-400 uppercase tracking-widest block mb-2">Custo (R$)</label>
-                    <input type="number" name="cost_price" value="{{ form.cost_price.value|unlocalize|default:'0' }}" step="0.01" min="0" class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-800 font-medium" required />
-                </div>
-            </div>
-
-            <div class="flex items-center">
-                <label class="inline-flex items-center gap-3 py-4 px-5 bg-slate-50 border border-slate-200 rounded-2xl w-full">
-                    <input type="checkbox" name="is_active" class="w-4 h-4" {% if ingredient.is_active or not ingredient %}checked{% endif %} />
-                    <span class="font-semibold text-slate-700">Ingrediente ativo</span>
-                </label>
-            </div>
-        </div>
-
-        <div class="flex gap-4 mt-8 pt-6 border-t border-slate-100">
-            <a href="{% url 'admin_ingredients' %}" class="flex-1 py-4 bg-slate-100 text-slate-600 rounded-xl font-bold text-center hover:bg-slate-200 transition-all">
-                Cancelar
-            </a>
-            <button type="submit" class="flex-1 py-4 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-xl font-bold hover:shadow-lg hover:shadow-red-500/30 transition-all">
-                <i class="bi bi-check-lg me-2"></i>Salvar
-            </button>
-        </div>
-    </form>
-</div>
+    <div>
+        <label class="nb-label" for="i-unit">Unidade</label>
+        <select id="i-unit" name="unit" class="nb-select">
+            {% for value, label in form.fields.unit.choices %}<option value="{{ value }}" {% if form.unit.value == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+        </select>
+    </div>
+    <div>
+        <label class="nb-label" for="i-stock">Estoque atual</label>
+        <input id="i-stock" type="number" name="stock_quantity" step="0.001" min="0" required value="{{ form.stock_quantity.value|default_if_none:'0'|unlocalize }}" class="nb-input tabular">
+        {% for error in form.stock_quantity.errors %}<p class="nb-error">{{ error }}</p>{% endfor %}
+    </div>
+    <div>
+        <label class="nb-label" for="i-alert">Avisar quando ficar abaixo de</label>
+        <input id="i-alert" type="number" name="low_stock_alert" step="0.001" min="0" value="{{ form.low_stock_alert.value|default_if_none:'0'|unlocalize }}" class="nb-input tabular">
+    </div>
+    <div>
+        <label class="nb-label" for="i-cost">Custo por unidade (R$)</label>
+        <input id="i-cost" type="number" name="cost_price" step="0.01" min="0" required value="{{ form.cost_price.value|default_if_none:'0'|unlocalize }}" class="nb-input tabular">
+        <p class="nb-help">Ex.: unidade em gramas → custo de 1 g.</p>
+    </div>
+    <label class="sm:col-span-2 flex items-center gap-3 cursor-pointer">
+        <input type="checkbox" name="is_active" class="nb-check" {% if form.is_bound %}{% if form.data.is_active %}checked{% endif %}{% elif not ingredient or ingredient.is_active %}checked{% endif %}>
+        <span class="font-semibold">Ativo</span>
+    </label>
+    <div class="sm:col-span-2 flex gap-2 justify-end">
+        <a href="{% url 'admin_ingredients' %}" class="nb-btn-secondary">Cancelar</a>
+        <button type="submit" class="nb-btn-primary">Salvar</button>
+    </div>
+</form>
 {% endblock %}

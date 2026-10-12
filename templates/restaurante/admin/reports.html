@@ -1,459 +1,152 @@
 {% extends 'restaurante/admin/base_admin.html' %}
 
-{% block title %}Relatórios - {{ app_settings.store_name }}{% endblock %}
+{% block title %}Relatórios · {{ app_settings.store_name }}{% endblock %}
 
 {% block admin_content %}
-<div class="max-w-[1400px] mx-auto">
-    <!-- Titulo -->
-    <div class="flex items-center justify-between mb-8">
-        <div>
-            <h1 class="admin-brand-title text-4xl text-[var(--admin-text)]">Relatorios</h1>
-            <p class="text-[var(--admin-muted)] font-semibold">Acompanhe o desempenho do seu negocio</p>
-        </div>
-        
-        <!-- Filtro por Calendário -->
-        <div class="bg-white rounded-2xl border border-slate-200 p-3 flex flex-wrap items-end gap-3">
-            <form method="get" class="flex items-end gap-2">
-                <input type="hidden" name="filter" value="day" />
-                {% if history_search %}<input type="hidden" name="history_search" value="{{ history_search }}" />{% endif %}
-                <input type="hidden" name="page_size" value="{{ page_size }}" />
-                <input type="hidden" name="start_date" value="{{ selected_start_date }}" />
-                <input type="hidden" name="end_date" value="{{ selected_end_date }}" />
-                <div>
-                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Dia</label>
-                    <input type="date" name="day" value="{{ selected_day }}" class="px-3 py-2 rounded-xl border border-slate-200 text-sm font-semibold text-slate-700" />
-                </div>
-                <button type="submit" class="px-3 py-2 rounded-xl text-sm font-bold {% if filter_type == 'day' %}bg-slate-900 text-white{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200{% endif %}">Aplicar</button>
-            </form>
-
-            <form method="get" class="flex items-end gap-2">
-                <input type="hidden" name="filter" value="month" />
-                {% if history_search %}<input type="hidden" name="history_search" value="{{ history_search }}" />{% endif %}
-                <input type="hidden" name="page_size" value="{{ page_size }}" />
-                <input type="hidden" name="start_date" value="{{ selected_start_date }}" />
-                <input type="hidden" name="end_date" value="{{ selected_end_date }}" />
-                <input type="hidden" name="start_date" value="{{ selected_start_date }}" />
-                <input type="hidden" name="end_date" value="{{ selected_end_date }}" />
-                <div>
-                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Mês</label>
-                    <input type="month" name="month" value="{{ selected_month }}" class="px-3 py-2 rounded-xl border border-slate-200 text-sm font-semibold text-slate-700" />
-                </div>
-                <button type="submit" class="px-3 py-2 rounded-xl text-sm font-bold {% if filter_type == 'month' %}bg-slate-900 text-white{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200{% endif %}">Aplicar</button>
-            </form>
-
-            <form method="get" class="flex items-end gap-2">
-                <input type="hidden" name="filter" value="year" />
-
-            <form method="get" class="flex items-end gap-2">
-                <input type="hidden" name="filter" value="range" />
-                {% if history_search %}<input type="hidden" name="history_search" value="{{ history_search }}" />{% endif %}
-                <input type="hidden" name="page_size" value="{{ page_size }}" />
-                <div>
-                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Inicio</label>
-                    <input type="date" name="start_date" value="{{ selected_start_date }}" class="px-3 py-2 rounded-xl border border-slate-200 text-sm font-semibold text-slate-700" />
-                </div>
-                <div>
-                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Fim</label>
-                    <input type="date" name="end_date" value="{{ selected_end_date }}" class="px-3 py-2 rounded-xl border border-slate-200 text-sm font-semibold text-slate-700" />
-                </div>
-                <button type="submit" class="px-3 py-2 rounded-xl text-sm font-bold {% if filter_type == 'range' %}bg-slate-900 text-white{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200{% endif %}">Periodo</button>
-            </form>
-                {% if history_search %}<input type="hidden" name="history_search" value="{{ history_search }}" />{% endif %}
-                <input type="hidden" name="page_size" value="{{ page_size }}" />
-                <div>
-                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Ano</label>
-                    <select name="year" class="px-3 py-2 rounded-xl border border-slate-200 text-sm font-semibold text-slate-700">
-                        {% for year in year_options %}
-                        <option value="{{ year }}" {% if selected_year == year|stringformat:"s" %}selected{% endif %}>{{ year }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <button type="submit" class="px-3 py-2 rounded-xl text-sm font-bold {% if filter_type == 'year' %}bg-slate-900 text-white{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200{% endif %}">Aplicar</button>
-            </form>
-        </div>
+<div class="nb-page-head">
+    <div>
+        <p class="nb-kicker">Relatórios · {{ period_label }}</p>
+        <h1 class="nb-title mt-1">Como foram as <em>vendas</em></h1>
     </div>
-    
-    <!-- Stats Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
-        <!-- Faturamento -->
-        <div class="rounded-3xl p-6 border border-[#cde3d7] bg-[#eef8f3] text-[var(--admin-text)] shadow-[0_20px_45px_-28px_rgba(46,122,87,0.4)]">
-            <div class="flex items-center justify-between mb-4">
-                <div class="w-12 h-12 bg-[#d8ecdf] rounded-xl flex items-center justify-center text-[var(--admin-ok)]">
-                    <i class="bi bi-currency-dollar text-2xl"></i>
-                </div>
-                <i class="bi bi-graph-up-arrow text-2xl text-[#5f886f]"></i>
-            </div>
-            <p class="text-4xl font-black text-[#275f45]">R$ {{ total_revenue|floatformat:2 }}</p>
-            <p class="text-sm font-semibold text-[#55806a] mt-1">Faturamento Total</p>
-        </div>
-
-        <!-- Pedidos -->
-        <div class="rounded-3xl p-6 border border-[#e7d6bd] bg-[#fff9ee] text-[var(--admin-text)] shadow-[0_20px_45px_-28px_rgba(161,125,57,0.45)]">
-            <div class="flex items-center justify-between mb-4">
-                <div class="w-12 h-12 bg-[#f7e9cc] rounded-xl flex items-center justify-center text-[#9d7b2f]">
-                    <i class="bi bi-receipt text-2xl"></i>
-                </div>
-                <i class="bi bi-bar-chart text-2xl text-[#9f8850]"></i>
-            </div>
-            <p class="text-4xl font-black text-[#5a4b22]">{{ total_orders }}</p>
-            <p class="text-sm font-semibold text-[#8f7d49] mt-1">Pedidos Finalizados</p>
-        </div>
-
-        <!-- Ticket Medio -->
-        <div class="rounded-3xl p-6 border border-[#e9c7b8] bg-[#fff3eb] text-[var(--admin-text)] shadow-[0_20px_45px_-28px_rgba(164,74,47,0.55)]">
-            <div class="flex items-center justify-between mb-4">
-                <div class="w-12 h-12 bg-[#f3d3c5] rounded-xl flex items-center justify-center text-[var(--admin-accent)]">
-                    <i class="bi bi-tag text-2xl"></i>
-                </div>
-                <i class="bi bi-cash-stack text-2xl text-[#a56a54]"></i>
-            </div>
-            <p class="text-4xl font-black text-[#7f2f1a]">R$ {{ ticket_medio|floatformat:2 }}</p>
-            <p class="text-sm font-semibold text-[#9d6f5d] mt-1">Ticket Medio</p>
-        </div>
-    </div>
-    
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Ranking de Garcons -->
-        <div class="bg-[var(--admin-card)] rounded-3xl p-6 border border-[var(--admin-line)] shadow-[0_20px_50px_-36px_rgba(66,47,28,0.55)]">
-            <div class="flex items-center gap-3 mb-6">
-                <div class="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center">
-                    <i class="bi bi-trophy text-amber-600"></i>
-                </div>
-                <h2 class="admin-brand-title text-2xl text-[var(--admin-text)]">Ranking de Garcons</h2>
-            </div>
-            
-            <div class="space-y-4">
-                {% for waiter in waiter_ranking %}
-                <div class="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl">
-                    <div class="w-10 h-10 rounded-xl flex items-center justify-center font-black text-lg {% if forloop.counter == 1 %}bg-amber-100 text-amber-600{% elif forloop.counter == 2 %}bg-slate-200 text-slate-600{% elif forloop.counter == 3 %}bg-orange-100 text-orange-600{% else %}bg-slate-100 text-slate-500{% endif %}">
-                        {{ forloop.counter }}
-                    </div>
-                    <div class="flex-1">
-                        <p class="font-bold text-slate-800">{{ waiter.waiter__username }}</p>
-                        <p class="text-sm text-slate-400">{{ waiter.orders_count }} pedidos</p>
-                    </div>
-                    <div class="text-right">
-                        <p class="font-black text-slate-800">R$ {{ waiter.total_sales|floatformat:2 }}</p>
-                        <p class="text-xs text-slate-400">Ticket: R$ {{ waiter.avg_ticket|floatformat:2 }}</p>
-                    </div>
-                </div>
-                {% empty %}
-                <div class="text-center py-8">
-                    <p class="text-slate-400">Nenhum dado disponível</p>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-        
-        <!-- Produtos Mais Vendidos -->
-        <div class="bg-[var(--admin-card)] rounded-3xl p-6 border border-[var(--admin-line)] shadow-[0_20px_50px_-36px_rgba(66,47,28,0.55)]">
-            <div class="flex items-center gap-3 mb-6">
-                <div class="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center">
-                    <i class="bi bi-star text-emerald-600"></i>
-                </div>
-                <h2 class="admin-brand-title text-2xl text-[var(--admin-text)]">Produtos Mais Vendidos</h2>
-            </div>
-            
-            <div class="space-y-4">
-                {% for product in top_products %}
-                <div class="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl">
-                    <div class="w-12 h-12 rounded-xl bg-white flex items-center justify-center text-2xl shadow-sm">
-                        {{ product.product__icon|default:"🍔" }}
-                    </div>
-                    <div class="flex-1">
-                        <p class="font-bold text-slate-800">{{ product.product_name }}</p>
-                    </div>
-                    <div class="text-right">
-                        <p class="font-black text-slate-800">{{ product.total_qty }}x</p>
-                        <p class="text-xs text-emerald-600">R$ {{ product.total_revenue|floatformat:2 }}</p>
-                    </div>
-                </div>
-                {% empty %}
-                <div class="text-center py-8">
-                    <p class="text-slate-400">Nenhum dado disponível</p>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-    </div>
-    
-    <!-- Resumo por Tipo de Pagamento -->
-    <div class="mt-8 bg-[var(--admin-card)] rounded-3xl p-6 border border-[var(--admin-line)] shadow-[0_20px_50px_-36px_rgba(66,47,28,0.55)]">
-            <div class="flex items-center gap-3 mb-6">
-                <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
-                    <i class="bi bi-credit-card text-blue-600"></i>
-                </div>
-                <h2 class="admin-brand-title text-2xl text-[var(--admin-text)]">Total Por Metodo de Pagamento</h2>
-            </div>
-            
-            <div class="space-y-4">
-                {% for payment in payment_summary %}
-                <div class="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl">
-                    <div class="w-12 h-12 rounded-xl bg-white flex items-center justify-center text-xl shadow-sm">
-                        {% if 'PIX' in payment.method %}
-                            💳
-                        {% elif 'Dinheiro' in payment.method %}
-                            💵
-                        {% elif 'Cartao' in payment.method or 'Crédito' in payment.method %}
-                            🏦
-                        {% elif 'Débito' in payment.method %}
-                            🏧
-                        {% else %}
-                            ❓
-                        {% endif %}
-                    </div>
-                    <div class="flex-1">
-                        <p class="font-bold text-slate-800">{{ payment.method }}</p>
-                        <p class="text-sm text-slate-400">{{ payment.count }} pedido{% if payment.count != 1 %}s{% endif %}</p>
-                    </div>
-                    <div class="text-right">
-                        <p class="font-black text-slate-800">R$ {{ payment.total|floatformat:2 }}</p>
-                        <p class="text-xs text-slate-500">{{ payment.count }} pedido{% if payment.count != 1 %}s{% endif %}</p>
-                    </div>
-                </div>
-                {% empty %}
-                <div class="text-center py-8">
-                    <p class="text-slate-400">Nenhum pagamento registrado</p>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-
-<div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div class="rounded-3xl p-5 bg-[var(--admin-card)] border border-[var(--admin-line)]">
-            <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Custo dos produtos</p>
-            <p class="text-2xl font-black mt-1">R$ {{ summary.items_cost|floatformat:2 }}</p>
-        </div>
-        <div class="rounded-3xl p-5 bg-[var(--admin-card)] border border-[var(--admin-line)]">
-            <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Descontos dados</p>
-            <p class="text-2xl font-black mt-1">R$ {{ summary.discounts|floatformat:2 }}</p>
-        </div>
-        <div class="rounded-3xl p-5 bg-emerald-50 border border-emerald-200">
-            <p class="text-xs font-bold uppercase tracking-wider text-emerald-700">Lucro bruto</p>
-            <p class="text-2xl font-black mt-1 text-emerald-800">R$ {{ summary.gross_profit|floatformat:2 }}</p>
-            <p class="text-[11px] text-emerald-700">vendas − descontos − custo dos produtos</p>
-        </div>
-        <div class="rounded-3xl p-5 bg-[var(--admin-card)] border border-[var(--admin-line)]">
-            <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Taxas de entrega</p>
-            <p class="text-2xl font-black mt-1">R$ {{ summary.delivery_fees|floatformat:2 }}</p>
-            {% if summary.products_without_cost %}<p class="text-[11px] text-amber-700 mt-1">{{ summary.products_without_cost }} produto(s) sem custo cadastrado</p>{% endif %}
-        </div>
-    </div>
-
-    <div class="mt-8 bg-[var(--admin-card)] rounded-3xl p-6 border border-[var(--admin-line)] shadow-[0_20px_50px_-36px_rgba(66,47,28,0.55)]">
-        <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center">
-                    <i class="bi bi-list-check text-emerald-700"></i>
-                </div>
-                <div>
-                    <h2 class="admin-brand-title text-2xl text-[var(--admin-text)]">Quantidade Vendida Por Produto</h2>
-                    <p class="text-xs text-slate-400">Resumo completo no periodo selecionado</p>
-                </div>
-            </div>
-            <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Total de itens vendidos: {{ total_items_sold }}</span>
-        </div>
-
-        <div class="overflow-x-auto rounded-2xl border border-slate-100">
-            <table class="min-w-full text-sm">
-                <thead class="bg-slate-50">
-                    <tr class="text-left text-slate-500">
-                        <th class="px-4 py-3 font-bold uppercase tracking-wide text-[11px]">Produto</th>
-                        <th class="px-4 py-3 font-bold uppercase tracking-wide text-[11px]">Quantidade Vendida</th>
-                        <th class="px-4 py-3 font-bold uppercase tracking-wide text-[11px]">Pedidos Com Esse Item</th>
-                        <th class="px-4 py-3 font-bold uppercase tracking-wide text-[11px] text-right">Faturamento</th>
-                        <th class="px-4 py-3 font-bold uppercase tracking-wide text-[11px] text-right">Custo</th>
-                        <th class="px-4 py-3 font-bold uppercase tracking-wide text-[11px] text-right">Lucro</th>
-                        <th class="px-4 py-3 font-bold uppercase tracking-wide text-[11px] text-right">Margem</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for product in product_quantities %}
-                    <tr class="border-t border-slate-100">
-                        <td class="px-4 py-3 text-slate-800 font-semibold">
-                            <span class="mr-2">{{ product.product__icon|default:"🍔" }}</span>{{ product.product_name }}
-                        </td>
-                        <td class="px-4 py-3 text-slate-900 font-black">{{ product.total_qty }}x</td>
-                        <td class="px-4 py-3 text-slate-600 font-semibold">{{ product.orders_count }}</td>
-                        <td class="px-4 py-3 text-right font-semibold">R$ {{ product.total_revenue|floatformat:2 }}</td>
-                        {% if product.has_cost %}
-                        <td class="px-4 py-3 text-right text-slate-500">R$ {{ product.total_cost|floatformat:2 }}</td>
-                        <td class="px-4 py-3 text-right font-black {% if product.profit < 0 %}text-red-600{% else %}text-emerald-700{% endif %}">R$ {{ product.profit|floatformat:2 }}</td>
-                        <td class="px-4 py-3 text-right font-bold">{{ product.margin|floatformat:0 }}%</td>
-                        {% else %}
-                        <td colspan="3" class="px-4 py-3 text-right text-xs text-slate-400">cadastre o custo do produto</td>
-                        {% endif %}
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="7" class="px-4 py-10 text-center text-slate-400 font-medium">Nenhum item vendido no periodo selecionado.</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <div class="mt-8 bg-[var(--admin-card)] rounded-3xl p-6 border border-[var(--admin-line)] shadow-[0_20px_50px_-36px_rgba(66,47,28,0.55)]">
-        <div class="flex items-center justify-between gap-3 mb-6">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
-                    <i class="bi bi-clock-history text-blue-600"></i>
-                </div>
-                <div>
-                    <h2 class="admin-brand-title text-2xl text-[var(--admin-text)]">Historico de Vendas</h2>
-                    <p class="text-xs text-slate-400">Pedidos fechados e cancelados no periodo selecionado</p>
-                </div>
-            </div>
-            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">{{ history_total }} registros</span>
-        </div>
-
-        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 mb-4">
-            <form method="get" class="flex flex-wrap items-center gap-2">
-                <input type="hidden" name="filter" value="{{ filter_type }}" />
-                <input type="hidden" name="day" value="{{ selected_day }}" />
-                <input type="hidden" name="month" value="{{ selected_month }}" />
-                <input type="hidden" name="year" value="{{ selected_year }}" />
-                <input type="hidden" name="start_date" value="{{ selected_start_date }}" />
-                <input type="hidden" name="end_date" value="{{ selected_end_date }}" />
-                <input type="hidden" name="page_size" value="{{ page_size }}" />
-                <input
-                    type="text"
-                    name="history_search"
-                    value="{{ history_search }}"
-                    placeholder="Buscar por nome do cliente"
-                    class="w-full sm:w-80 px-3 py-2 rounded-xl border border-slate-200 text-sm font-semibold text-slate-700"
-                />
-                <button type="submit" class="px-3 py-2 rounded-xl text-sm font-bold bg-slate-900 text-white hover:bg-slate-700">Buscar</button>
-                {% if history_search %}
-                <a href="?filter={{ filter_type }}&day={{ selected_day }}&month={{ selected_month }}&year={{ selected_year }}&start_date={{ selected_start_date }}&end_date={{ selected_end_date }}&page_size={{ page_size }}" class="px-3 py-2 rounded-xl text-sm font-bold bg-slate-100 text-slate-600 hover:bg-slate-200">Limpar</a>
-                {% endif %}
-            </form>
-
-            <div class="flex flex-wrap items-center gap-2">
-                <form method="get" class="flex items-center gap-2">
-                    <input type="hidden" name="filter" value="{{ filter_type }}" />
-                    <input type="hidden" name="day" value="{{ selected_day }}" />
-                    <input type="hidden" name="month" value="{{ selected_month }}" />
-                    <input type="hidden" name="year" value="{{ selected_year }}" />
-                    <input type="hidden" name="start_date" value="{{ selected_start_date }}" />
-                    <input type="hidden" name="end_date" value="{{ selected_end_date }}" />
-                    {% if history_search %}<input type="hidden" name="history_search" value="{{ history_search }}" />{% endif %}
-                    <label class="text-xs font-bold text-slate-500">Itens:</label>
-                    <select name="page_size" onchange="this.form.submit()" class="px-2 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-700">
-                        {% for size in page_size_options %}
-                        <option value="{{ size }}" {% if page_size == size %}selected{% endif %}>{{ size }}</option>
-                        {% endfor %}
-                    </select>
-                </form>
-
-                <a href="?{{ base_query_string }}{% if base_query_string %}&{% endif %}export=xlsx" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold bg-green-700 text-white hover:bg-green-800 transition-colors">
-                    <i class="bi bi-file-earmark-excel"></i>
-                    Exportar Excel
-                </a>
-                <a href="?{{ base_query_string }}{% if base_query_string %}&{% endif %}export=csv" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors">
-                    <i class="bi bi-file-earmark-spreadsheet"></i>
-                    Exportar CSV
-                </a>
-                <a href="?{{ base_query_string }}{% if base_query_string %}&{% endif %}export=pdf" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold bg-rose-600 text-white hover:bg-rose-700 transition-colors">
-                    <i class="bi bi-file-earmark-pdf"></i>
-                    Exportar PDF
-                </a>
-            </div>
-        </div>
-
-        <div class="overflow-x-auto rounded-2xl border border-slate-100">
-            <table class="min-w-full text-sm">
-                <thead class="bg-slate-50">
-                    <tr class="text-left text-slate-500">
-                        <th class="px-4 py-3 font-bold uppercase tracking-wide text-[11px]">Data</th>
-                        <th class="px-4 py-3 font-bold uppercase tracking-wide text-[11px]">Nome</th>
-                        <th class="px-4 py-3 font-bold uppercase tracking-wide text-[11px]">O que foi vendido</th>
-                        <th class="px-4 py-3 font-bold uppercase tracking-wide text-[11px]">Pagamento</th>
-                        <th class="px-4 py-3 font-bold uppercase tracking-wide text-[11px]">Valor</th>
-                        <th class="px-4 py-3 font-bold uppercase tracking-wide text-[11px]">Nota</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for order in sales_history %}
-                    <tr class="border-t border-slate-100 align-top">
-                        <td class="px-4 py-3 text-slate-600 whitespace-nowrap">
-                            <p class="font-semibold">{{ order.created_at|date:"d/m/Y" }}</p>
-                            <p class="text-xs text-slate-400">{{ order.created_at|date:"H:i" }} - #{{ order.id }}</p>
-                        </td>
-                        <td class="px-4 py-3 text-slate-700">
-                            <p class="font-semibold">
-                                {% if order.cliente %}
-                                    {{ order.cliente }}
-                                {% elif order.order_type == 'delivery' %}
-                                    Cliente delivery
-                                {% else %}
-                                    Mesa {{ order.mesa }}
-                                {% endif %}
-                            </p>
-                            <span class="inline-flex items-center mt-1 px-2 py-0.5 rounded-full text-[10px] font-bold {% if order.status == 'cancelado' %}bg-red-100 text-red-700{% else %}bg-emerald-100 text-emerald-700{% endif %}">
-                                {{ order.get_status_display }}
-                            </span>
-                            <p class="text-xs text-slate-400">
-                                {% if order.order_type == 'delivery' %}
-                                    Delivery
-                                {% else %}
-                                    Mesa {{ order.mesa }}
-                                {% endif %}
-                                {% if order.waiter %} - {{ order.waiter.username }}{% endif %}
-                            </p>
-                        </td>
-                        <td class="px-4 py-3 text-slate-700">
-                            <div class="space-y-1">
-                                {% for item in order.items.all %}
-                                <p class="text-xs md:text-sm">
-                                    <span class="font-bold">{{ item.quantity }}x</span> {{ item.name }}
-                                    <span class="text-slate-400">(R$ {{ item.subtotal|floatformat:2 }})</span>
-                                </p>
-                                {% endfor %}
-                            </div>
-                        </td>
-                        <td class="px-4 py-3 text-slate-700 whitespace-nowrap">
-                            <span class="inline-flex items-center px-2 py-1 rounded-full text-[11px] font-bold bg-slate-100 text-slate-700">
-                                {% if order.payment_method %}
-                                    {{ order.get_payment_method_display }}
-                                {% else %}
-                                    <span class="text-slate-400">Não definido</span>
-                                {% endif %}
-                            </span>
-                        </td>
-                        <td class="px-4 py-3 text-slate-800 font-black whitespace-nowrap">R$ {{ order.total|floatformat:2 }}</td>
-                        <td class="px-4 py-3 whitespace-nowrap">
-                            <a href="{% url 'print_order' order.id %}" target="_blank" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold bg-slate-900 text-white hover:bg-slate-700 transition-colors">
-                                <i class="bi bi-printer"></i>
-                                Reimprimir
-                            </a>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="6" class="px-4 py-10 text-center text-slate-400 font-medium">Nenhum pedido fechado ou cancelado no periodo selecionado.</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-
-        {% if sales_history.paginator.num_pages > 1 %}
-        <div class="mt-4 flex flex-wrap items-center justify-between gap-2">
-            <p class="text-xs text-slate-500">
-                Pagina {{ sales_history.number }} de {{ sales_history.paginator.num_pages }}
-            </p>
-            <div class="flex items-center gap-2">
-                {% if sales_history.has_previous %}
-                <a href="?{{ base_query_string }}{% if base_query_string %}&{% endif %}page={{ sales_history.previous_page_number }}" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200">Anterior</a>
-                {% endif %}
-                {% if sales_history.has_next %}
-                <a href="?{{ base_query_string }}{% if base_query_string %}&{% endif %}page={{ sales_history.next_page_number }}" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-900 text-white hover:bg-slate-700">Proxima</a>
-                {% endif %}
-            </div>
-        </div>
-        {% endif %}
+    <div class="flex flex-wrap gap-2">
+        <a href="?{{ base_query_string }}{% if base_query_string %}&{% endif %}export=xlsx" class="nb-btn-secondary"><i class="bi bi-file-earmark-excel" aria-hidden="true"></i>Excel</a>
+        <a href="?{{ base_query_string }}{% if base_query_string %}&{% endif %}export=pdf" class="nb-btn-secondary"><i class="bi bi-file-earmark-pdf" aria-hidden="true"></i>PDF</a>
+        <a href="?{{ base_query_string }}{% if base_query_string %}&{% endif %}export=csv" class="nb-btn-ghost">CSV</a>
     </div>
 </div>
+
+<form method="get" class="nb-card nb-card-pad mb-6 flex flex-wrap items-end gap-3" aria-label="Período">
+    <fieldset class="flex flex-wrap gap-1.5">
+        <legend class="nb-label">Período</legend>
+        {% for value, label in filter_options %}
+        <label class="cursor-pointer">
+            <input type="radio" name="filter" value="{{ value }}" class="peer sr-only" {% if filter_type == value %}checked{% endif %} onchange="this.form.dataset.changed='1'; this.form.querySelectorAll('[data-filter]').forEach(el => el.hidden = el.dataset.filter !== this.value)">
+            <span class="nb-chip peer-checked:bg-carvao peer-checked:text-white peer-checked:border-carvao peer-focus-visible:ring-2 peer-focus-visible:ring-tomate">{{ label }}</span>
+        </label>
+        {% endfor %}
+    </fieldset>
+    <div data-filter="day" {% if filter_type != 'day' %}hidden{% endif %}><label class="nb-label" for="f-day">Dia</label><input id="f-day" type="date" name="day" value="{{ selected_day }}" class="nb-input"></div>
+    <div data-filter="month" {% if filter_type != 'month' %}hidden{% endif %}><label class="nb-label" for="f-month">Mês</label><input id="f-month" type="month" name="month" value="{{ selected_month }}" class="nb-input"></div>
+    <div data-filter="year" {% if filter_type != 'year' %}hidden{% endif %}><label class="nb-label" for="f-year">Ano</label>
+        <select id="f-year" name="year" class="nb-select">{% for year in year_options %}<option {% if selected_year == year|stringformat:"s" %}selected{% endif %}>{{ year }}</option>{% endfor %}</select></div>
+    <div data-filter="range" {% if filter_type != 'range' %}hidden{% endif %} class="flex gap-2">
+        <div><label class="nb-label" for="f-start">De</label><input id="f-start" type="date" name="start_date" value="{{ selected_start_date }}" class="nb-input"></div>
+        <div><label class="nb-label" for="f-end">Até</label><input id="f-end" type="date" name="end_date" value="{{ selected_end_date }}" class="nb-input"></div>
+    </div>
+    <button class="nb-btn-dark">Ver</button>
+</form>
+
+<dl class="nb-card grid grid-cols-2 lg:grid-cols-4 mb-6">
+    <div class="p-5 sm:p-6"><dt class="nb-label">Faturamento</dt><dd class="nb-money text-[2rem] leading-none mt-2">R$ {{ total_revenue|floatformat:2 }}</dd></div>
+    <div class="p-5 sm:p-6 border-l border-linha"><dt class="nb-label">Contas fechadas</dt><dd class="nb-money text-[2rem] leading-none mt-2">{{ total_orders }}</dd></div>
+    <div class="p-5 sm:p-6 border-t lg:border-t-0 lg:border-l border-linha"><dt class="nb-label">Ticket médio</dt><dd class="nb-money text-[2rem] leading-none mt-2">R$ {{ ticket_medio|floatformat:2 }}</dd></div>
+    <div class="p-5 sm:p-6 border-t lg:border-t-0 border-l border-linha"><dt class="nb-label">Itens vendidos</dt><dd class="nb-money text-[2rem] leading-none mt-2">{{ total_items_sold }}</dd></div>
+</dl>
+
+<section class="mb-6 grid gap-px bg-linha rounded-card overflow-hidden border border-linha sm:grid-cols-2 lg:grid-cols-4" aria-label="Lucro">
+    <div class="bg-papel p-5"><p class="nb-label">Custo dos produtos</p><p class="nb-money text-xl">R$ {{ summary.items_cost|floatformat:2 }}</p></div>
+    <div class="bg-papel p-5"><p class="nb-label">Descontos dados</p><p class="nb-money text-xl">R$ {{ summary.discounts|floatformat:2 }}</p></div>
+    <div class="bg-manjericao-50 p-5"><p class="nb-label text-manjericao">Lucro bruto</p>
+        {% if summary.items_cost %}
+        <p class="nb-money text-xl text-manjericao">R$ {{ summary.gross_profit|floatformat:2 }}</p>
+        <p class="text-xs text-manjericao/80 mt-0.5">vendas − descontos − custo</p>
+        {% else %}
+        <p class="text-sm font-semibold text-manjericao mt-1">Cadastre o custo dos produtos para ver o lucro.</p>
+        {% endif %}</div>
+    <div class="bg-papel p-5"><p class="nb-label">Taxas de entrega</p><p class="nb-money text-xl">R$ {{ summary.delivery_fees|floatformat:2 }}</p>
+        {% if summary.products_without_cost %}<p class="text-xs text-[#8A5A12] mt-0.5">{{ summary.products_without_cost }} produto(s) sem custo cadastrado</p>{% endif %}</div>
+</section>
+
+<div class="grid gap-6 lg:grid-cols-2 mb-6">
+    <section class="nb-card" aria-labelledby="pag-titulo">
+        <h2 id="pag-titulo" class="nb-h2 px-6 pt-5 pb-2">Por forma de pagamento</h2>
+        <table class="nb-table">
+            <thead><tr><th scope="col">Forma</th><th scope="col" class="text-right">Pagamentos</th><th scope="col" class="text-right">Total</th></tr></thead>
+            <tbody>
+                {% for payment in payment_summary %}
+                <tr><td>{{ payment.method }}</td><td class="text-right tabular">{{ payment.count }}</td><td class="text-right tabular font-semibold">R$ {{ payment.total|floatformat:2 }}</td></tr>
+                {% empty %}<tr><td colspan="3" class="text-fumaca">Nenhum pagamento no período.</td></tr>{% endfor %}
+            </tbody>
+        </table>
+    </section>
+    <section class="nb-card" aria-labelledby="garcom-titulo">
+        <h2 id="garcom-titulo" class="nb-h2 px-6 pt-5 pb-2">Por garçom</h2>
+        <table class="nb-table">
+            <thead><tr><th scope="col">Garçom</th><th scope="col" class="text-right">Pedidos</th><th scope="col" class="text-right">Vendas</th></tr></thead>
+            <tbody>
+                {% for waiter in waiter_ranking %}
+                <tr><td>{{ waiter.waiter__username|default:'Site / sem garçom' }}</td><td class="text-right tabular">{{ waiter.orders_count }}</td><td class="text-right tabular font-semibold">R$ {{ waiter.total_sales|floatformat:2 }}</td></tr>
+                {% empty %}<tr><td colspan="3" class="text-fumaca">Sem vendas no período.</td></tr>{% endfor %}
+            </tbody>
+        </table>
+    </section>
+</div>
+
+<section class="nb-card mb-6" aria-labelledby="prod-titulo">
+    <header class="px-6 pt-5 pb-2 flex flex-wrap items-baseline justify-between gap-2">
+        <h2 id="prod-titulo" class="nb-h2">Produtos e lucro</h2>
+        <span class="text-sm text-fumaca">{{ total_items_sold }} itens no período</span>
+    </header>
+    <div class="overflow-x-auto">
+        <table class="nb-table min-w-[640px]">
+            <thead><tr><th scope="col">Produto</th><th scope="col" class="text-right">Qtd.</th><th scope="col" class="text-right">Faturamento</th><th scope="col" class="text-right">Custo</th><th scope="col" class="text-right">Lucro</th><th scope="col" class="text-right">Margem</th></tr></thead>
+            <tbody>
+                {% for product in product_quantities %}
+                <tr>
+                    <td class="font-medium">{{ product.product_name }}</td>
+                    <td class="text-right tabular">{{ product.total_qty }}</td>
+                    <td class="text-right tabular">R$ {{ product.total_revenue|floatformat:2 }}</td>
+                    {% if product.has_cost %}
+                    <td class="text-right tabular text-fumaca">R$ {{ product.total_cost|floatformat:2 }}</td>
+                    <td class="text-right tabular font-semibold {% if product.profit < 0 %}text-pimenta{% else %}text-manjericao{% endif %}">R$ {{ product.profit|floatformat:2 }}</td>
+                    <td class="text-right tabular">{{ product.margin|floatformat:0 }}%</td>
+                    {% else %}
+                    <td colspan="3" class="text-right text-sm text-fumaca">cadastre o custo do produto</td>
+                    {% endif %}
+                </tr>
+                {% empty %}<tr><td colspan="6" class="text-fumaca">Nenhum item vendido no período.</td></tr>{% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="nb-card" aria-labelledby="hist-titulo">
+    <header class="px-6 pt-5 pb-3 flex flex-wrap items-end justify-between gap-3">
+        <div>
+            <h2 id="hist-titulo" class="nb-h2">Histórico</h2>
+            <p class="text-sm text-fumaca">{{ history_total }} pedido{{ history_total|pluralize }} encerrado{{ history_total|pluralize }}</p>
+        </div>
+        <form method="get" class="flex gap-2 items-end">
+            {% for key, value in request.GET.items %}{% if key != 'history_search' and key != 'page' and key != 'page_size' %}<input type="hidden" name="{{ key }}" value="{{ value }}">{% endif %}{% endfor %}
+            <div><label class="nb-label" for="h-search">Cliente</label><input id="h-search" type="search" name="history_search" value="{{ history_search }}" class="nb-input" autocomplete="off"></div>
+            <div><label class="nb-label" for="h-size">Por página</label>
+                <select id="h-size" name="page_size" class="nb-select w-24">{% for size in page_size_options %}<option {% if page_size == size %}selected{% endif %}>{{ size }}</option>{% endfor %}</select></div>
+            <button class="nb-btn-secondary">Filtrar</button>
+        </form>
+    </header>
+    <div class="overflow-x-auto">
+        <table class="nb-table min-w-[720px]">
+            <thead><tr><th scope="col">Pedido</th><th scope="col">Fechado</th><th scope="col">Cliente / mesa</th><th scope="col">Itens</th><th scope="col">Pagamento</th><th scope="col" class="text-right">Total</th></tr></thead>
+            <tbody>
+                {% for order in sales_history %}
+                <tr class="{% if order.status == 'cancelado' %}text-fumaca{% endif %}">
+                    <td class="font-mono text-xs">#{{ order.id }}</td>
+                    <td class="tabular whitespace-nowrap">{{ order.closed_at|date:"d/m H:i" }}</td>
+                    <td>{{ order.display_name }}{% if order.waiter %}<span class="block text-xs text-fumaca">{{ order.waiter.username }}</span>{% endif %}</td>
+                    <td class="text-sm">{% for item in order.items.all %}{{ item.quantity }}× {{ item.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</td>
+                    <td>{% if order.status == 'cancelado' %}<span class="nb-status-erro">Cancelado</span>{% else %}{{ order.get_payment_method_display|default:'—' }}{% endif %}</td>
+                    <td class="text-right tabular font-semibold whitespace-nowrap">{% if order.status == 'cancelado' %}—{% else %}R$ {{ order.amount_due|floatformat:2 }}{% endif %}</td>
+                </tr>
+                {% empty %}<tr><td colspan="6" class="text-fumaca">Nenhum pedido encerrado no período.</td></tr>{% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if sales_history.paginator.num_pages > 1 %}
+    <nav class="flex items-center justify-between px-6 py-4 border-t border-linha" aria-label="Páginas do histórico">
+        {% if sales_history.has_previous %}<a class="nb-btn-secondary nb-btn-sm" href="?{{ base_query_string }}&page={{ sales_history.previous_page_number }}">Anterior</a>{% else %}<span></span>{% endif %}
+        <span class="font-mono text-xs text-fumaca">{{ sales_history.number }} / {{ sales_history.paginator.num_pages }}</span>
+        {% if sales_history.has_next %}<a class="nb-btn-secondary nb-btn-sm" href="?{{ base_query_string }}&page={{ sales_history.next_page_number }}">Próxima</a>{% else %}<span></span>{% endif %}
+    </nav>
+    {% endif %}
+</section>
 {% endblock %}

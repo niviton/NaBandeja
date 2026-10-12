@@ -1,79 +1,86 @@
 {% if calls %}
-<section class="mb-5 rounded-2xl border-2 border-amber-300 bg-amber-50 p-3 sm:p-4">
-    <h2 class="font-black text-amber-900 mb-2 flex items-center gap-2"><i class="bi bi-bell-fill animate-pulse"></i>Chamados das mesas</h2>
-    <div class="flex flex-wrap gap-2">
-        {% for call in calls %}
-        <form hx-post="{% url 'resolve_table_calls' call.table.name %}" hx-target="#salao-board" class="contents">
-            <button type="submit" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-amber-200 font-bold text-sm text-amber-900 hover:bg-amber-100">
-                <span>Mesa {{ call.table.name }}</span>
-                <span class="text-amber-700 font-semibold">· {{ call.get_kind_display }}</span>
-                <span class="text-xs text-amber-600" data-since="{{ call.created_at.isoformat }}"></span>
-                <i class="bi bi-check2-circle text-emerald-600"></i>
-            </button>
-        </form>
-        {% endfor %}
+<section class="nb-alert-warn mb-5" aria-labelledby="chamados-titulo">
+    <i class="bi bi-bell-fill text-lg mt-0.5" aria-hidden="true"></i>
+    <div class="flex-1">
+        <h2 id="chamados-titulo" class="font-semibold">Mesas chamando</h2>
+        <div class="mt-2 flex flex-wrap gap-2">
+            {% for call in calls %}
+            <form hx-post="{% url 'resolve_table_calls' call.table.name %}" hx-target="#salao-board">
+                <button type="submit" class="nb-chip bg-papel" aria-label="Marcar mesa {{ call.table.name }} como atendida">
+                    <b>Mesa {{ call.table.name }}</b> · {{ call.get_kind_display }}
+                    <span class="font-mono text-xs tabular" data-since="{{ call.created_at.isoformat }}"></span>
+                    <i class="bi bi-check2 text-manjericao" aria-hidden="true"></i>
+                </button>
+            </form>
+            {% endfor %}
+        </div>
     </div>
 </section>
 {% endif %}
 
 {% if pending_online and user.role == 'gerente' %}
-<a href="{% url 'admin_online_orders' %}" class="mb-5 flex items-center gap-3 rounded-2xl border-2 border-sky-300 bg-sky-50 p-4 font-bold text-sky-900 hover:bg-sky-100">
-    <i class="bi bi-globe2 text-xl"></i>
-    {{ pending_online }} pedido{{ pending_online|pluralize }} online aguardando confirmação
-    <i class="bi bi-arrow-right ms-auto"></i>
+<a href="{% url 'admin_online_orders' %}" class="nb-alert-info mb-5 font-semibold hover:brightness-95">
+    <i class="bi bi-globe2 text-lg" aria-hidden="true"></i>
+    <span class="flex-1">{{ pending_online }} pedido{{ pending_online|pluralize }} online aguardando confirmação</span>
+    <i class="bi bi-arrow-right" aria-hidden="true"></i>
 </a>
 {% endif %}
 
 {% if tables %}
-<div class="grid gap-3 grid-cols-3 sm:grid-cols-4 md:grid-cols-6 xl:grid-cols-8">
+<ul class="grid gap-3 grid-cols-3 sm:grid-cols-4 md:grid-cols-6 xl:grid-cols-8" aria-label="Mesas">
     {% for state in tables %}
-    <a href="{% url 'table_order' state.table.name %}"
-       class="relative aspect-square rounded-2xl border-2 p-3 flex flex-col justify-between transition-transform active:scale-95 hover:shadow-md {{ state.css }}">
-        <div class="flex items-start justify-between gap-1">
-            <span class="text-2xl sm:text-3xl font-black leading-none">{{ state.table.name }}</span>
-            {% if state.calling_waiter %}<i class="bi bi-bell-fill text-amber-500 animate-pulse" title="Chamando garçom"></i>{% endif %}
-        </div>
-        <div class="text-left leading-tight">
-            <span class="block text-[11px] font-black uppercase tracking-wide">{{ state.label }}</span>
-            {% if state.order %}
-            <span class="block text-sm font-bold">R$ {{ state.order.amount_due|floatformat:2 }}</span>
-            <span class="block text-[11px] opacity-70" data-since="{{ state.order.created_at.isoformat }}"></span>
-            {% elif state.table.area %}
-            <span class="block text-[11px] opacity-60">{{ state.table.area }}</span>
-            {% endif %}
-        </div>
-        {% if state.status == 'pronto' %}<span class="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-emerald-500 ring-4 ring-white animate-ping"></span>{% endif %}
-    </a>
+    <li>
+        <a href="{% url 'table_order' state.table.name %}"
+           class="relative aspect-square rounded-2xl border-2 p-3 flex flex-col justify-between transition-transform active:scale-[0.97] hover:shadow-float {{ state.css }}"
+           aria-label="Mesa {{ state.table.name }}: {{ state.label }}{% if state.order %}, R$ {{ state.order.amount_due|floatformat:2 }}{% endif %}">
+            <span class="flex items-start justify-between gap-1">
+                <span class="font-display text-[2rem] sm:text-[2.4rem] font-semibold leading-none">{{ state.table.name }}</span>
+                {% if state.calling_waiter %}<i class="bi bi-bell-fill text-mostarda" aria-hidden="true"></i>{% endif %}
+            </span>
+            <span class="leading-tight">
+                <span class="block font-mono text-xs sm:text-xs font-medium uppercase tracking-[0.1em]">{{ state.label }}</span>
+                {% if state.order %}
+                <span class="block text-sm font-semibold tabular">R$ {{ state.order.amount_due|floatformat:2 }}</span>
+                <span class="block text-xs opacity-75 tabular" data-since="{{ state.order.created_at.isoformat }}"></span>
+                {% elif state.table.area %}
+                <span class="block text-xs text-fumaca">{{ state.table.area }}</span>
+                {% endif %}
+            </span>
+            {% if state.status == 'pronto' %}<span class="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-manjericao ring-4 ring-creme motion-safe:animate-pulse" aria-hidden="true"></span>{% endif %}
+        </a>
+    </li>
     {% endfor %}
-</div>
+</ul>
 {% else %}
-<div class="rounded-2xl border-2 border-dashed border-slate-300 bg-white p-8 text-center">
-    <i class="bi bi-grid-3x3 text-4xl text-slate-300"></i>
-    <p class="mt-2 font-bold text-slate-600">Nenhuma mesa cadastrada</p>
+<div class="nb-card nb-card-pad text-center py-12">
+    {% include 'brand/_mark.html' with class='w-12 h-12 mx-auto opacity-60' %}
+    <p class="nb-h2 mt-3">Nenhuma mesa cadastrada</p>
     {% if user.role == 'gerente' %}
-    <a href="{% url 'admin_tables' %}" class="inline-block mt-3 px-4 py-2 rounded-xl bg-slate-900 text-white font-bold">Cadastrar mesas</a>
+    <a href="{% url 'admin_tables' %}" class="nb-btn-primary mt-4">Cadastrar mesas</a>
     {% else %}
-    <p class="text-sm text-slate-500">Peça ao gerente para cadastrar as mesas.</p>
+    <p class="nb-subtitle mt-1">Peça ao gerente para cadastrar as mesas.</p>
     {% endif %}
 </div>
 {% endif %}
 
 {% if counter_orders %}
-<section class="mt-6">
-    <h2 class="font-black text-slate-700 mb-3">Balcão e delivery</h2>
-    <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+<section class="mt-10" aria-labelledby="balcao-titulo">
+    <h2 id="balcao-titulo" class="nb-h2 mb-3">Balcão e delivery</h2>
+    <ul class="nb-card nb-divide">
         {% for order in counter_orders %}
-        <a href="{% url 'order_workspace' order.id %}" class="rounded-2xl bg-white border border-slate-200 p-4 flex items-center gap-3 hover:shadow-md">
-            <span class="w-11 h-11 rounded-xl flex items-center justify-center text-lg {% if order.order_type == 'delivery' %}bg-sky-100 text-sky-700{% else %}bg-slate-100 text-slate-600{% endif %}">
-                <i class="bi {% if order.order_type == 'delivery' %}bi-scooter{% else %}bi-bag{% endif %}"></i>
-            </span>
-            <span class="flex-1 min-w-0">
-                <span class="block font-bold truncate">#{{ order.id }} · {{ order.display_name }}</span>
-                <span class="block text-xs text-slate-500">{{ order.get_status_display }}{% if order.platform %} · {{ order.platform }}{% endif %} · <span data-since="{{ order.created_at.isoformat }}"></span></span>
-            </span>
-            <span class="font-black">R$ {{ order.amount_due|floatformat:2 }}</span>
-        </a>
+        <li>
+            <a href="{% url 'order_workspace' order.id %}" class="flex items-center gap-4 px-4 sm:px-5 py-4 hover:bg-creme/60">
+                <span class="w-11 h-11 rounded-xl flex items-center justify-center text-lg {% if order.order_type == 'delivery' %}bg-cebola-50 text-cebola{% else %}bg-creme text-fumaca{% endif %}" aria-hidden="true">
+                    <i class="bi {% if order.order_type == 'delivery' %}bi-scooter{% else %}bi-bag{% endif %}"></i>
+                </span>
+                <span class="flex-1 min-w-0">
+                    <span class="block font-semibold truncate">{{ order.display_name }} <span class="font-mono text-xs text-fumaca">#{{ order.id }}</span></span>
+                    <span class="block text-sm text-fumaca">{{ order.get_status_display }}{% if order.platform %} · {{ order.platform }}{% endif %} · <span class="tabular" data-since="{{ order.created_at.isoformat }}"></span></span>
+                </span>
+                <span class="nb-money text-lg">R$ {{ order.amount_due|floatformat:2 }}</span>
+            </a>
+        </li>
         {% endfor %}
-    </div>
+    </ul>
 </section>
 {% endif %}

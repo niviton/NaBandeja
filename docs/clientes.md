@@ -34,7 +34,7 @@ O script:
 
 1. cria a branch `cliente/pizzaria-do-joao` a partir da `main`;
 2. remove fotos, logos e ícones de outros clientes;
-3. cria um banco limpo, com o nome da loja e o usuário `gerente`;
+3. cria um banco limpo, com o nome da loja, o **código da empresa** (igual ao slug da branch) e o usuário `gerente`;
 4. mostra a **senha do gerente** (anote, ela não fica salva em lugar nenhum);
 5. faz o commit.
 

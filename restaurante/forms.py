@@ -7,7 +7,11 @@ from .services.pix import PixError, build_payload as build_pix_payload
 
 
 class LoginForm(AuthenticationForm):
-    """Formulário de login personalizado"""
+    """Login com empresa + usuário + senha."""
+
+    empresa = forms.CharField(label='Empresa', max_length=60)
+
+    field_order = ['empresa', 'username', 'password']
     username = forms.CharField(
         label='Usuário',
         widget=forms.TextInput(attrs={

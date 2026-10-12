@@ -1,196 +1,58 @@
-{% load static %}
-<!DOCTYPE html>
+{% load static %}<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="{{ app_settings.primary_color|default:'#ef4444' }}">
-    <title>{% block title %}{{ app_settings.store_name }}{% endblock %}</title>
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ctext y='0.9em' font-size='52'%3E🍔%3C/text%3E%3C/svg%3E">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#FAF6EF">
+    <meta name="color-scheme" content="light">
+    <title>{% block title %}NaBandeja{% endblock %}</title>
+    <link rel="icon" type="image/svg+xml" href="{% static 'brand/nabandeja-mark.svg' %}">
     <link rel="manifest" href="{% url 'pwa_manifest' %}">
-    
-    <!-- CSS local: o sistema funciona sem internet (gerado por scripts/build_css.bat) -->
+    <link rel="preload" href="{% static 'vendor/fonts/inter.woff2' %}" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="{% static 'vendor/fonts/fraunces.woff2' %}" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="{% static 'css/app.css' %}">
     <link rel="stylesheet" href="{% static 'vendor/bootstrap-icons/bootstrap-icons.min.css' %}">
     <script src="{% static 'vendor/htmx/htmx.min.js' %}" defer></script>
     <script src="{% static 'js/nabandeja.js' %}" defer></script>
-
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        
-        .custom-scrollbar::-webkit-scrollbar {
-            height: 6px;
-            width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: #f1f5f9;
-            border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 10px;
-        }
-        
-        @keyframes pulse-slow {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-        .animate-pulse-slow {
-            animation: pulse-slow 2s ease-in-out infinite;
-        }
-        
-        @keyframes slide-up {
-            from { transform: translateY(100px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-        .toast-enter {
-            animation: slide-up 0.3s ease-out;
-        }
-        
-        @keyframes blob {
-            0%, 100% { transform: translate(0, 0) scale(1); }
-            33% { transform: translate(30px, -50px) scale(1.1); }
-            66% { transform: translate(-20px, 20px) scale(0.9); }
-        }
-        .animate-blob {
-            animation: blob 7s infinite;
-        }
-        .animation-delay-2000 {
-            animation-delay: 2s;
-        }
-    </style>
-    
     {% block extra_css %}{% endblock %}
 </head>
-<body class="{% block body_class %}bg-slate-50 min-h-screen{% endblock %}" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' {% block body_attrs %}{% endblock %}>
+<body class="{% block body_class %}min-h-screen{% endblock %}" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' {% block body_attrs %}{% endblock %}>
+    <a href="#conteudo" class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[90] nb-btn-dark">Pular para o conteúdo</a>
     {% block navbar %}{% endblock %}
-    
-    <main>
+
+    <main id="conteudo">
         {% block content %}{% endblock %}
     </main>
 
-    <div id="appConfirmModal" class="hidden fixed inset-0 z-[70]">
-        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-[1px]"></div>
-        <div class="absolute inset-0 flex items-end sm:items-center justify-center p-3 sm:p-6">
-            <div class="w-full max-w-md rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden">
-                <div class="px-5 py-4 border-b border-slate-100">
-                    <p id="appConfirmTitle" class="text-base sm:text-lg font-black text-slate-800">Confirmar ação</p>
-                </div>
-                <div class="px-5 py-4">
-                    <p id="appConfirmMessage" class="text-sm sm:text-base text-slate-600 font-medium">Deseja continuar?</p>
-                </div>
-                <div class="px-4 pb-4 flex gap-2 sm:gap-3 justify-end">
-                    <button id="appConfirmCancel" type="button" class="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200 transition-all">Cancelar</button>
-                    <button id="appConfirmOk" type="button" class="px-4 py-2.5 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700 transition-all">Confirmar</button>
-                </div>
+    <dialog id="nbConfirm" class="rounded-card border border-linha bg-papel p-0 w-[calc(100%-2rem)] max-w-md backdrop:bg-carvao/50" aria-labelledby="nbConfirmTitle">
+        <form method="dialog" class="p-6">
+            <p class="nb-kicker">Confirmar</p>
+            <h2 id="nbConfirmTitle" class="nb-h2 mt-1">Tem certeza?</h2>
+            <p id="nbConfirmMessage" class="mt-2 text-fumaca"></p>
+            <div class="mt-6 flex justify-end gap-2">
+                <button value="cancel" class="nb-btn-secondary">Cancelar</button>
+                <button value="ok" class="nb-btn-primary" autofocus>Confirmar</button>
             </div>
-        </div>
-    </div>
-    
-    <!-- Toast Messages -->
-    {% if messages %}
-    <div class="toast-container fixed bottom-3 left-3 right-3 md:bottom-4 md:right-4 md:left-auto z-50 flex flex-col items-stretch md:items-end pointer-events-none">
+        </form>
+    </dialog>
+
+    <div class="toast-container fixed bottom-3 inset-x-3 md:inset-x-auto md:right-4 md:bottom-4 z-[80] flex flex-col items-stretch md:items-end gap-2 pointer-events-none" role="status" aria-live="polite">
         {% for message in messages %}
-        <div class="toast-enter px-4 md:px-6 py-3 rounded-xl shadow-2xl flex items-center gap-3 {% if message.tags == 'success' %}bg-emerald-600{% elif message.tags == 'error' %}bg-red-600{% else %}bg-slate-800{% endif %} text-white mb-2 w-full md:w-auto max-w-full md:max-w-md pointer-events-auto">
-            {% if message.tags == 'success' %}
-            <i class="bi bi-check-circle text-lg"></i>
-            {% elif message.tags == 'error' %}
-            <i class="bi bi-x-circle text-lg"></i>
-            {% else %}
-            <i class="bi bi-info-circle text-lg"></i>
-            {% endif %}
+        <div class="toast-enter flex items-center gap-3 px-4 py-3 rounded-2xl shadow-float text-white pointer-events-auto max-w-md
+            {% if message.tags == 'success' %}bg-manjericao{% elif message.tags == 'error' %}bg-pimenta{% elif message.tags == 'warning' %}bg-[#8A5A12]{% else %}bg-carvao{% endif %}" data-autohide>
+            <i class="bi {% if message.tags == 'success' %}bi-check-circle{% elif message.tags == 'error' %}bi-x-circle{% elif message.tags == 'warning' %}bi-exclamation-triangle{% else %}bi-info-circle{% endif %} text-lg" aria-hidden="true"></i>
             <span class="font-medium">{{ message }}</span>
         </div>
         {% endfor %}
     </div>
-    {% endif %}
-    
+
     <script>
-        function showConfirmModal(message, title = 'Confirmar ação') {
-            return new Promise((resolve) => {
-                const modal = document.getElementById('appConfirmModal');
-                const titleEl = document.getElementById('appConfirmTitle');
-                const messageEl = document.getElementById('appConfirmMessage');
-                const okBtn = document.getElementById('appConfirmOk');
-                const cancelBtn = document.getElementById('appConfirmCancel');
-
-                if (!modal || !titleEl || !messageEl || !okBtn || !cancelBtn) {
-                    resolve(window.confirm(message));
-                    return;
-                }
-
-                titleEl.textContent = title;
-                messageEl.textContent = message || 'Deseja continuar?';
-                modal.classList.remove('hidden');
-
-                function close(result) {
-                    modal.classList.add('hidden');
-                    okBtn.removeEventListener('click', onConfirm);
-                    cancelBtn.removeEventListener('click', onCancel);
-                    modal.removeEventListener('click', onBackdrop);
-                    document.removeEventListener('keydown', onKeydown);
-                    resolve(result);
-                }
-
-                function onConfirm() { close(true); }
-                function onCancel() { close(false); }
-                function onBackdrop(event) {
-                    if (event.target === modal) {
-                        close(false);
-                    }
-                }
-                function onKeydown(event) {
-                    if (event.key === 'Escape') {
-                        close(false);
-                    }
-                }
-
-                okBtn.addEventListener('click', onConfirm);
-                cancelBtn.addEventListener('click', onCancel);
-                modal.addEventListener('click', onBackdrop);
-                document.addEventListener('keydown', onKeydown);
-            });
-        }
-
-        document.addEventListener('submit', async function(event) {
-            const form = event.target;
-            if (!(form instanceof HTMLFormElement)) return;
-            if (form.dataset.confirmed === 'true') {
-                form.dataset.confirmed = 'false';
-                return;
-            }
-
-            const confirmMessage = form.dataset.confirmMessage;
-            if (!confirmMessage) return;
-
-            event.preventDefault();
-            const confirmed = await showConfirmModal(confirmMessage, 'Confirmar');
-            if (confirmed) {
-                form.dataset.confirmed = 'true';
-                form.submit();
-            }
-        }, true);
-        
-        // Auto-hide Django messages toasts
-        document.addEventListener('DOMContentLoaded', function() {
-            const toasts = document.querySelectorAll('.toast-enter');
-            toasts.forEach(function(toast) {
-                setTimeout(function() {
-                    toast.style.opacity = '0';
-                    toast.style.transform = 'translateY(20px)';
-                    toast.style.transition = 'all 0.3s ease-out';
-                    setTimeout(() => toast.remove(), 300);
-                }, 3000);
-            });
-
+        document.addEventListener('DOMContentLoaded', () => {
             if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('{% url "pwa_service_worker" %}').catch(function() {});
+                navigator.serviceWorker.register('{% url "pwa_service_worker" %}').catch(() => {});
             }
         });
     </script>
-    
     {% block extra_js %}{% endblock %}
 </body>
 </html>

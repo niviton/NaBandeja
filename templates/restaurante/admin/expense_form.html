@@ -1,20 +1,26 @@
 {% extends 'restaurante/admin/base_admin.html' %}
 
-{% block title %}Conta a pagar - {{ app_settings.store_name }}{% endblock %}
+{% block title %}Conta a pagar · {{ app_settings.store_name }}{% endblock %}
 
 {% block admin_content %}
-<div class="max-w-lg mx-auto">
-    <a href="{% url 'expenses' %}" class="text-[var(--admin-muted)] inline-flex items-center gap-2 mb-3"><i class="bi bi-arrow-left"></i>Voltar</a>
-    <h1 class="admin-brand-title text-3xl text-[var(--admin-text)] mb-4">{% if expense %}Editar conta{% else %}Nova conta{% endif %}</h1>
-    <form method="post" class="rounded-3xl bg-[var(--admin-card)] border border-[var(--admin-line)] p-5 space-y-3">
-        {% csrf_token %}
-        {% include 'restaurante/admin/_expense_fields.html' %}
-        <button class="w-full py-3 rounded-xl bg-[var(--admin-accent)] text-white font-bold">Salvar</button>
-    </form>
-    {% if expense %}
-    <form method="post" action="{% url 'expense_delete' expense.id %}" class="mt-3 text-center" data-confirm-message="Excluir esta conta?">
-        {% csrf_token %}<button class="text-sm font-bold text-red-600">Excluir conta</button>
-    </form>
-    {% endif %}
-</div>
+{% url 'expenses' as back_url %}
+{% if expense %}
+{% include 'restaurante/admin/_page_head.html' with back=back_url kicker='Financeiro' title='Editar' emphasis='conta' %}
+{% else %}
+{% include 'restaurante/admin/_page_head.html' with back=back_url kicker='Financeiro' title='Nova' emphasis='conta' %}
+{% endif %}
+
+<form method="post" class="nb-card nb-card-pad max-w-lg space-y-3" novalidate>
+    {% csrf_token %}
+    {% include 'restaurante/admin/_expense_fields.html' %}
+    <div class="flex gap-2 justify-end pt-2">
+        <a href="{% url 'expenses' %}" class="nb-btn-secondary">Cancelar</a>
+        <button class="nb-btn-primary">Salvar</button>
+    </div>
+</form>
+{% if expense %}
+<form method="post" action="{% url 'expense_delete' expense.id %}" class="mt-4 max-w-lg" data-confirm-message="Excluir a conta {{ expense.description }}?">
+    {% csrf_token %}<button class="nb-btn-danger">Excluir conta</button>
+</form>
+{% endif %}
 {% endblock %}

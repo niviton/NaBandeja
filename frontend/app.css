@@ -2,25 +2,102 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Fontes servidas localmente (o sistema funciona sem internet). */
-@font-face {
-  font-family: 'Inter';
-  font-style: normal;
-  font-display: swap;
-  font-weight: 100 900;
-  src: url('../vendor/fonts/inter.woff2') format('woff2-variations');
+/* ------------------------------------------------------------ fontes (locais) */
+@font-face { font-family: 'Inter'; font-style: normal; font-display: swap; font-weight: 100 900;
+  src: url('../vendor/fonts/inter.woff2') format('woff2-variations'); }
+@font-face { font-family: 'Fraunces'; font-style: normal; font-display: swap; font-weight: 100 900;
+  src: url('../vendor/fonts/fraunces.woff2') format('woff2-variations'); }
+@font-face { font-family: 'Fraunces'; font-style: italic; font-display: swap; font-weight: 100 900;
+  src: url('../vendor/fonts/fraunces-italic.woff2') format('woff2-variations'); }
+@font-face { font-family: 'JetBrains Mono'; font-style: normal; font-display: swap; font-weight: 100 800;
+  src: url('../vendor/fonts/jetbrains-mono.woff2') format('woff2-variations'); }
+
+/* ------------------------------------------------------------ base */
+@layer base {
+  :root { color-scheme: light; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { @apply bg-creme text-carvao font-sans antialiased; font-feature-settings: 'cv11', 'ss01'; }
+  button, a, [role='button'], input[type='checkbox'], input[type='radio'], label { touch-action: manipulation; }
+  :focus-visible { @apply outline-none ring-2 ring-tomate ring-offset-2 ring-offset-creme; }
+  ::selection { @apply bg-tomate-50 text-carvao; }
+  .tabular { font-variant-numeric: tabular-nums; }
+  [hidden] { display: none !important; }
 }
-@font-face {
-  font-family: 'Manrope';
-  font-style: normal;
-  font-display: swap;
-  font-weight: 200 800;
-  src: url('../vendor/fonts/manrope.woff2') format('woff2-variations');
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
 }
-@font-face {
-  font-family: 'Fraunces';
-  font-style: normal;
-  font-display: swap;
-  font-weight: 100 900;
-  src: url('../vendor/fonts/fraunces.woff2') format('woff2-variations');
+
+/* ------------------------------------------------------------ componentes */
+@layer components {
+  /* tipografia */
+  .nb-kicker { @apply font-mono text-xs font-medium uppercase tracking-[0.12em] text-tomate; }
+  .nb-title { @apply font-display text-[1.9rem] sm:text-[2.4rem] font-semibold leading-[1.08] tracking-[-0.01em] text-carvao; }
+  .nb-title em { @apply italic text-tomate font-semibold; }
+  .nb-subtitle { @apply text-fumaca text-[15px] leading-relaxed; }
+  .nb-h2 { @apply font-display text-xl font-semibold text-carvao; }
+  .nb-label { @apply block font-mono text-xs font-medium uppercase tracking-[0.1em] text-fumaca mb-1.5; }
+  .nb-help { @apply text-[13px] text-fumaca mt-1.5 leading-snug; }
+  .nb-error { @apply text-[13px] font-semibold text-pimenta mt-1.5; }
+  .nb-money { @apply font-display font-semibold tabular-nums; }
+
+  /* layout */
+  .nb-page { @apply max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8; }
+  .nb-page-head { @apply flex flex-wrap items-end justify-between gap-4 mb-6 sm:mb-8; }
+  .nb-card { @apply bg-papel border border-linha rounded-card; }
+  .nb-card-pad { @apply p-5 sm:p-6; }
+  .nb-divide > * + * { @apply border-t border-linha; }
+
+  /* botões */
+  .nb-btn { @apply inline-flex items-center justify-center gap-2 min-h-[44px] px-4 rounded-xl text-[15px] font-semibold
+            transition-colors duration-150 select-none disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap; }
+  .nb-btn-sm { @apply min-h-[36px] px-3 text-sm rounded-lg; }
+  .nb-btn-lg { @apply min-h-[56px] px-6 text-base rounded-2xl; }
+  .nb-btn-primary { @apply nb-btn bg-tomate text-white hover:bg-brasa active:bg-brasa; }
+  .nb-btn-dark { @apply nb-btn bg-carvao text-white hover:bg-carvao-700; }
+  .nb-btn-secondary { @apply nb-btn bg-papel text-carvao border border-linha hover:border-carvao/30 hover:bg-creme; }
+  .nb-btn-ghost { @apply nb-btn text-fumaca hover:text-carvao hover:bg-linha/50; }
+  .nb-btn-success { @apply nb-btn bg-manjericao text-white hover:brightness-95; }
+  .nb-btn-danger { @apply nb-btn text-pimenta hover:bg-pimenta-50; }
+  .nb-icon-btn { @apply inline-flex items-center justify-center w-11 h-11 rounded-xl text-fumaca hover:text-carvao hover:bg-linha/60 transition-colors; }
+
+  /* campos */
+  .nb-input { @apply w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-papel border border-linha text-carvao text-[15px]
+              placeholder:text-fumaca/70 transition-colors focus:outline-none focus:border-tomate focus:ring-2 focus:ring-tomate/25; }
+  .nb-select { @apply nb-input pr-9; }
+  .nb-textarea { @apply nb-input min-h-[88px]; }
+  .nb-check { @apply w-5 h-5 rounded border-linha accent-tomate; }
+
+  /* chips e status */
+  .nb-chip { @apply inline-flex items-center gap-1.5 px-3 min-h-[36px] rounded-full border border-linha bg-papel text-sm font-medium text-carvao hover:border-carvao/30; }
+  .nb-chip-active { @apply bg-carvao text-white border-carvao; }
+  .nb-status { @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold; }
+  .nb-status-livre { @apply nb-status bg-creme text-fumaca border border-linha; }
+  .nb-status-cozinha { @apply nb-status bg-mostarda-50 text-[#8A5A12]; }
+  .nb-status-pronto { @apply nb-status bg-manjericao-50 text-manjericao; }
+  .nb-status-ocupada { @apply nb-status bg-cebola-50 text-cebola; }
+  .nb-status-conta { @apply nb-status bg-uva-50 text-uva; }
+  .nb-status-erro { @apply nb-status bg-pimenta-50 text-pimenta; }
+
+  /* aviso */
+  .nb-alert { @apply flex gap-3 items-start rounded-2xl border px-4 py-3 text-sm; }
+  .nb-alert-info { @apply nb-alert bg-cebola-50 border-cebola/20 text-cebola; }
+  .nb-alert-warn { @apply nb-alert bg-mostarda-50 border-mostarda/40 text-[#7A4F0F]; }
+  .nb-alert-error { @apply nb-alert bg-pimenta-50 border-pimenta/30 text-pimenta; }
+  .nb-alert-ok { @apply nb-alert bg-manjericao-50 border-manjericao/30 text-manjericao; }
+
+  /* tabela */
+  .nb-table { @apply w-full text-sm; }
+  .nb-table th { @apply text-left font-mono text-xs font-medium uppercase tracking-[0.12em] text-fumaca px-4 py-3 border-b border-linha; }
+  .nb-table td { @apply px-4 py-3 border-b border-linha align-middle; }
+  .nb-table tr:last-child td { @apply border-b-0; }
+
+  /* navegação do painel */
+  .nb-nav-link { @apply flex items-center gap-3 px-3 min-h-[44px] rounded-xl text-[15px] font-medium text-fumaca hover:text-carvao hover:bg-linha/50 whitespace-nowrap; }
+  .nb-nav-link[aria-current='page'] { @apply bg-carvao text-white hover:bg-carvao hover:text-white; }
 }
+
+/* ------------------------------------------------------------ animações */
+@keyframes nb-toast-in { from { transform: translateY(12px); opacity: 0; } to { transform: none; opacity: 1; } }
+.toast-enter { animation: nb-toast-in .2s ease-out; }

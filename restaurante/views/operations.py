@@ -7,6 +7,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 
+from ..modules import module_required
 from ..models import AppSettings, DeliveryZone, Order, Table
 from ..permissions import manager_required
 from ..services import orders as order_service
@@ -76,6 +77,7 @@ def table_save(request, table_id=None):
 
 @manager_required
 @require_POST
+@module_required('cardapio_digital')
 def table_new_qr(request, table_id):
     """Gera um QR Code novo (o antigo deixa de funcionar)."""
     table = get_object_or_404(Table, pk=table_id)
@@ -87,6 +89,7 @@ def table_new_qr(request, table_id):
 
 
 @manager_required
+@module_required('cardapio_digital')
 def tables_qr_sheet(request):
     """Folha com os QR Codes de todas as mesas, pronta para imprimir e recortar."""
     cards = [
@@ -101,6 +104,7 @@ def tables_qr_sheet(request):
 # ------------------------------------------------------------------ áreas de entrega
 
 @manager_required
+@module_required('delivery')
 def delivery_zones(request):
     return render(request, 'restaurante/admin/delivery_zones.html', {
         'zones': DeliveryZone.objects.all(),
@@ -110,6 +114,7 @@ def delivery_zones(request):
 
 @manager_required
 @require_POST
+@module_required('delivery')
 def delivery_zone_save(request, zone_id=None):
     zone = get_object_or_404(DeliveryZone, pk=zone_id) if zone_id else DeliveryZone()
     zone.name = request.POST.get('name', '').strip()[:80]
@@ -133,6 +138,7 @@ def delivery_zone_save(request, zone_id=None):
 
 @manager_required
 @require_POST
+@module_required('delivery')
 def delivery_zone_delete(request, zone_id):
     zone = get_object_or_404(DeliveryZone, pk=zone_id)
     zone.delete()
@@ -155,6 +161,7 @@ def admin_online_orders(request):
 
 @manager_required
 @require_POST
+@module_required('online')
 def online_order_decide(request, order_id, decision):
     order = get_object_or_404(Order, pk=order_id)
     try:
@@ -172,6 +179,7 @@ def online_order_decide(request, order_id, decision):
 
 
 @manager_required
+@module_required('cardapio_digital')
 def menu_qr_sheet(request):
     """Cartões com o QR do cardápio (e do Wi-Fi) para o suporte de molhos."""
     store = AppSettings.get_settings()

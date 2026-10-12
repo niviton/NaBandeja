@@ -1,94 +1,64 @@
 {% extends 'restaurante/admin/base_admin.html' %}
 
-{% block title %}Cardápio - {{ app_settings.store_name }}{% endblock %}
+{% block title %}Cardápio · {{ app_settings.store_name }}{% endblock %}
 
 {% block admin_content %}
-<div class="max-w-[1400px] mx-auto">
-    <!-- Título -->
-    <div class="flex items-center justify-between mb-8">
-        <div>
-            <h1 class="text-3xl font-black text-slate-800">Cardápio</h1>
-            <p class="text-slate-500">Gerencie seus produtos</p>
-        </div>
-        <div class="flex gap-3">
-            <a href="{% url 'category_create' %}" class="px-5 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold hover:bg-slate-200 transition-all">
-                <i class="bi bi-folder-plus me-2"></i>Nova Categoria
-            </a>
-            <a href="{% url 'product_create' %}" class="px-5 py-3 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-xl font-bold hover:shadow-lg hover:shadow-red-500/30 transition-all">
-                <i class="bi bi-plus-lg me-2"></i>Novo Produto
-            </a>
-        </div>
+<div class="nb-page-head">
+    <div>
+        <p class="nb-kicker">Cardápio</p>
+        <h1 class="nb-title mt-1">O que sai da <em>cozinha</em></h1>
+        <p class="nb-subtitle mt-1.5">Produtos desativados somem do garçom e do cardápio digital, mas o histórico de vendas fica.</p>
     </div>
-    
-    <!-- Categorias -->
-    {% for category in categories %}
-    <div class="mb-8">
-        <div class="flex items-center gap-4 mb-4">
-            <h2 class="text-xl font-black text-slate-800">{{ category.name }}</h2>
-            <span class="px-2 py-1 bg-slate-100 rounded-full text-slate-500 text-xs font-bold">{{ category.products.count }} produtos</span>
-            <a href="{% url 'category_edit' category.id %}" class="text-slate-400 hover:text-slate-600 transition-all">
-                <i class="bi bi-pencil"></i>
-            </a>
-            <form method="post" action="{% url 'category_delete' category.id %}" class="inline" data-confirm-message="Remover esta categoria?">
-                {% csrf_token %}
-                <button type="submit" class="text-slate-400 hover:text-red-600 transition-all">
-                    <i class="bi bi-trash"></i>
-                </button>
-            </form>
-        </div>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {% for product in category.products.all %}
-            <div class="bg-white rounded-2xl p-4 border border-slate-200 hover:shadow-lg hover:border-slate-300 transition-all group">
-                <div class="flex items-start gap-4">
-                    <div class="w-16 h-16 rounded-xl overflow-hidden bg-slate-100 flex items-center justify-center flex-shrink-0">
-                        {% if product.image %}
-                        <img src="{{ product.image.url }}" class="w-full h-full object-cover" />
-                        {% else %}
-                        <span class="text-3xl">{{ product.icon|default:"🍔" }}</span>
-                        {% endif %}
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <h3 class="font-bold text-slate-800 truncate">{{ product.name }}</h3>
-                        <p class="text-xl font-black text-slate-800 mt-1">R$ {{ product.price }}</p>
-                        <div class="flex flex-col gap-2 mt-2">
-                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold w-fit max-w-full {% if product.available_stock <= 5 %}bg-red-100 text-red-600{% elif product.available_stock <= 20 %}bg-amber-100 text-amber-600{% else %}bg-emerald-100 text-emerald-600{% endif %}">
-                                {{ product.available_stock }} disponíveis
-                            </span>
-                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold w-fit max-w-full {% if product.use_ingredient_stock %}bg-indigo-100 text-indigo-700{% else %}bg-slate-100 text-slate-600{% endif %}">
-                                {% if product.use_ingredient_stock %}Ingredientes{% else %}Manual{% endif %}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-                <div class="flex gap-2 mt-4 pt-4 border-t border-slate-100">
-                    <a href="{% url 'product_edit' product.id %}" class="flex-1 py-2 bg-slate-100 text-slate-600 rounded-lg text-center text-sm font-bold hover:bg-slate-200 transition-all">
-                        <i class="bi bi-pencil me-1"></i>Editar
-                    </a>
-                    <form method="post" action="{% url 'product_delete' product.id %}" class="inline" data-confirm-message="Remover este produto?">
-                        {% csrf_token %}
-                        <button type="submit" class="py-2 px-3 bg-slate-100 text-slate-400 rounded-lg hover:bg-red-100 hover:text-red-600 transition-all">
-                            <i class="bi bi-trash"></i>
-                        </button>
-                    </form>
-                </div>
-            </div>
-            {% empty %}
-            <div class="col-span-full text-center py-8 bg-slate-50 rounded-2xl">
-                <p class="text-slate-400">Nenhum produto nesta categoria</p>
-            </div>
-            {% endfor %}
-        </div>
+    <div class="flex gap-2">
+        <a href="{% url 'category_create' %}" class="nb-btn-secondary"><i class="bi bi-folder-plus" aria-hidden="true"></i>Categoria</a>
+        <a href="{% url 'product_create' %}" class="nb-btn-primary"><i class="bi bi-plus-lg" aria-hidden="true"></i>Produto</a>
     </div>
-    {% empty %}
-    <div class="text-center py-20 bg-white rounded-3xl border border-slate-200">
-        <i class="bi bi-bag text-6xl text-slate-300"></i>
-        <h3 class="text-xl font-bold text-slate-400 mt-4">Nenhuma categoria cadastrada</h3>
-        <p class="text-slate-400 mt-2">Comece criando uma categoria</p>
-        <a href="{% url 'category_create' %}" class="inline-block mt-6 px-6 py-3 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-xl font-bold">
-            <i class="bi bi-plus-lg me-2"></i>Criar Categoria
-        </a>
-    </div>
-    {% endfor %}
 </div>
+
+{% for category in categories %}
+<section class="mb-8" aria-labelledby="cat-{{ category.id }}">
+    <header class="flex items-center gap-3 mb-3">
+        <h2 id="cat-{{ category.id }}" class="nb-h2 flex-1">{{ category.icon }} {{ category.name }}
+            {% if not category.is_active %}<span class="nb-status-livre ms-2 align-middle">Oculta</span>{% endif %}</h2>
+        <a href="{% url 'category_edit' category.id %}" class="nb-btn-ghost nb-btn-sm">Editar</a>
+        <form method="post" action="{% url 'category_delete' category.id %}" data-confirm-message="Remover a categoria {{ category.name }}? Se tiver produtos, ela e os produtos serão desativados.">
+            {% csrf_token %}<button class="nb-btn-danger nb-btn-sm" aria-label="Remover categoria {{ category.name }}"><i class="bi bi-trash" aria-hidden="true"></i></button>
+        </form>
+    </header>
+    {% if category.products.all %}
+    <ul class="nb-card nb-divide">
+        {% for product in category.products.all %}
+        <li class="flex items-center gap-4 px-4 sm:px-5 py-3 {% if not product.is_active %}opacity-60{% endif %}">
+            <span class="w-12 h-12 shrink-0 rounded-xl overflow-hidden bg-creme flex items-center justify-center text-2xl" aria-hidden="true">
+                {% if product.image %}<img src="{{ product.image.url }}" alt="" width="48" height="48" class="w-full h-full object-cover" loading="lazy">{% else %}{{ product.icon }}{% endif %}
+            </span>
+            <span class="flex-1 min-w-0">
+                <span class="block font-semibold truncate">{{ product.name }}</span>
+                <span class="flex flex-wrap items-center gap-2 mt-0.5 text-sm text-fumaca">
+                    <span class="tabular font-semibold text-carvao">R$ {{ product.price|floatformat:2 }}</span>
+                    {% with stock=product.available_stock %}
+                    <span class="{% if stock <= 0 %}nb-status-erro{% elif stock <= 5 %}nb-status-cozinha{% else %}nb-status-livre{% endif %}">estoque {{ stock }}</span>
+                    {% endwith %}
+                    {% if product.use_ingredient_stock %}<span class="nb-status-ocupada">por receita</span>{% endif %}
+                    {% if not product.is_active %}<span class="nb-status-livre">desativado</span>{% endif %}
+                </span>
+            </span>
+            <a href="{% url 'product_edit' product.id %}" class="nb-btn-secondary nb-btn-sm">Editar</a>
+            <form method="post" action="{% url 'product_delete' product.id %}" data-confirm-message="Remover {{ product.name }}? Se já foi vendido, ele será desativado.">
+                {% csrf_token %}<button class="nb-icon-btn w-9 h-9" aria-label="Remover {{ product.name }}"><i class="bi bi-trash" aria-hidden="true"></i></button>
+            </form>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p class="nb-card nb-card-pad text-fumaca">Nenhum produto nesta categoria.</p>
+    {% endif %}
+</section>
+{% empty %}
+<div class="nb-card nb-card-pad text-center py-12">
+    <p class="nb-h2">Cardápio vazio</p>
+    <p class="nb-subtitle mt-1">Comece criando uma categoria (ex.: Lanches).</p>
+    <a href="{% url 'category_create' %}" class="nb-btn-primary mt-4">Criar categoria</a>
+</div>
+{% endfor %}
 {% endblock %}

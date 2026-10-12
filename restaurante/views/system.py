@@ -82,20 +82,6 @@ def backup_download(request):
     return FileResponse(open(path, 'rb'), as_attachment=True, filename=f'nabandeja_{path.name}')
 
 
-@manager_required
-@require_POST
-def license_install(request):
-    store = AppSettings.get_settings()
-    try:
-        payload = license.install(store, request.POST.get('license_key', ''))
-    except ValueError as exc:
-        messages.error(request, str(exc))
-    else:
-        audit(request, 'license.install', f'Licença instalada até {payload["expira"]:%d/%m/%Y}.')
-        messages.success(request, f'Licença de {payload["cliente"]} válida até {payload["expira"]:%d/%m/%Y}.')
-    return redirect('system_status')
-
-
 # ------------------------------------------------------------------ assistente
 
 class StoreStepForm(forms.ModelForm):
@@ -164,6 +150,7 @@ def setup_wizard(request, step='loja'):
         'step': step,
         'step_number': STEPS.index(step) + 1,
         'steps_total': len(STEPS),
+        'step_names': ['Loja', 'PIX', 'Mesas', 'Cardápio'],
         'form': form,
         'key_types': KEY_TYPES,
         'tables_count': Table.objects.count(),

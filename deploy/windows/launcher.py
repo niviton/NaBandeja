@@ -92,6 +92,8 @@ def main():
     print('Preparando banco de dados...')
     call_command('migrate', interactive=False, verbosity=0)
     call_command('ensure_initial_access')
+    if os.getenv('NABANDEJA_SUPPORT_HASH', '').strip():
+        call_command('suporte_nabandeja')  # usa o hash do .env
     interval = int(os.getenv('BACKUP_INTERVAL_MINUTES', '60'))
     if interval > 0:
         threading.Thread(target=backup_loop, args=(interval,), daemon=True).start()

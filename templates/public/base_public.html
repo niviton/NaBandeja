@@ -1,19 +1,21 @@
 {% extends 'base.html' %}
 
 {% block title %}{{ store.store_name }}{% endblock %}
-{% block body_class %}bg-stone-50 min-h-screen text-slate-800{% endblock %}
+{% block body_class %}min-h-screen bg-creme{% endblock %}
 
 {% block navbar %}
-<header class="bg-white border-b border-stone-200">
+<header class="bg-papel border-b border-linha">
     <div class="max-w-3xl mx-auto px-4 py-4 flex items-center gap-3">
-        <span class="w-14 h-14 rounded-2xl overflow-hidden bg-stone-100 flex items-center justify-center shrink-0">
-            {% if store.logo %}<img src="{{ store.logo.url }}" alt="" class="w-full h-full object-cover">{% else %}<i class="bi bi-shop text-2xl text-stone-400"></i>{% endif %}
+        <span class="w-14 h-14 rounded-2xl overflow-hidden bg-creme border border-linha flex items-center justify-center shrink-0">
+            {% if store.logo %}<img src="{{ store.logo.url }}" alt="" width="56" height="56" class="w-full h-full object-cover">{% else %}{% include 'brand/_mark.html' with class='w-9 h-9' %}{% endif %}
         </span>
         <div class="min-w-0">
-            <h1 class="text-xl font-black leading-tight truncate">{{ store.store_name }}</h1>
-            {% if store.slogan %}<p class="text-sm text-slate-500 truncate">{{ store.slogan }}</p>{% endif %}
-            {% if not store.is_store_open %}<p class="text-xs font-black uppercase text-red-600">Fechado no momento</p>{% endif %}
+            <p class="font-display text-xl font-semibold leading-tight truncate">{{ store.store_name }}</p>
+            {% if store.slogan %}<p class="text-sm text-fumaca truncate">{{ store.slogan }}</p>{% endif %}
+            {% if not store.is_store_open %}<p class="nb-status-erro mt-1">Fechado no momento</p>{% endif %}
         </div>
     </div>
 </header>
 {% endblock %}
+
+{% block extra_js %}{% endblock %}

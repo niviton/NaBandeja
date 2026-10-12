@@ -1,20 +1,23 @@
 {% extends 'app/base_app.html' %}
 
-{% block title %}Conta paga - {{ app_settings.store_name }}{% endblock %}
+{% block title %}Conta paga · {{ app_settings.store_name }}{% endblock %}
 
 {% block content %}
-<div class="max-w-md mx-auto p-6 text-center">
-    <div class="mt-8 w-24 h-24 mx-auto rounded-full bg-emerald-100 flex items-center justify-center">
-        <i class="bi bi-check-lg text-5xl text-emerald-600"></i>
+<div class="max-w-md mx-auto px-5 py-12">
+    <div class="w-16 h-16 rounded-2xl bg-manjericao-50 flex items-center justify-center" aria-hidden="true">
+        <i class="bi bi-check-lg text-4xl text-manjericao"></i>
     </div>
-    <h1 class="mt-5 text-3xl font-black">Conta paga!</h1>
-    <p class="mt-1 text-slate-500">{{ order.display_name }} · pedido #{{ order.id }} · R$ {{ order.amount_due|floatformat:2 }}</p>
-    <ul class="mt-4 text-sm text-slate-600">
-        {% for payment in order.payments.all %}<li>{{ payment.get_method_display }}: R$ {{ payment.amount|floatformat:2 }}</li>{% endfor %}
+    <p class="nb-kicker mt-6">Pedido #{{ order.id }}</p>
+    <h1 class="nb-title mt-1">Conta <em>paga.</em></h1>
+    <p class="nb-subtitle mt-2">{{ order.display_name }} · <span class="tabular">R$ {{ order.amount_due|floatformat:2 }}</span></p>
+    <ul class="mt-5 nb-card nb-divide text-sm">
+        {% for payment in order.payments.all %}
+        <li class="px-4 py-3 flex justify-between"><span>{{ payment.get_method_display }}</span><span class="tabular font-semibold">R$ {{ payment.amount|floatformat:2 }}</span></li>
+        {% endfor %}
     </ul>
-    <div class="mt-8 grid gap-3">
-        <a href="{% url 'print_order' order.id %}" target="_blank" class="py-4 rounded-2xl bg-white border border-slate-200 font-bold"><i class="bi bi-printer me-1"></i>Imprimir cupom</a>
-        <a href="{% url 'waiter_view' %}" class="py-4 rounded-2xl bg-slate-900 text-white font-black">Voltar ao salão</a>
+    <div class="mt-8 grid gap-2">
+        <a href="{% url 'waiter_view' %}" class="nb-btn-dark nb-btn-lg">Voltar ao salão</a>
+        <a href="{% url 'print_order' order.id %}" target="_blank" rel="noopener" class="nb-btn-secondary nb-btn-lg"><i class="bi bi-printer" aria-hidden="true"></i>Imprimir cupom</a>
     </div>
 </div>
 {% endblock %}

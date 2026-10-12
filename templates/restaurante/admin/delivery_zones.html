@@ -1,38 +1,37 @@
 {% extends 'restaurante/admin/base_admin.html' %}
 
-{% block title %}Bairros e taxas - {{ app_settings.store_name }}{% endblock %}
+{% block title %}Bairros e taxas · {{ app_settings.store_name }}{% endblock %}
 
 {% block admin_content %}
-<div class="max-w-3xl mx-auto">
-    <a href="{% url 'admin_online_orders' %}" class="text-[var(--admin-muted)] inline-flex items-center gap-2 mb-3"><i class="bi bi-arrow-left"></i>Voltar</a>
-    <h1 class="admin-brand-title text-4xl text-[var(--admin-text)]">Bairros e taxas de entrega</h1>
-    <p class="text-[var(--admin-muted)] mb-6">A taxa é somada ao pedido de delivery conforme o bairro escolhido.</p>
+{% url 'admin_online_orders' as back_url %}
+{% include 'restaurante/admin/_page_head.html' with back=back_url kicker='Delivery' title='Bairros e' emphasis='taxas' subtitle='A taxa é somada ao pedido de entrega conforme o bairro escolhido.' %}
 
-    <form method="post" action="{% url 'delivery_zone_create' %}" class="mb-6 rounded-3xl bg-[var(--admin-card)] border border-[var(--admin-line)] p-5 flex flex-wrap gap-2 items-end">
-        {% csrf_token %}
-        <input name="name" required placeholder="Bairro ou região" class="flex-1 min-w-[180px] px-3 py-2.5 rounded-xl border border-[var(--admin-line)]">
-        <input name="fee" inputmode="decimal" placeholder="Taxa (ex.: 5,00)" class="w-36 px-3 py-2.5 rounded-xl border border-[var(--admin-line)]">
-        <button class="px-4 py-2.5 rounded-xl bg-[var(--admin-accent)] text-white font-bold">Adicionar</button>
-    </form>
+<form method="post" action="{% url 'delivery_zone_create' %}" class="nb-card nb-card-pad mb-6 flex flex-wrap gap-3 items-end max-w-3xl">
+    {% csrf_token %}
+    <div class="flex-1 min-w-[12rem]"><label class="nb-label" for="z-name">Bairro ou região</label><input id="z-name" name="name" required class="nb-input" autocomplete="off"></div>
+    <div class="w-36"><label class="nb-label" for="z-fee">Taxa (R$)</label><input id="z-fee" name="fee" inputmode="decimal" placeholder="0,00" class="nb-input tabular"></div>
+    <button class="nb-btn-primary">Adicionar</button>
+</form>
 
-    <div class="rounded-3xl bg-[var(--admin-card)] border border-[var(--admin-line)] divide-y divide-[var(--admin-line)]">
-        {% for zone in zones %}
-        <div class="flex flex-wrap items-center gap-2 px-4 py-3">
-            <form method="post" action="{% url 'delivery_zone_edit' zone.id %}" class="flex flex-1 flex-wrap items-center gap-2">
-                {% csrf_token %}
-                <input name="name" value="{{ zone.name }}" class="flex-1 min-w-[160px] px-2 py-1.5 rounded-lg border border-[var(--admin-line)] font-bold">
-                <input name="fee" value="{{ zone.fee|floatformat:2 }}" inputmode="decimal" class="w-28 px-2 py-1.5 rounded-lg border border-[var(--admin-line)]">
-                <label class="inline-flex items-center gap-1 text-xs font-bold"><input type="checkbox" name="is_active" {% if zone.is_active %}checked{% endif %}> ativo</label>
-                <input type="hidden" name="is_active_sent" value="1">
-                <button class="px-3 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-bold">Salvar</button>
-            </form>
-            <form method="post" action="{% url 'delivery_zone_delete' zone.id %}" data-confirm-message="Remover {{ zone.name }}?">
-                {% csrf_token %}<button class="px-3 py-1.5 rounded-lg text-red-600 text-xs font-bold"><i class="bi bi-trash"></i></button>
-            </form>
-        </div>
-        {% empty %}
-        <p class="px-4 py-8 text-center text-[var(--admin-muted)]">Nenhum bairro cadastrado. Sem bairros, o delivery não cobra taxa.</p>
-        {% endfor %}
-    </div>
-</div>
+<ul class="nb-card nb-divide max-w-3xl">
+    {% for zone in zones %}
+    <li class="px-4 sm:px-5 py-3 flex flex-wrap items-center gap-2">
+        <form method="post" action="{% url 'delivery_zone_edit' zone.id %}" class="flex flex-1 flex-wrap items-center gap-2">
+            {% csrf_token %}
+            <label class="sr-only" for="zn-{{ zone.id }}">Bairro</label>
+            <input id="zn-{{ zone.id }}" name="name" value="{{ zone.name }}" class="nb-input flex-1 min-w-[10rem] font-semibold">
+            <label class="sr-only" for="zf-{{ zone.id }}">Taxa</label>
+            <input id="zf-{{ zone.id }}" name="fee" value="{{ zone.fee|floatformat:2 }}" inputmode="decimal" class="nb-input w-28 tabular">
+            <label class="inline-flex items-center gap-2 text-sm"><input type="checkbox" name="is_active" class="nb-check" {% if zone.is_active %}checked{% endif %}> ativo</label>
+            <input type="hidden" name="is_active_sent" value="1">
+            <button class="nb-btn-dark nb-btn-sm">Salvar</button>
+        </form>
+        <form method="post" action="{% url 'delivery_zone_delete' zone.id %}" data-confirm-message="Remover o bairro {{ zone.name }}?">
+            {% csrf_token %}<button class="nb-icon-btn w-9 h-9" aria-label="Remover {{ zone.name }}"><i class="bi bi-trash" aria-hidden="true"></i></button>
+        </form>
+    </li>
+    {% empty %}
+    <li class="px-5 py-10 text-center text-fumaca">Nenhum bairro cadastrado. Sem bairros, o delivery não cobra taxa.</li>
+    {% endfor %}
+</ul>
 {% endblock %}

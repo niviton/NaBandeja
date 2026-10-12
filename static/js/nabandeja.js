@@ -16,13 +16,15 @@
 
   // ------------------------------------------------------------ toast
   const ICONS = { success: 'bi-check-circle', error: 'bi-x-circle', warning: 'bi-exclamation-triangle', info: 'bi-info-circle' };
-  const COLORS = { success: 'bg-emerald-600', error: 'bg-red-600', warning: 'bg-amber-600', info: 'bg-slate-800' };
+  const COLORS = { success: 'bg-manjericao', error: 'bg-pimenta', warning: 'bg-[#8A5A12]', info: 'bg-carvao' };
 
   function toastContainer() {
     let container = document.querySelector('.toast-container');
     if (!container) {
       container = document.createElement('div');
-      container.className = 'toast-container fixed bottom-3 left-3 right-3 md:bottom-4 md:right-4 md:left-auto z-[80] flex flex-col items-stretch md:items-end gap-2 pointer-events-none';
+      container.className = 'toast-container fixed bottom-3 inset-x-3 md:inset-x-auto md:right-4 md:bottom-4 z-[80] flex flex-col items-stretch md:items-end gap-2 pointer-events-none';
+      container.setAttribute('role', 'status');
+      container.setAttribute('aria-live', 'polite');
       document.body.appendChild(container);
     }
     return container;
@@ -30,11 +32,12 @@
 
   NB.toast = function (message, type = 'info', duration = 3500) {
     const toast = document.createElement('div');
-    toast.className = `toast-enter px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 text-white pointer-events-auto max-w-md ${COLORS[type] || COLORS.info}`;
+    toast.className = `toast-enter px-4 py-3 rounded-2xl shadow-float flex items-center gap-3 text-white pointer-events-auto max-w-md ${COLORS[type] || COLORS.info}`;
     const icon = document.createElement('i');
     icon.className = `bi ${ICONS[type] || ICONS.info} text-lg`;
     const text = document.createElement('span');
-    text.className = 'font-semibold';
+    text.className = 'font-medium';
+    icon.setAttribute('aria-hidden', 'true');
     text.textContent = message;
     toast.append(icon, text);
     toastContainer().appendChild(toast);
@@ -45,6 +48,37 @@
     }, duration);
   };
   window.showToast = NB.toast; // compatibilidade com templates antigos
+
+  // ------------------------------------------------------------ confirmação
+  // <form data-confirm-message="..."> e hx-confirm="..." usam o <dialog> da base.
+  NB.confirm = function (message) {
+    const dialog = document.getElementById('nbConfirm');
+    if (!dialog || typeof dialog.showModal !== 'function') return Promise.resolve(window.confirm(message));
+    document.getElementById('nbConfirmMessage').textContent = message;
+    return new Promise((resolve) => {
+      dialog.addEventListener('close', () => resolve(dialog.returnValue === 'ok'), { once: true });
+      dialog.returnValue = '';
+      dialog.showModal();
+    });
+  };
+  window.showConfirmModal = NB.confirm;
+
+  document.addEventListener('submit', async (event) => {
+    const form = event.target;
+    if (!(form instanceof HTMLFormElement) || !form.dataset.confirmMessage) return;
+    if (form.dataset.confirmed === '1') { delete form.dataset.confirmed; return; }
+    event.preventDefault();
+    if (await NB.confirm(form.dataset.confirmMessage)) {
+      form.dataset.confirmed = '1';
+      form.requestSubmit ? form.requestSubmit(event.submitter) : form.submit();
+    }
+  }, true);
+
+  document.addEventListener('htmx:confirm', (event) => {
+    if (!event.detail.question) return;
+    event.preventDefault();
+    NB.confirm(event.detail.question).then((ok) => { if (ok) event.detail.issueRequest(true); });
+  });
 
   // ------------------------------------------------------------ sons
   let audioCtx = null;
@@ -160,6 +194,11 @@
   setInterval(tickTimers, 30000);
   document.addEventListener('htmx:afterSettle', tickTimers);
   document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('[data-autohide]').forEach((toast) => setTimeout(() => {
+      toast.style.transition = 'opacity .3s ease-out';
+      toast.style.opacity = '0';
+      setTimeout(() => toast.remove(), 300);
+    }, 4000));
     // Mensagens do servidor no cabeçalho HX-Trigger: {"nb:toast": {"message": "...", "type": "success"}}
     document.body.addEventListener('nb:toast', (event) => NB.toast(event.detail.message, event.detail.type || 'success'));
     tickTimers();

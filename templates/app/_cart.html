@@ -1,48 +1,45 @@
-<div class="p-4 sm:p-5">
-    <div class="flex items-center justify-between mb-3">
-        <h2 class="font-black text-slate-800">{% if order or target.kind == 'pedido' %}Acrescentar à conta{% else %}Novo pedido{% endif %}</h2>
+<div class="p-5">
+    <div class="flex items-center justify-between mb-2">
+        <h2 class="nb-h2">{% if order or target.kind == 'pedido' %}Acrescentar à conta{% else %}Novo pedido{% endif %}</h2>
         {% if cart %}
-        <button type="button" hx-post="{% url 'cart_clear' target.key %}" hx-target="#cart"
-            class="text-sm font-bold text-slate-400 hover:text-red-600"><i class="bi bi-trash me-1"></i>Limpar</button>
+        <button type="button" hx-post="{% url 'cart_clear' target.key %}" hx-target="#cart" class="nb-btn-ghost nb-btn-sm">Limpar</button>
         {% endif %}
     </div>
 
     {% if cart %}
-    <ul class="divide-y divide-slate-100">
+    <ul class="nb-divide">
         {% for item in cart.items %}
         <li class="py-3">
             <div class="flex items-center gap-3">
-                <span class="w-10 h-10 shrink-0 rounded-xl bg-slate-100 overflow-hidden flex items-center justify-center text-xl">
-                    {% if item.image %}<img src="{{ item.image }}" alt="" class="w-full h-full object-cover">{% else %}{{ item.icon|default:'🍽️' }}{% endif %}
-                </span>
                 <span class="flex-1 min-w-0">
-                    <span class="block font-bold text-sm truncate">{{ item.name }}</span>
-                    <span class="block text-xs text-slate-500">R$ {{ item.price|floatformat:2 }}</span>
+                    <span class="block font-semibold truncate">{{ item.name }}</span>
+                    <span class="block text-sm text-fumaca tabular">R$ {{ item.price|floatformat:2 }}</span>
                 </span>
-                <span class="flex items-center gap-1">
-                    <button type="button" hx-post="{% url 'cart_change' target.key %}" hx-vals='{"cart_key": "{{ item.cart_key|escapejs }}", "delta": -1}' hx-target="#cart"
-                        class="w-9 h-9 rounded-lg bg-slate-100 hover:bg-red-100 hover:text-red-600"><i class="bi bi-dash"></i></button>
-                    <span class="w-7 text-center font-black">{{ item.qty }}</span>
-                    <button type="button" hx-post="{% url 'cart_change' target.key %}" hx-vals='{"cart_key": "{{ item.cart_key|escapejs }}", "delta": 1}' hx-target="#cart"
-                        class="w-9 h-9 rounded-lg bg-slate-100 hover:bg-emerald-100 hover:text-emerald-700"><i class="bi bi-plus"></i></button>
+                <span class="flex items-center gap-1" role="group" aria-label="Quantidade de {{ item.name }}">
+                    <button type="button" class="nb-icon-btn w-10 h-10 border border-linha" aria-label="Diminuir {{ item.name }}"
+                        hx-post="{% url 'cart_change' target.key %}" hx-vals='{"cart_key": "{{ item.cart_key|escapejs }}", "delta": -1}' hx-target="#cart"><i class="bi bi-dash" aria-hidden="true"></i></button>
+                    <span class="w-8 text-center font-semibold tabular" aria-live="polite">{{ item.qty }}</span>
+                    <button type="button" class="nb-icon-btn w-10 h-10 border border-linha" aria-label="Aumentar {{ item.name }}"
+                        hx-post="{% url 'cart_change' target.key %}" hx-vals='{"cart_key": "{{ item.cart_key|escapejs }}", "delta": 1}' hx-target="#cart"><i class="bi bi-plus" aria-hidden="true"></i></button>
                 </span>
             </div>
-            <details class="mt-2 group" {% if item.notes %}open{% endif %}>
-                <summary class="list-none cursor-pointer text-xs font-bold {% if item.notes %}text-amber-700{% else %}text-slate-400{% endif %}">
-                    <i class="bi bi-chat-left-text me-1"></i>{% if item.notes %}{{ item.notes }}{% else %}Adicionar observação{% endif %}
+            <details class="mt-1.5" {% if item.notes %}open{% endif %}>
+                <summary class="cursor-pointer text-sm {% if item.notes %}font-semibold text-tomate{% else %}text-fumaca{% endif %}">
+                    {% if item.notes %}{{ item.notes }}{% else %}+ observação{% endif %}
                 </summary>
                 <form hx-post="{% url 'cart_change' target.key %}" hx-target="#cart" class="mt-2 space-y-2">
                     <input type="hidden" name="cart_key" value="{{ item.cart_key }}">
+                    {% if quick_notes %}
                     <div class="flex flex-wrap gap-1.5">
                         {% for note in quick_notes %}
-                        <button type="button" data-note="{{ note }}" onclick="addQuickNote(this)"
-                            class="px-2.5 py-1 rounded-lg bg-amber-50 border border-amber-200 text-xs font-bold text-amber-800 hover:bg-amber-100">{{ note }}</button>
+                        <button type="button" class="nb-chip min-h-[32px] text-[13px]" data-note="{{ note }}" onclick="addQuickNote(this)">{{ note }}</button>
                         {% endfor %}
                     </div>
+                    {% endif %}
                     <div class="flex gap-2">
-                        <input name="notes" value="{{ item.notes }}" maxlength="200" placeholder="Ex.: sem cebola"
-                            class="flex-1 min-w-0 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-sm outline-none focus:ring-2 focus:ring-amber-300">
-                        <button type="submit" class="px-3 py-2 rounded-xl bg-amber-500 text-white text-sm font-bold">OK</button>
+                        <label class="sr-only" for="nota-{{ forloop.counter }}">Observação de {{ item.name }}</label>
+                        <input id="nota-{{ forloop.counter }}" name="notes" value="{{ item.notes }}" maxlength="200" placeholder="Ex.: sem cebola" class="nb-input">
+                        <button type="submit" class="nb-btn-dark">OK</button>
                     </div>
                 </form>
             </details>
@@ -50,38 +47,31 @@
         {% endfor %}
     </ul>
 
-    <form hx-post="{% url 'cart_send' target.key %}" hx-disabled-elt="find button[type=submit]" class="mt-4 space-y-3 border-t border-slate-100 pt-4">
+    <form hx-post="{% url 'cart_send' target.key %}" hx-disabled-elt="find button[type=submit]" class="mt-3 pt-4 border-t border-linha space-y-3">
         {% if target.kind == 'novo' and target.ref == 'delivery' %}
         <div class="grid grid-cols-2 gap-2">
-            <input name="cliente" required placeholder="Nome do cliente" class="col-span-2 px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm outline-none">
-            <input name="phone" placeholder="Telefone" inputmode="tel" class="px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm outline-none">
-            <select name="platform" class="px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm outline-none">
-                {% for platform in platforms %}<option>{{ platform }}</option>{% endfor %}
-            </select>
-            <input name="address" required placeholder="Endereço completo" class="col-span-2 px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm outline-none">
+            <div class="col-span-2"><label class="nb-label" for="d-cliente">Cliente</label><input id="d-cliente" name="cliente" required autocomplete="name" class="nb-input"></div>
+            <div><label class="nb-label" for="d-tel">Telefone</label><input id="d-tel" name="phone" inputmode="tel" autocomplete="tel" class="nb-input"></div>
+            <div><label class="nb-label" for="d-plat">Origem</label>
+                <select id="d-plat" name="platform" class="nb-select">{% for platform in platforms %}<option>{{ platform }}</option>{% endfor %}</select></div>
+            <div class="col-span-2"><label class="nb-label" for="d-end">Endereço</label><input id="d-end" name="address" required autocomplete="street-address" class="nb-input"></div>
             {% if delivery_zones %}
-            <select name="zone" class="col-span-2 px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm outline-none">
-                <option value="">Bairro (taxa de entrega)</option>
-                {% for zone in delivery_zones %}<option value="{{ zone.id }}">{{ zone.name }} · R$ {{ zone.fee|floatformat:2 }}</option>{% endfor %}
-            </select>
+            <div class="col-span-2"><label class="nb-label" for="d-zona">Bairro (taxa)</label>
+                <select id="d-zona" name="zone" class="nb-select"><option value="">Sem taxa</option>{% for zone in delivery_zones %}<option value="{{ zone.id }}">{{ zone.name }} · R$ {{ zone.fee|floatformat:2 }}</option>{% endfor %}</select></div>
             {% endif %}
         </div>
         {% elif target.kind != 'pedido' and not order %}
-        <input name="cliente" placeholder="Nome do cliente (opcional)" class="w-full px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm outline-none">
+        <div><label class="nb-label" for="p-cliente">Nome do cliente (opcional)</label><input id="p-cliente" name="cliente" autocomplete="off" class="nb-input"></div>
         {% endif %}
         {% if not order %}
-        <input name="observacoes" placeholder="Observação do pedido (opcional)" class="w-full px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm outline-none">
+        <div><label class="nb-label" for="p-obs">Observação do pedido (opcional)</label><input id="p-obs" name="observacoes" autocomplete="off" class="nb-input"></div>
         {% endif %}
-        <button type="submit" class="w-full py-4 rounded-2xl bg-emerald-600 text-white font-black text-lg hover:bg-emerald-700 disabled:opacity-60 flex items-center justify-center gap-2">
-            <i class="bi bi-send"></i>
-            <span>Enviar para a cozinha</span>
-            <span class="ms-2 px-2 py-0.5 rounded-lg bg-white/20 text-base">R$ {{ cart.total|floatformat:2 }}</span>
+        <button type="submit" class="nb-btn-primary nb-btn-lg w-full justify-between">
+            <span><i class="bi bi-send me-1" aria-hidden="true"></i>Enviar para a cozinha</span>
+            <span class="tabular">R$ {{ cart.total|floatformat:2 }}</span>
         </button>
     </form>
     {% else %}
-    <div class="py-8 text-center">
-        <i class="bi bi-hand-index text-3xl text-slate-300"></i>
-        <p class="mt-2 font-bold text-slate-400">Toque nos produtos para adicionar</p>
-    </div>
+    <p class="py-8 text-center text-fumaca">Toque nos produtos do cardápio para adicionar.</p>
     {% endif %}
 </div>

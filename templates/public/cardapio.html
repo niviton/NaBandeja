@@ -1,65 +1,70 @@
 {% extends 'public/base_public.html' %}
 
-{% block title %}Cardápio - {{ store.store_name }}{% endblock %}
+{% block title %}Cardápio · {{ store.store_name }}{% endblock %}
 
 {% block content %}
-<div class="max-w-3xl mx-auto px-4 pb-32">
+<div class="max-w-3xl mx-auto px-4 {% if table %}pb-32{% else %}pb-6{% endif %}">
     {% if table %}
-    <div class="mt-4 rounded-2xl bg-slate-900 text-white p-4 flex items-center gap-3">
-        <span class="text-3xl font-black">{{ table.name }}</span>
-        <span class="text-sm leading-tight">Você está na <b>mesa {{ table.name }}</b>.<br>Precisa de algo? Use os botões abaixo.</span>
+    <h1 class="sr-only">Cardápio · mesa {{ table.name }}</h1>
+    <p class="mt-5 nb-card px-4 py-3 flex items-center gap-3">
+        <span class="font-display text-3xl font-semibold text-tomate">{{ table.name }}</span>
+        <span class="text-sm leading-snug">Você está na <b>mesa {{ table.name }}</b>. Precisa de algo? Use os botões lá embaixo.</span>
+    </p>
+    {% else %}
+    <div class="mt-6">
+        <p class="nb-kicker">Cardápio</p>
+        <h1 class="nb-title mt-1">O que vai <em>hoje?</em></h1>
+        <p class="nb-subtitle mt-1">Escolha com calma e faça o pedido com o garçom.</p>
     </div>
     {% endif %}
 
-    {% if not table %}
-    <p class="mt-4 rounded-2xl bg-white border border-stone-200 p-3 text-sm text-slate-600"><i class="bi bi-info-circle me-1"></i>Escolha com calma e faça o pedido com o garçom.</p>
-    {% endif %}
-    <div class="relative mt-4">
-        <i class="bi bi-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-        <input id="menuSearch" type="search" placeholder="Buscar no cardápio" autocomplete="off"
-            class="w-full pl-11 pr-4 py-3 rounded-2xl bg-white border border-stone-200 outline-none">
+    <div class="mt-5">
+        <label for="menuSearch" class="sr-only">Buscar no cardápio</label>
+        <div class="relative">
+            <i class="bi bi-search absolute left-4 top-1/2 -translate-y-1/2 text-fumaca" aria-hidden="true"></i>
+            <input id="menuSearch" type="search" placeholder="Buscar no cardápio" autocomplete="off" class="nb-input pl-11">
+        </div>
     </div>
-    <nav class="sticky top-0 z-20 bg-stone-50/95 backdrop-blur py-3 flex gap-2 overflow-x-auto">
+    <nav class="sticky top-0 z-20 bg-creme/95 backdrop-blur py-3 flex gap-2 overflow-x-auto" aria-label="Categorias">
         {% for category in categories %}
-        <a href="#c{{ category.id }}" class="whitespace-nowrap px-3 py-1.5 rounded-full bg-white border border-stone-200 text-sm font-bold">{{ category.icon }} {{ category.name }}</a>
+        <a href="#c{{ category.id }}" class="nb-chip shrink-0">{{ category.icon }} {{ category.name }}</a>
         {% endfor %}
     </nav>
 
     {% for category in categories %}
-    <section id="c{{ category.id }}" class="scroll-mt-16 mt-4" data-menu-section>
-        <h2 class="text-lg font-black mb-2">{{ category.icon }} {{ category.name }}</h2>
-        <div class="space-y-2">
+    <section id="c{{ category.id }}" class="scroll-mt-16 mt-5" data-menu-section aria-labelledby="ct{{ category.id }}">
+        <h2 id="ct{{ category.id }}" class="nb-h2 mb-2">{{ category.name }}</h2>
+        <ul class="nb-card nb-divide">
             {% for product in category.products.all %}
-            <div data-menu-item="{{ product.name|lower }} {{ product.description|lower }}" class="rounded-2xl bg-white border border-stone-200 p-3 flex gap-3 items-center {% if product.available_stock <= 0 %}opacity-50{% endif %}">
-                <span class="w-16 h-16 shrink-0 rounded-xl overflow-hidden bg-stone-100 flex items-center justify-center text-3xl">
-                    {% if product.image %}<img src="{{ product.image.url }}" alt="" class="w-full h-full object-cover" loading="lazy">{% else %}{{ product.icon|default:'🍽️' }}{% endif %}
+            <li data-menu-item="{{ product.name|lower }} {{ product.description|lower }}" class="px-4 py-3 flex gap-3 items-center {% if product.available_stock <= 0 %}opacity-50{% endif %}">
+                <span class="w-16 h-16 shrink-0 rounded-xl overflow-hidden bg-creme flex items-center justify-center text-3xl" aria-hidden="true">
+                    {% if product.image %}<img src="{{ product.image.url }}" alt="" width="64" height="64" class="w-full h-full object-cover" loading="lazy">{% else %}{{ product.icon|default:'🍽️' }}{% endif %}
                 </span>
                 <span class="flex-1 min-w-0">
-                    <span class="block font-bold">{{ product.name }}</span>
-                    {% if product.description %}<span class="block text-sm text-slate-500 leading-snug">{{ product.description }}</span>{% endif %}
-                    {% if product.available_stock <= 0 %}<span class="text-xs font-black uppercase text-red-600">Esgotado</span>{% endif %}
+                    <span class="block font-semibold">{{ product.name }}</span>
+                    {% if product.description %}<span class="block text-sm text-fumaca leading-snug">{{ product.description }}</span>{% endif %}
+                    {% if product.available_stock <= 0 %}<span class="nb-status-erro mt-1">Esgotado</span>{% endif %}
                 </span>
-                <span class="font-black whitespace-nowrap">R$ {{ product.price|floatformat:2 }}</span>
-            </div>
+                <span class="tabular font-semibold whitespace-nowrap">R$ {{ product.price|floatformat:2 }}</span>
+            </li>
             {% endfor %}
-        </div>
+        </ul>
     </section>
     {% empty %}
-    <p class="mt-10 text-center text-slate-500">Cardápio em atualização.</p>
+    <p class="mt-10 text-center text-fumaca">Cardápio em atualização.</p>
     {% endfor %}
 
     {% if online_enabled and not table %}
-    <a href="{% url 'online_order' %}" class="mt-8 block text-center py-4 rounded-2xl bg-emerald-600 text-white font-black">Pedir para entrega</a>
+    <a href="{% url 'online_order' %}" class="mt-8 nb-btn-primary nb-btn-lg w-full">Pedir para entrega</a>
     {% endif %}
 </div>
+{% include 'public/_footer.html' %}
 
 {% if table %}
-<div id="callBar" class="fixed bottom-0 inset-x-0 z-30 bg-white border-t border-stone-200 p-3">
+<div id="callBar" class="fixed bottom-0 inset-x-0 z-30 bg-papel/95 backdrop-blur border-t border-linha p-3" style="padding-bottom: max(0.75rem, env(safe-area-inset-bottom))">
     <div class="max-w-3xl mx-auto grid grid-cols-2 gap-2">
-        <button hx-post="{% url 'table_call' table.public_token 'garcom' %}" hx-target="#callBar" hx-swap="innerHTML"
-            class="py-4 rounded-2xl bg-slate-900 text-white font-black"><i class="bi bi-bell me-1"></i>Chamar garçom</button>
-        <button hx-post="{% url 'table_call' table.public_token 'conta' %}" hx-target="#callBar" hx-swap="innerHTML" hx-confirm="Pedir a conta da mesa {{ table.name }}?"
-            class="py-4 rounded-2xl bg-violet-600 text-white font-black"><i class="bi bi-receipt me-1"></i>Pedir a conta</button>
+        <button hx-post="{% url 'table_call' table.public_token 'garcom' %}" hx-target="#callBar" hx-swap="innerHTML" class="nb-btn-dark nb-btn-lg"><i class="bi bi-bell" aria-hidden="true"></i>Chamar garçom</button>
+        <button hx-post="{% url 'table_call' table.public_token 'conta' %}" hx-target="#callBar" hx-swap="innerHTML" hx-confirm="Pedir a conta da mesa {{ table.name }}?" class="nb-btn-primary nb-btn-lg"><i class="bi bi-receipt" aria-hidden="true"></i>Pedir a conta</button>
     </div>
 </div>
 {% endif %}
@@ -69,7 +74,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const search = document.getElementById('menuSearch');
-    const normalize = (text) => text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    const normalize = (text) => text.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
     search.addEventListener('input', () => {
         const term = normalize(search.value.trim());
         document.querySelectorAll('[data-menu-section]').forEach((section) => {

@@ -297,7 +297,7 @@ LOGGING = {
 }
 
 # ---------------------------------------------------------------- Produto
-NABANDEJA_VERSION = '2.3.0'
+NABANDEJA_VERSION = '3.0.0'
 BACKUP_KEEP = int(os.getenv('BACKUP_KEEP', '48'))
 # Endereço usado nos QR Codes impressos (ex.: https://cardapio.minhaloja.com.br).
 # Vazio: usa o endereço pelo qual o gerente acessou o sistema.

@@ -55,7 +55,7 @@ class PublicMenuTests(TestCase):
         self.assertContains(response, 'faça o pedido com o garçom')
         html = response.content.decode()
         self.assertNotIn('hx-post', html)
-        self.assertNotIn('<form', html)
+        self.assertNotIn('method="post"', html)
 
     def test_cardapio_desligado(self):
         AppSettings.objects.update(public_menu_enabled=False)

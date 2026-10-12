@@ -23,7 +23,7 @@
 | **Cozinha** | Tempo real, cronômetro e atraso, som de pedido novo, impressão automática da comanda (só itens novos). |
 | **Cliente** | Cardápio digital pelo **QR Code da mesa** (chamar garçom, pedir a conta) e **pedido online** com taxa por bairro. |
 | **Gestão** | Caixa por turno, relatórios com **lucro por produto**, Excel/CSV/PDF, contas a pagar, estoque por ingrediente. |
-| **Sistema** | Funciona **sem internet**, backup automático, **login com Google**, licença por cliente, assistente de primeiro uso, PWA. |
+| **Sistema** | Funciona **sem internet**, backup automático, login com **empresa + usuário + senha** ou **Google**, superusuário de suporte com **módulos por cliente**, licença, assistente de primeiro uso, PWA. |
 
 Lista completa em [docs/funcionalidades.md](docs/funcionalidades.md).
 
@@ -37,7 +37,7 @@ cd nabandeja
 .\INICIAR_PC_NOVO.bat
 ```
 
-O script cria o ambiente virtual, instala as dependências, aplica as migrações, cria o usuário `gerente` e abre o navegador. A senha aparece no terminal. Para escolher a senha, defina `NABANDEJA_INIT_ADMIN_PASSWORD` no `.env`.
+O script cria o ambiente virtual, instala as dependências, aplica as migrações, cria o usuário `gerente` e abre o navegador. Para entrar: **empresa** (o nome da loja), **usuário** e **senha**. A senha aparece no terminal. Para escolher a senha, defina `NABANDEJA_INIT_ADMIN_PASSWORD` no `.env`.
 
 Para outras formas de instalar (manual, executável `.exe` ou Linux/Mac), veja [docs/instalacao.md](docs/instalacao.md).
 
@@ -71,7 +71,9 @@ O passo a passo completo está em [docs/clientes.md](docs/clientes.md).
 | [Segurança](docs/seguranca.md) | Variáveis de ambiente e checklist de produção |
 | [Funcionalidades](docs/funcionalidades.md) | Tudo o que o sistema faz |
 | [Pedidos online](docs/pedidos-online.md) | Cardápio digital, delivery pelo site e acesso pela internet |
+| [Suporte NaBandeja](docs/suporte.md) | Login com empresa, superusuário e módulos por cliente |
 | [Licenças](docs/licenca.md) | Emitir e instalar licenças por cliente |
+| [Design system](DESIGN.md) | Cores, tipografia e componentes da interface |
 | [Desenvolvimento](docs/desenvolvimento.md) | Organização do código, CSS e testes |
 | [Melhorias](docs/melhorias.md) | Checklist do que melhorar (roadmap) |
 

@@ -1,392 +1,110 @@
 {% extends 'restaurante/admin/base_admin.html' %}
 
-{% block title %}Dashboard - {{ app_settings.store_name }}{% endblock %}
+{% block title %}Painel · {{ app_settings.store_name }}{% endblock %}
+{% block body_attrs %}data-realtime="1"{% endblock %}
 
 {% block admin_content %}
-<div class="max-w-[1400px] mx-auto">
-    <!-- Titulo -->
-    <div class="mb-8">
-        <h1 class="admin-brand-title text-4xl text-[var(--admin-text)]">Dashboard</h1>
-        <p class="text-[var(--admin-muted)] font-semibold">Visao geral do seu restaurante</p>
+<div class="nb-page-head">
+    <div>
+        <p class="nb-kicker">{% now "l, d \d\e F" %}</p>
+        <h1 class="nb-title mt-1">Visão do <em>dia</em></h1>
     </div>
-    
-    <!-- Stats Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-        <!-- Vendas Hoje -->
-        <div class="rounded-3xl p-6 border border-[#e9c7b8] bg-[#fff3eb] text-[var(--admin-text)] shadow-[0_20px_45px_-28px_rgba(164,74,47,0.55)]">
-            <div class="flex items-center justify-between mb-4">
-                <div class="w-12 h-12 bg-[#f3d3c5] rounded-xl flex items-center justify-center text-[var(--admin-accent)]">
-                    <i class="bi bi-currency-dollar text-2xl"></i>
-                </div>
-                <span class="text-xs font-extrabold uppercase tracking-[0.14em] text-[#9c5f48]">Hoje</span>
-            </div>
-            <p id="statVendasHoje" class="text-3xl font-black text-[#7f2f1a]">R$ {{ vendas_hoje|floatformat:2 }}</p>
-            <p class="text-sm font-semibold text-[#9d6f5d] mt-1">Vendas do dia</p>
-        </div>
-
-        <!-- Pedidos Hoje -->
-        <div class="rounded-3xl p-6 border border-[#e7d6bd] bg-[#fff9ee] text-[var(--admin-text)] shadow-[0_20px_45px_-28px_rgba(161,125,57,0.45)]">
-            <div class="flex items-center justify-between mb-4">
-                <div class="w-12 h-12 bg-[#f7e9cc] rounded-xl flex items-center justify-center text-[#9d7b2f]">
-                    <i class="bi bi-receipt text-2xl"></i>
-                </div>
-                <span class="text-xs font-extrabold uppercase tracking-[0.14em] text-[#9f8850]">Hoje</span>
-            </div>
-            <p id="statPedidosHoje" class="text-3xl font-black text-[#5a4b22]">{{ pedidos_hoje }}</p>
-            <p class="text-sm font-semibold text-[#8f7d49] mt-1">Pedidos finalizados</p>
-        </div>
-
-        <!-- Pedidos Ativos -->
-        <div class="rounded-3xl p-6 border border-[#cde3d7] bg-[#eef8f3] text-[var(--admin-text)] shadow-[0_20px_45px_-28px_rgba(46,122,87,0.4)]">
-            <div class="flex items-center justify-between mb-4">
-                <div class="w-12 h-12 bg-[#d8ecdf] rounded-xl flex items-center justify-center text-[var(--admin-ok)]">
-                    <i class="bi bi-clock-history text-2xl"></i>
-                </div>
-                <span class="text-xs font-extrabold uppercase tracking-[0.14em] text-[#4f7f66]">Ativos</span>
-            </div>
-            <p id="statPedidosAtivos" class="text-3xl font-black text-[#275f45]">{{ pedidos_ativos }}</p>
-            <p class="text-sm font-semibold text-[#55806a] mt-1">Em andamento</p>
-        </div>
-
-        <!-- Mesas Ativas -->
-        <div class="rounded-3xl p-6 border border-[#ddcfbd] bg-[#faf3e8] text-[var(--admin-text)] shadow-[0_20px_45px_-28px_rgba(102,78,47,0.45)]">
-            <div class="flex items-center justify-between mb-4">
-                <div class="w-12 h-12 bg-[#efe1cd] rounded-xl flex items-center justify-center text-[#7f6040]">
-                    <i class="bi bi-grid-3x3 text-2xl"></i>
-                </div>
-                <span class="text-xs font-extrabold uppercase tracking-[0.14em] text-[#8f775e]">Mesas</span>
-            </div>
-            <p id="statMesasAtivas" class="text-3xl font-black text-[#4f3f2e]">{{ mesas_ativas }}</p>
-            <p class="text-sm font-semibold text-[#7c6d5c] mt-1">Mesas ocupadas</p>
-        </div>
+    <div class="flex gap-2">
+        <a href="{% url 'waiter_view' %}" class="nb-btn-secondary"><i class="bi bi-grid-3x3-gap" aria-hidden="true"></i>Salão</a>
+        <a href="{% url 'admin_reports' %}" class="nb-btn-dark"><i class="bi bi-bar-chart" aria-hidden="true"></i>Relatórios</a>
     </div>
+</div>
 
+<div id="live" hx-get="{% url 'admin_dashboard' %}" hx-select="#live" hx-target="this" hx-swap="outerHTML" hx-trigger="nb:event from:body delay:800ms">
     {% if calls or pending_online or overdue_expenses %}
     <div class="grid gap-3 md:grid-cols-3 mb-6">
         {% if calls %}
-        <a href="{% url 'waiter_view' %}" class="rounded-2xl border-2 border-amber-300 bg-amber-50 p-4 font-bold text-amber-900">
-            <i class="bi bi-bell-fill me-1"></i>{{ calls|length }} chamado(s) de mesa: {% for call in calls %}{{ call.table.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
-        </a>
+        <a href="{% url 'waiter_view' %}" class="nb-alert-warn font-semibold"><i class="bi bi-bell-fill" aria-hidden="true"></i>
+            <span>Mesa{{ calls|length|pluralize }} chamando: {% for call in calls %}{{ call.table.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</span></a>
         {% endif %}
         {% if pending_online %}
-        <a href="{% url 'admin_online_orders' %}" class="rounded-2xl border-2 border-sky-300 bg-sky-50 p-4 font-bold text-sky-900">
-            <i class="bi bi-globe2 me-1"></i>{{ pending_online }} pedido(s) online aguardando
-        </a>
+        <a href="{% url 'admin_online_orders' %}" class="nb-alert-info font-semibold"><i class="bi bi-globe2" aria-hidden="true"></i>
+            <span>{{ pending_online }} pedido{{ pending_online|pluralize }} online aguardando</span></a>
         {% endif %}
         {% if overdue_expenses %}
-        <a href="{% url 'expenses' %}" class="rounded-2xl border-2 border-red-300 bg-red-50 p-4 font-bold text-red-900">
-            <i class="bi bi-wallet2 me-1"></i>{{ overdue_expenses|length }} conta(s) vencendo hoje ou vencidas
-        </a>
+        <a href="{% url 'expenses' %}" class="nb-alert-error font-semibold"><i class="bi bi-wallet2" aria-hidden="true"></i>
+            <span>{{ overdue_expenses|length }} conta{{ overdue_expenses|length|pluralize }} vencendo ou vencida{{ overdue_expenses|length|pluralize }}</span></a>
         {% endif %}
     </div>
     {% endif %}
 
-    <div class="mb-6">
-        {% include 'restaurante/admin/_cash_card.html' %}
-    </div>
+    <dl class="nb-card grid grid-cols-2 lg:grid-cols-4 divide-y lg:divide-y-0 lg:divide-x divide-linha mb-6">
+        <div class="p-5 sm:p-6"><dt class="nb-label">Vendas hoje</dt><dd class="nb-money text-[2rem] sm:text-[2.4rem] leading-none mt-2">R$ {{ vendas_hoje|floatformat:2 }}</dd></div>
+        <div class="p-5 sm:p-6 border-l border-linha lg:border-l-0"><dt class="nb-label">Contas fechadas</dt><dd class="nb-money text-[2rem] sm:text-[2.4rem] leading-none mt-2">{{ pedidos_hoje }}</dd>
+            <dd class="text-sm text-fumaca mt-1 tabular">ticket médio R$ {{ ticket_medio|floatformat:2 }}</dd></div>
+        <div class="p-5 sm:p-6"><dt class="nb-label">Em andamento</dt><dd class="nb-money text-[2rem] sm:text-[2.4rem] leading-none mt-2">{{ pedidos_ativos }}</dd></div>
+        <div class="p-5 sm:p-6 border-l border-linha lg:border-l-0"><dt class="nb-label">Mesas ocupadas</dt><dd class="nb-money text-[2rem] sm:text-[2.4rem] leading-none mt-2">{{ mesas_ativas }}</dd></div>
+    </dl>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Pedidos Ativos -->
-        <div class="bg-[var(--admin-card)] rounded-3xl p-6 border border-[var(--admin-line)] shadow-[0_20px_50px_-36px_rgba(66,47,28,0.55)]">
-            <div class="flex items-center justify-between mb-6">
-                <h2 class="admin-brand-title text-2xl text-[var(--admin-text)]">Pedidos Ativos</h2>
-                <span id="activeOrdersCount" class="px-3 py-1 bg-[#efe3d4] rounded-full text-[#6f6255] text-sm font-extrabold">{{ active_orders|length }}</span>
-            </div>
-            
-            <div id="activeOrdersContainer" class="space-y-4 max-h-[400px] overflow-y-auto custom-scrollbar">
+    <div class="grid gap-6 lg:grid-cols-[1.4fr_1fr] items-start">
+        <section class="nb-card" aria-labelledby="ativos-titulo">
+            <header class="flex items-center justify-between px-5 sm:px-6 pt-5 pb-3">
+                <h2 id="ativos-titulo" class="nb-h2">Pedidos em andamento</h2>
+                <span class="font-mono text-sm text-fumaca">{{ active_orders|length }}</span>
+            </header>
+            {% if active_orders %}
+            <ul class="nb-divide border-t border-linha">
                 {% for order in active_orders %}
-                <div class="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border-l-4 {% if order.status == 'cozinha' %}border-amber-500{% else %}border-cyan-500{% endif %}">
-                    <div class="w-12 h-12 rounded-xl bg-white flex items-center justify-center font-black text-lg text-slate-700 shadow-sm">
-                        {% if order.order_type == 'delivery' or order.mesa == 'DELIVERY' %}
-                        <span class="text-[10px] font-black uppercase tracking-wide text-indigo-600 flex items-center gap-1">
-                            <i class="bi bi-truck text-xs"></i>DLV
-                        </span>
-                        {% else %}
-                        {{ order.mesa }}
-                        {% endif %}
-                    </div>
-                    <div class="flex-1">
-                        <p class="font-bold text-slate-800">{{ order.display_name }}</p>
-                        {% if order.platform_name %}
-                        <span class="inline-flex items-center gap-1 mt-1 px-2 py-1 rounded-full bg-indigo-100 text-indigo-700 text-[10px] font-black uppercase tracking-wide">
-                            <i class="bi bi-phone text-[10px]"></i>{{ order.platform_name }}
-                        </span>
-                        {% endif %}
-                        <p class="text-sm text-slate-400">{{ order.items.count }} itens • R$ {{ order.amount_due|floatformat:2 }}</p>
-                        <p class="text-xs font-semibold text-slate-400 mt-1">
-                            Tempo: <span class="order-elapsed-time" data-order-created-at="{{ order.created_at|date:'c' }}">agora</span>
-                        </p>
-                        <div class="flex gap-2 mt-2">
-                            <a href="{% url 'order_workspace' order.id %}" class="px-3 py-1 bg-slate-900 text-white rounded-lg text-xs font-bold hover:bg-slate-700 transition-all">
-                                <i class="bi bi-pencil-square me-1"></i>Abrir
-                            </a>
-                            <a href="{% url 'close_order' order.id %}" class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-lg text-xs font-bold hover:bg-emerald-200 transition-all">
-                                <i class="bi bi-cash-stack me-1"></i>Fechar
-                            </a>
-                            <form method="post" action="{% url 'cancel_order' order.id %}" class="inline" data-confirm-message="Cancelar o pedido inteiro?">
-                                {% csrf_token %}
-                                <button type="submit" class="px-3 py-1 bg-red-100 text-red-700 rounded-lg text-xs font-bold hover:bg-red-200 transition-all" title="Cancela o pedido inteiro. Para cancelar um item, use Alterar.">
-                                    <i class="bi bi-x-circle me-1"></i>Cancelar Tudo
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                    <span class="px-3 py-1 rounded-full text-xs font-bold {% if order.status == 'cozinha' %}bg-amber-100 text-amber-700{% else %}bg-cyan-100 text-cyan-700{% endif %}">
-                        {{ order.get_status_display }}
+                <li class="px-5 sm:px-6 py-3.5 flex items-center gap-3">
+                    <span class="w-11 h-11 shrink-0 rounded-xl bg-creme flex items-center justify-center font-display font-semibold text-lg" aria-hidden="true">
+                        {% if order.order_type == 'delivery' %}<i class="bi bi-scooter text-cebola"></i>{% elif order.mesa == 'SEM MESA' %}<i class="bi bi-bag text-fumaca"></i>{% else %}{{ order.mesa }}{% endif %}
                     </span>
-                </div>
-                {% empty %}
-                <div class="text-center py-12">
-                    <i class="bi bi-inbox text-4xl text-slate-300"></i>
-                    <p class="text-slate-400 mt-2">Nenhum pedido ativo</p>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-        
-        <!-- Alertas de Estoque -->
-        <div class="bg-[var(--admin-card)] rounded-3xl p-6 border border-[var(--admin-line)] shadow-[0_20px_50px_-36px_rgba(66,47,28,0.55)]">
-            <div class="flex items-center justify-between mb-6">
-                <h2 class="admin-brand-title text-2xl text-[var(--admin-text)]">Alertas de Ingredientes</h2>
-                <span id="lowStockCount" class="px-3 py-1 bg-[#f6ddd2] rounded-full text-[var(--admin-accent)] text-sm font-extrabold">{{ low_stock_ingredients|length }}</span>
-            </div>
-            
-            <div id="lowStockContainer" class="space-y-4 max-h-[400px] overflow-y-auto custom-scrollbar">
-                {% for ingredient in low_stock_ingredients %}
-                <div class="flex items-center gap-4 p-4 bg-red-50 rounded-2xl">
-                    <div class="w-12 h-12 rounded-xl bg-white flex items-center justify-center text-2xl shadow-sm">
-                        <i class="bi bi-box-seam text-red-500"></i>
-                    </div>
-                    <div class="flex-1">
-                        <p class="font-bold text-slate-800">{{ ingredient.name }}</p>
-                        <p class="text-sm text-red-500">Apenas {{ ingredient.stock_quantity }} {{ ingredient.unit }}</p>
-                    </div>
-                    <span class="px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-600">
-                        <i class="bi bi-exclamation-triangle me-1"></i>Baixo
+                    <span class="flex-1 min-w-0">
+                        <span class="block font-semibold truncate">{{ order.display_name }}{% if order.platform %} <span class="text-sm font-normal text-fumaca">· {{ order.platform }}</span>{% endif %}</span>
+                        <span class="block text-sm text-fumaca"><span class="{% if order.status == 'cozinha' %}nb-status-cozinha{% else %}nb-status-pronto{% endif %}">{{ order.get_status_display }}</span>
+                            <span class="tabular ms-1" data-since="{{ order.created_at.isoformat }}"></span></span>
                     </span>
-                </div>
-                {% empty %}
-                <div class="text-center py-12">
-                    <i class="bi bi-check-circle text-4xl text-emerald-400"></i>
-                    <p class="text-slate-400 mt-2">Estoque em dia!</p>
-                </div>
+                    <span class="tabular font-semibold hidden sm:block">R$ {{ order.amount_due|floatformat:2 }}</span>
+                    <a href="{% url 'order_workspace' order.id %}" class="nb-btn-secondary nb-btn-sm">Abrir</a>
+                </li>
                 {% endfor %}
-            </div>
+            </ul>
+            {% else %}
+            <p class="px-6 pb-8 pt-4 text-fumaca">Nenhum pedido em andamento.</p>
+            {% endif %}
+        </section>
+
+        <div class="space-y-6">
+            {% if modules.caixa %}{% include 'restaurante/admin/_cash_card.html' %}{% endif %}
+
+            <section class="nb-card nb-card-pad" aria-labelledby="mais-titulo">
+                <h2 id="mais-titulo" class="nb-h2">Mais vendidos hoje</h2>
+                {% if top_products %}
+                <ol class="mt-3 space-y-2">
+                    {% for product in top_products %}
+                    <li class="flex items-center gap-3 text-sm">
+                        <span class="font-mono text-xs text-fumaca w-5">{{ forloop.counter }}</span>
+                        <span class="flex-1 truncate">{{ product.product_name }}</span>
+                        <span class="tabular font-semibold">{{ product.total_qty }}</span>
+                    </li>
+                    {% endfor %}
+                </ol>
+                {% else %}
+                <p class="mt-2 text-sm text-fumaca">Nenhuma venda fechada hoje ainda.</p>
+                {% endif %}
+            </section>
+
+            {% if modules.ingredientes %}
+            <section class="nb-card nb-card-pad" aria-labelledby="estoque-titulo">
+                <h2 id="estoque-titulo" class="nb-h2">Estoque baixo</h2>
+                {% if low_stock_ingredients %}
+                <ul class="mt-3 space-y-2">
+                    {% for ingredient in low_stock_ingredients %}
+                    <li class="flex items-center justify-between text-sm"><span>{{ ingredient.name }}</span><span class="nb-status-erro tabular">{{ ingredient.stock_quantity|floatformat:"-3" }} {{ ingredient.unit }}</span></li>
+                    {% endfor %}
+                </ul>
+                <a href="{% url 'admin_ingredients' %}" class="nb-btn-ghost nb-btn-sm mt-3 -ml-3">Ver ingredientes</a>
+                {% else %}
+                <p class="mt-2 text-sm text-manjericao font-semibold"><i class="bi bi-check-circle" aria-hidden="true"></i> Estoque em dia.</p>
+                {% endif %}
+            </section>
+            {% endif %}
         </div>
     </div>
 </div>
-
-{% block extra_js %}
-<script>
-let adminDashboardSocket = null;
-let adminReconnectTimeout = null;
-let adminReconnectAttempts = 0;
-const adminMaxReconnectAttempts = 5;
-let adminDisableWebSocket = false;
-let adminPollingStarted = false;
-
-function startAdminPolling() {
-    if (adminPollingStarted) {
-        return;
-    }
-    adminPollingStarted = true;
-    setInterval(fetchDashboardData, 3000);
-}
-
-function updateConnectionStatus(status, message, icon) {
-    return;
-    const statusEl = document.getElementById('connectionStatus');
-    const statusIcon = document.getElementById('connectionStatusIcon');
-    const statusText = document.getElementById('connectionStatusText');
-    
-    if (statusEl && statusIcon && statusText) {
-        statusEl.className = `mb-4 p-3 rounded-2xl text-sm font-bold flex items-center gap-2 ${status === 'connected' ? 'bg-emerald-100 text-emerald-700' : status === 'error' ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-600'}`;
-        statusIcon.textContent = icon || '🔄';
-        statusText.textContent = message;
-        statusEl.classList.remove('hidden');
-        
-        if (status === 'connected') {
-            setTimeout(() => statusEl.classList.add('hidden'), 3000);
-        }
-    }
-}
-
-function formatElapsedTime(isoDate) {
-    if (!isoDate) return 'agora';
-
-    const createdAt = new Date(isoDate);
-    if (Number.isNaN(createdAt.getTime())) return 'agora';
-
-    const diffMs = Math.max(0, Date.now() - createdAt.getTime());
-    const minutes = Math.floor(diffMs / 60000);
-
-    if (minutes < 1) return 'agora';
-    if (minutes < 60) return `ha ${minutes} min`;
-
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `ha ${hours}h`;
-
-    const days = Math.floor(hours / 24);
-    return `ha ${days}d`;
-}
-
-function updateOrderElapsedTimes() {
-    document.querySelectorAll('.order-elapsed-time[data-order-created-at]').forEach(function(el) {
-        el.textContent = formatElapsedTime(el.dataset.orderCreatedAt);
-    });
-}
-
-async function fetchDashboardData() {
-    try {
-        const response = await fetch(window.location.href, {
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        });
-        
-        if (!response.ok) throw new Error('Failed to fetch');
-        
-        const html = await response.text();
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, 'text/html');
-        
-        // Update stats
-        const statElements = {
-            'statVendasHoje': doc.querySelector('#statVendasHoje'),
-            'statPedidosHoje': doc.querySelector('#statPedidosHoje'),
-            'statPedidosAtivos': doc.querySelector('#statPedidosAtivos'),
-            'statMesasAtivas': doc.querySelector('#statMesasAtivas')
-        };
-        
-        for (const [id, sourceEl] of Object.entries(statElements)) {
-            const targetEl = document.getElementById(id);
-            if (targetEl && sourceEl) {
-                const oldValue = targetEl.textContent;
-                const newValue = sourceEl.textContent;
-                if (oldValue !== newValue) {
-                    targetEl.classList.add('animate-pulse');
-                    targetEl.textContent = newValue;
-                    setTimeout(() => targetEl.classList.remove('animate-pulse'), 500);
-                }
-            }
-        }
-        
-        // Update active orders
-        const activeOrdersContainer = doc.querySelector('#activeOrdersContainer');
-        if (activeOrdersContainer) {
-            document.getElementById('activeOrdersContainer').innerHTML = activeOrdersContainer.innerHTML;
-            
-            const count = doc.querySelector('#activeOrdersCount')?.textContent || '0';
-            document.getElementById('activeOrdersCount').textContent = count;
-            updateOrderElapsedTimes();
-        }
-        
-        // Update low stock alerts
-        const lowStockContainer = doc.querySelector('#lowStockContainer');
-        if (lowStockContainer) {
-            document.getElementById('lowStockContainer').innerHTML = lowStockContainer.innerHTML;
-            
-            const count = doc.querySelector('#lowStockCount')?.textContent || '0';
-            document.getElementById('lowStockCount').textContent = count;
-        }
-        
-    } catch (error) {
-        console.error('Error fetching dashboard data:', error);
-    }
-}
-
-function connectAdminDashboardSocket() {
-    if (adminDisableWebSocket) {
-        startAdminPolling();
-        return;
-    }
-
-    if (adminDashboardSocket && adminDashboardSocket.readyState === WebSocket.OPEN) {
-        return;
-    }
-    
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}/ws/orders/`;
-    
-    updateConnectionStatus('connecting', 'Conectando ao servidor...', '🔄');
-    
-    try {
-        adminDashboardSocket = new WebSocket(wsUrl);
-        
-        adminDashboardSocket.onopen = function() {
-            console.log('Dashboard WebSocket connected');
-            adminReconnectAttempts = 0;
-            updateConnectionStatus('connected', 'Conectado! Atualizações em tempo real ativas.', '✅');
-        };
-        
-        adminDashboardSocket.onmessage = function(e) {
-            try {
-                const data = JSON.parse(e.data);
-                console.log('Dashboard received:', data);
-                
-                if (data.type === 'connection.ready') {
-                    console.log('Dashboard connection ready');
-                    return;
-                }
-                
-                // Show notifications for order events
-                if (data.type === 'order.created') {
-                    showToast(`Novo pedido criado: ${data.order?.mesa || 'DELIVERY'}`, 'success');
-                    fetchDashboardData();
-                } else if (data.type === 'order.updated') {
-                    showToast(`Pedido ${data.order?.mesa || 'DELIVERY'} atualizado`, 'info');
-                    fetchDashboardData();
-                } else if (data.type === 'order.deleted') {
-                    showToast(`Pedido cancelado`, 'warning');
-                    fetchDashboardData();
-                } else if (data.type === 'order.status_changed') {
-                    showToast(`Status do pedido ${data.order?.mesa || ''} alterado`, 'info');
-                    fetchDashboardData();
-                }
-                
-            } catch (error) {
-                console.error('Error processing dashboard message:', error);
-            }
-        };
-        
-        adminDashboardSocket.onerror = function(error) {
-            console.error('Dashboard WebSocket error:', error);
-            // Silencioso - polling será ativado no onclose
-        };
-        
-        adminDashboardSocket.onclose = function(e) {
-            console.log('Dashboard WebSocket closed:', e.code, e.reason);
-            adminDashboardSocket = null;
-
-            // Evita spam de tentativas quando o endpoint WebSocket nao existe no servidor atual.
-            adminDisableWebSocket = true;
-            updateConnectionStatus('error', 'Tempo real indisponível. Usando atualização automática.', '⚠️');
-            startAdminPolling();
-        };
-        
-    } catch (error) {
-        console.error('Error creating dashboard WebSocket:', error);
-        adminDisableWebSocket = true;
-        startAdminPolling();
-    }
-}
-
-// Connect on page load
-document.addEventListener('DOMContentLoaded', function() {
-    connectAdminDashboardSocket();
-    updateOrderElapsedTimes();
-    setInterval(updateOrderElapsedTimes, 30000);
-});
-
-// Clean up on page unload
-window.addEventListener('beforeunload', function() {
-    if (adminDashboardSocket) {
-        adminDashboardSocket.close();
-    }
-    if (adminReconnectTimeout) {
-        clearTimeout(adminReconnectTimeout);
-    }
-});
-</script>
-{% endblock %}
 {% endblock %}

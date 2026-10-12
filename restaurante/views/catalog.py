@@ -7,6 +7,7 @@ from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
+from ..modules import module_required
 from ..forms import CategoryForm, IngredientForm, ProductForm
 from ..models import Category, Ingredient, IngredientStockMovement, Product, ProductIngredient
 from ..permissions import manager_required
@@ -161,6 +162,7 @@ def _log_movement(request, ingredient, movement_type, before, after, reason):
 
 
 @manager_required
+@module_required('ingredientes')
 def admin_ingredients(request):
     return render(request, 'restaurante/admin/ingredients.html', {
         'ingredients': Ingredient.objects.order_by('-is_active', 'name'),
@@ -169,11 +171,13 @@ def admin_ingredients(request):
 
 
 @manager_required
+@module_required('ingredientes')
 def ingredient_create(request):
     return _ingredient_edit(request, None)
 
 
 @manager_required
+@module_required('ingredientes')
 def ingredient_edit(request, ingredient_id):
     return _ingredient_edit(request, get_object_or_404(Ingredient, pk=ingredient_id))
 
@@ -201,6 +205,7 @@ def _ingredient_edit(request, ingredient):
 
 @manager_required
 @require_POST
+@module_required('ingredientes')
 def ingredient_delete(request, ingredient_id):
     ingredient = get_object_or_404(Ingredient, pk=ingredient_id)
     if ingredient.recipe_products.exists() or ingredient.stock_movements.exists():

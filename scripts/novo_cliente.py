@@ -110,9 +110,12 @@ def main():
         f's.store_name = {args.nome!r}\n'
         + (f's.slogan = {args.slogan!r}\n' if args.slogan else '')
         + (f's.primary_color = {args.cor!r}\n' if args.cor else '')
+        + f's.company_code = {slug!r}\n'
         + 's.save()\n'
     )
     run([python, 'manage.py', 'shell', '-c', configure], env=env)
+    if os.getenv('NABANDEJA_SUPPORT_HASH'):
+        run([python, 'manage.py', 'suporte_nabandeja'], env=env)
 
     print('\n[5/5] Salvando cliente no git...')
     run(['git', 'add', '-f', 'db.sqlite3'])
@@ -124,6 +127,7 @@ def main():
  Cliente criado: {args.nome}
 ========================================
  Branch:  {branch}
+ Empresa: {slug}
  Login:   gerente
  Senha:   {password}   <- anote agora, ela não fica salva em lugar nenhum
 

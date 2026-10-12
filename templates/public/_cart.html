@@ -1,38 +1,34 @@
-<h2 class="text-lg font-black mb-3"><i class="bi bi-bag me-1"></i>Seu pedido</h2>
+<h2 class="nb-h2 mb-3">Seu pedido</h2>
 {% if cart %}
-<ul class="divide-y divide-stone-100 mb-4">
+<ul class="nb-divide mb-4">
     {% for item in cart.items %}
-    <li class="py-2 flex items-center gap-2">
-        <span class="flex-1 min-w-0 text-sm font-bold truncate">{{ item.name }}</span>
+    <li class="py-2.5 flex items-center gap-2">
+        <span class="flex-1 min-w-0 font-semibold truncate">{{ item.name }}</span>
         <button hx-post="{% url 'online_cart_change' %}" hx-vals='{"cart_key": "{{ item.cart_key|escapejs }}", "delta": -1}' hx-target="#onlineCart"
-            class="w-8 h-8 rounded-lg bg-stone-100"><i class="bi bi-dash"></i></button>
-        <span class="w-6 text-center font-black">{{ item.qty }}</span>
+            class="nb-icon-btn w-9 h-9 border border-linha" aria-label="Diminuir {{ item.name }}"><i class="bi bi-dash" aria-hidden="true"></i></button>
+        <span class="w-6 text-center font-semibold tabular">{{ item.qty }}</span>
         <button hx-post="{% url 'online_cart_change' %}" hx-vals='{"cart_key": "{{ item.cart_key|escapejs }}", "delta": 1}' hx-target="#onlineCart"
-            class="w-8 h-8 rounded-lg bg-stone-100"><i class="bi bi-plus"></i></button>
+            class="nb-icon-btn w-9 h-9 border border-linha" aria-label="Aumentar {{ item.name }}"><i class="bi bi-plus" aria-hidden="true"></i></button>
     </li>
     {% endfor %}
 </ul>
-<p class="flex justify-between font-black text-lg mb-4"><span>Subtotal</span><span>R$ {{ cart.total|floatformat:2 }}</span></p>
-{% if store.min_delivery_order %}<p class="text-xs text-slate-500 -mt-3 mb-4">Pedido mínimo: R$ {{ store.min_delivery_order|floatformat:2 }}</p>{% endif %}
+<p class="flex justify-between items-baseline mb-1"><span class="font-semibold">Subtotal</span><span class="nb-money text-xl">R$ {{ cart.total|floatformat:2 }}</span></p>
+{% if store.min_delivery_order %}<p class="nb-help mt-0 mb-4">Pedido mínimo: R$ {{ store.min_delivery_order|floatformat:2 }}</p>{% endif %}
 
-<form hx-post="{% url 'online_checkout' %}" hx-disabled-elt="find button[type=submit]" class="space-y-2">
-    <input name="cliente" required placeholder="Seu nome" class="w-full px-3 py-3 rounded-xl bg-stone-50 border border-stone-200 outline-none">
-    <input name="phone" required inputmode="tel" placeholder="Telefone com DDD" class="w-full px-3 py-3 rounded-xl bg-stone-50 border border-stone-200 outline-none">
-    <input name="address" required placeholder="Endereço (rua, número, complemento)" class="w-full px-3 py-3 rounded-xl bg-stone-50 border border-stone-200 outline-none">
+<form hx-post="{% url 'online_checkout' %}" hx-disabled-elt="find button[type=submit]" class="space-y-3 mt-4">
+    <div><label class="nb-label" for="o-nome">Seu nome</label><input id="o-nome" name="cliente" required autocomplete="name" class="nb-input"></div>
+    <div><label class="nb-label" for="o-tel">Telefone com DDD</label><input id="o-tel" name="phone" required inputmode="tel" autocomplete="tel" class="nb-input"></div>
+    <div><label class="nb-label" for="o-end">Endereço</label><input id="o-end" name="address" required autocomplete="street-address" placeholder="Rua, número, complemento" class="nb-input"></div>
     {% if zones %}
-    <select name="zone" required class="w-full px-3 py-3 rounded-xl bg-stone-50 border border-stone-200 outline-none">
-        <option value="">Bairro</option>
-        {% for zone in zones %}<option value="{{ zone.id }}">{{ zone.name }} · entrega R$ {{ zone.fee|floatformat:2 }}</option>{% endfor %}
-    </select>
+    <div><label class="nb-label" for="o-zona">Bairro</label>
+        <select id="o-zona" name="zone" required class="nb-select"><option value="">Escolha…</option>{% for zone in zones %}<option value="{{ zone.id }}">{{ zone.name }} · entrega R$ {{ zone.fee|floatformat:2 }}</option>{% endfor %}</select></div>
     {% endif %}
-    <select name="pagamento" class="w-full px-3 py-3 rounded-xl bg-stone-50 border border-stone-200 outline-none">
-        <option value="">Forma de pagamento na entrega</option>
-        <option>PIX</option><option>Dinheiro</option><option>Cartão de crédito</option><option>Cartão de débito</option>
-    </select>
-    <input name="observacoes" placeholder="Observações (troco para, ponto de referência...)" class="w-full px-3 py-3 rounded-xl bg-stone-50 border border-stone-200 outline-none">
-    <button type="submit" class="w-full py-4 rounded-2xl bg-emerald-600 text-white font-black text-lg disabled:opacity-60">Enviar pedido</button>
-    <p class="text-xs text-slate-500 text-center">A loja confirma o pedido e a taxa de entrega antes de preparar.</p>
+    <div><label class="nb-label" for="o-pag">Pagamento na entrega</label>
+        <select id="o-pag" name="pagamento" class="nb-select"><option value="">Escolha…</option><option>PIX</option><option>Dinheiro</option><option>Cartão de crédito</option><option>Cartão de débito</option></select></div>
+    <div><label class="nb-label" for="o-obs">Observações</label><input id="o-obs" name="observacoes" placeholder="Troco para, ponto de referência…" class="nb-input"></div>
+    <button type="submit" class="nb-btn-primary nb-btn-lg w-full">Enviar pedido</button>
+    <p class="nb-help text-center">A loja confirma o pedido antes de começar a preparar.</p>
 </form>
 {% else %}
-<p class="py-6 text-center text-slate-400 font-bold">Adicione itens do cardápio.</p>
+<p class="py-6 text-center text-fumaca">Adicione itens do cardápio.</p>
 {% endif %}
