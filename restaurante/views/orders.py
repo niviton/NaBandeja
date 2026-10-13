@@ -435,30 +435,55 @@ def close_order(request, order_id):
     if not order.is_active:
         messages.info(request, 'Este pedido já foi encerrado.')
         return redirect(home_for(request.user))
-    return render(request, 'app/conta.html', _payment_context(order))
+    return render(request, 'app/conta.html', _payment_context(order, request.GET))
 
 
-def _payment_context(order):
+PAYMENT_METHOD_ICONS = {'dinheiro': 'bi-cash-coin', 'pix': 'bi-qr-code', 'credito': 'bi-credit-card',
+                        'debito': 'bi-credit-card-2-front', 'vale': 'bi-ticket-perforated'}
+
+
+def _payment_context(order, params=None):
+    params = params or {}
     order = Order.objects.prefetch_related('items__product', 'payments__created_by').get(pk=order.pk)
     remaining = order.amount_remaining
+    store = AppSettings.get_settings()
+    has_split = any(p.label.startswith(payment_service.SPLIT_PREFIX) for p in order.payments.all())
+    has_items = any(p.items for p in order.payments.all())
+    person, people, share = payment_service.split_progress(order, params.get('pessoas') or 2)
+    mode = params.get('modo') or ('dividir' if has_split else 'itens' if has_items else 'tudo')
     return {
         'order': order,
         'remaining': remaining,
-        'methods': payment_service.METHODS,
-        'split_options': [2, 3, 4, 5, 6],
-        'pix': pix_for_order(order, AppSettings.get_settings()) if remaining > 0 else None,
+        'methods': [(key, label, PAYMENT_METHOD_ICONS.get(key, 'bi-wallet2')) for key, label in payment_service.METHODS.items()],
+        'mode': mode if mode in payment_service.MODES else 'tudo',
+        'split': {'person': person, 'people': people, 'share': share},
+        'open_items': payment_service.open_items(order),
+        'service_available': bool(store.service_percent) and order.order_type == 'dine-in' and order.mesa != 'SEM MESA',
+        'store_service_percent': store.service_percent,
+        'can_change_service': not order.payments.exists(),
+        'pix': pix_for_order(order, store) if remaining > 0 else None,
     }
+
+
+def _posted_items(post):
+    return {key[5:]: value for key, value in post.items() if key.startswith('item_') and value not in ('', '0')}
 
 
 @service_required
 @require_POST
 def add_payment(request, order_id):
     order = get_order_or_403(request.user, order_id)
+    post = request.POST
     try:
-        payment, change, finished = payment_service.add_payment(
-            order, request.POST.get('method', ''), request.POST.get('amount', ''), request.user,
+        amount, label, items = payment_service.charge(
+            order, post.get('mode', 'valor'), amount=post.get('amount', ''), people=post.get('pessoas'),
+            items=_posted_items(post),
         )
-    except OrderError as exc:
+        payment, change, finished = payment_service.add_payment(
+            order, post.get('method', ''), amount, request.user,
+            received=post.get('received') or None, label=label, items=items,
+        )
+    except (OrderError, ValueError) as exc:
         return error_response(str(exc))
 
     if finished:
@@ -473,11 +498,28 @@ def add_payment(request, order_id):
         note = f' Troco: R$ {change:.2f}.'.replace('.', ',') if change else ''
         return hx_redirect(reverse(target), request, f'Pedido #{order.id} pago.{note} Entregue quando ficar pronto.')
 
-    message = f'Recebido R$ {payment.amount:.2f}'.replace('.', ',')
+    message = f'{payment.label or "Recebido"}: R$ {payment.amount:.2f}'.replace('.', ',')
     if change:
         message += f' · troco R$ {change:.2f}'.replace('.', ',')
-    response = render(request, 'app/_payments.html', _payment_context(order))
+    keep = {'modo': post.get('mode'), 'pessoas': post.get('pessoas')}
+    response = render(request, 'app/_payments.html', _payment_context(order, keep))
     return with_toast(response, message)
+
+
+@service_required
+@require_POST
+def set_service(request, order_id):
+    """Cliente aceitou ou recusou a taxa de serviço."""
+    order = get_order_or_403(request.user, order_id)
+    percent = AppSettings.get_settings().service_percent if request.POST.get('on') == '1' else 0
+    try:
+        payment_service.set_service(order, percent)
+    except OrderError as exc:
+        return error_response(str(exc))
+    audit(request, 'order.service', f'Taxa de serviço {"incluída" if percent else "retirada"} no pedido #{order.id}.',
+          order, percent=str(percent))
+    text = 'Taxa de serviço incluída.' if percent else 'Taxa de serviço retirada.'
+    return hx_redirect(reverse('close_order', args=[order.id]), request, text)
 
 
 @manager_required
@@ -491,7 +533,7 @@ def remove_payment(request, payment_id):
         return error_response(str(exc))
     audit(request, 'payment.remove', f'Pagamento estornado no pedido #{order.id}.', order,
           method=payment.method, amount=payment.amount)
-    return with_toast(render(request, 'app/_payments.html', _payment_context(order)), 'Pagamento estornado.', 'warning')
+    return with_toast(render(request, 'app/_payments.html', _payment_context(order, request.POST)), 'Pagamento estornado.', 'warning')
 
 
 @service_required

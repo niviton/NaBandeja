@@ -205,6 +205,9 @@ def place_order(user, cart, *, order_type='dine-in', mesa='', cliente='', observ
             platform=platform,
             customer_phone=(customer_phone or '').strip()[:30],
             delivery_fee=delivery_fee or Decimal('0'),
+            # Serviço do garçom só nas mesas (balcão e delivery não têm).
+            service_percent=(store_settings.service_percent if store_settings is not None and order_type == 'dine-in'
+                             and mesa and mesa != 'SEM MESA' else Decimal('0')),
             waiter=user,
             status='pendente' if pending else 'cozinha',
         )

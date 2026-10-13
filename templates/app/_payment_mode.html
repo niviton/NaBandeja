@@ -1,0 +1,7 @@
+<label class="cursor-pointer">
+    <input type="radio" name="mode" value="{{ key }}" class="peer sr-only" {% if mode == key %}checked{% endif %}>
+    <span style="min-height:76px" class="flex flex-col items-center justify-center text-center gap-1 rounded-xl border-2 border-linha bg-papel px-2 py-3 text-sm font-semibold leading-tight
+        peer-checked:border-carvao peer-checked:bg-carvao peer-checked:text-white peer-focus-visible:ring-2 peer-focus-visible:ring-tomate">
+        <i class="bi {{ icon }} text-lg" aria-hidden="true"></i>{{ label }}
+    </span>
+</label>

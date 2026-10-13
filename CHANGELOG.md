@@ -22,8 +22,17 @@ Mudanças relevantes do NaBandeja. O formato segue o [Keep a Changelog](https://
 - `REDIS_URL` para vários processos, `DATABASE_URL` e domínio do Railway reconhecidos.
 - Dependências separadas por ambiente em `requirements/`.
 
+### Pagamento como acontece de verdade
+- Dois passos: **quem está pagando** (um paga tudo · dividir igual · cada um o seu · outro valor) e
+  **como vai pagar** (dinheiro · PIX · crédito · débito · **vale-refeição**).
+- Dividir igual com quantidade de pessoas livre: "Pessoa 2 de 3", cada uma na sua forma.
+- **Cada um o seu**: marca os itens de cada pessoa; desconto e serviço entram proporcionais e os itens pagos saem da lista.
+- Dinheiro: "cliente entregou", cédulas rápidas e troco em destaque (guardados no pagamento e no cupom).
+- **Taxa de serviço** opcional nas mesas (Configurações › Salão), que o cliente pode recusar no fechamento.
+- Cupom: o TOTAL agora considera desconto, serviço e entrega, e lista os pagamentos com troco.
+
 ### Alterado
-- Nova logo (símbolo, logo horizontal, favicons e ícones do app).
+- Nova logo (símbolo, logo horizontal, favicons e ícones do app); o topo das telas mostra a logo da loja.
 
 ### Removido
 - `novo_cliente.py`, `NOVO_CLIENTE.bat` e o backup que fazia commit do banco **sem criptografia** no repositório

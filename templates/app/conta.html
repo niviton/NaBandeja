@@ -30,6 +30,7 @@
             <dl class="mt-3 pt-3 border-t border-linha space-y-1 text-sm tabular">
                 <div class="flex justify-between"><dt class="text-fumaca">Itens</dt><dd>R$ {{ order.total|floatformat:2 }}</dd></div>
                 {% if order.discount %}<div class="flex justify-between text-manjericao"><dt>Desconto</dt><dd>− R$ {{ order.discount|floatformat:2 }}</dd></div>{% endif %}
+                {% if order.service_fee %}<div class="flex justify-between"><dt class="text-fumaca">Serviço ({{ order.service_percent|floatformat:"-2" }}%)</dt><dd>R$ {{ order.service_fee|floatformat:2 }}</dd></div>{% endif %}
                 {% if order.delivery_fee %}<div class="flex justify-between"><dt class="text-fumaca">Entrega</dt><dd>R$ {{ order.delivery_fee|floatformat:2 }}</dd></div>{% endif %}
                 <div class="flex justify-between items-baseline pt-1"><dt class="font-semibold">Total da conta</dt><dd class="nb-money text-xl">R$ {{ order.amount_due|floatformat:2 }}</dd></div>
             </dl>
@@ -44,30 +45,122 @@
 
 {% block extra_js %}
 <script>
+// Pagamento em dois passos: quem paga (modo) e como paga (forma).
+// O servidor recalcula tudo; aqui é só para mostrar o valor e o troco na hora.
 function paymentForm(form) {
-    const amount = form.querySelector('[name=amount]');
+    const remaining = Number(form.dataset.remaining);
+    const paidSplit = Number(form.dataset.paidSplit || 0);
+    const people = form.querySelector('[name=pessoas]');
+    const custom = form.querySelector('[name=amount]');
+    const received = form.querySelector('[name=received]');
+    const bills = form.querySelector('[data-bills]');
     const change = form.querySelector('[data-change]');
     const pixBox = document.getElementById('pixBox');
-    const remaining = Number(form.dataset.remaining);
-    const toNumber = (text) => Number(String(text).replace(/\./g, '').replace(',', '.')) || 0;
+    const toNumber = (text) => Number(String(text).trim().replace(/\./g, '').replace(',', '.')) || 0;
+    const cents = (value) => Math.round(value * 100);
+    const money = (value) => NB.money(value);
+    let pixTimer = null;
+    let lastPix = '';
 
-    function refresh() {
-        const method = form.querySelector('[name=method]:checked').value;
-        const value = toNumber(amount.value);
-        change.textContent = method === 'dinheiro' && value > remaining ? `Troco: ${NB.money(value - remaining)}` : '';
-        if (method === 'pix' && value > 0) {
-            htmx.ajax('GET', `${form.dataset.pixUrl}?valor=${encodeURIComponent(amount.value)}`, { target: '#pixBox' });
-            pixBox.hidden = false;
-        } else {
-            pixBox.hidden = true;
+    const mode = () => form.querySelector('[name=mode]:checked').value;
+    const method = () => form.querySelector('[name=method]:checked').value;
+    const methodLabel = () => form.querySelector('[name=method]:checked').closest('label').textContent.trim();
+
+    function splitShare() {
+        const total = Math.max(2, Math.min(30, Number(people.value) || 2));
+        const left = Math.max(1, total - paidSplit);
+        const base = Math.floor(cents(remaining) / left);
+        const leftover = cents(remaining) - base * left;
+        return { total, person: Math.min(paidSplit + 1, total), value: (base + (leftover > 0 ? 1 : 0)) / 100 };
+    }
+
+    function itemsTotal() {
+        let sum = 0;
+        let everything = true;
+        form.querySelectorAll('[data-item-price]').forEach((input) => {
+            const qty = Math.max(0, Math.min(Number(input.max), Number(input.value) || 0));
+            sum += cents(Number(input.dataset.itemPrice)) * qty;
+            if (qty < Number(input.max)) everything = false;
+        });
+        // Quem paga os últimos itens leva o resto (arredondamento e entrega), como no servidor.
+        return everything && sum > 0 ? remaining : Math.min(sum / 100, remaining);
+    }
+
+    function amountNow() {
+        switch (mode()) {
+            case 'dividir': return splitShare().value;
+            case 'itens': return itemsTotal();
+            case 'valor': return Math.min(toNumber(custom.value), remaining);
+            default: return remaining;
         }
     }
-    form.querySelectorAll('[name=method]').forEach((radio) => radio.addEventListener('change', refresh));
-    amount.addEventListener('change', refresh);
-    document.querySelectorAll('#payments [data-fill]').forEach((button) => button.addEventListener('click', () => {
-        amount.value = button.dataset.fill;
+
+    function renderBills(value) {
+        // Valor exato e as cédulas que o cliente costuma entregar.
+        const options = [value];
+        [5, 10, 20, 50, 100, 200].forEach((note) => {
+            const rounded = Math.ceil((value + 0.001) / note) * note;
+            if (rounded > value && !options.includes(rounded)) options.push(rounded);
+        });
+        bills.replaceChildren(...options.slice(0, 5).map((option, index) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'nb-chip';
+            button.textContent = index === 0 ? 'Valor exato' : money(option);
+            button.addEventListener('click', () => { received.value = index === 0 ? '' : option.toFixed(2).replace('.', ','); refresh(); });
+            return button;
+        }));
+    }
+
+    function refresh() {
+        const current = mode();
+        form.querySelectorAll('[data-mode-panel]').forEach((panel) => { panel.hidden = panel.dataset.modePanel !== current; });
+        const kind = method() === 'dinheiro' ? 'dinheiro' : method() === 'pix' ? 'pix' : 'cartao';
+        form.querySelectorAll('[data-method-panel]').forEach((panel) => { panel.hidden = panel.dataset.methodPanel !== kind; });
+        received.disabled = kind !== 'dinheiro';
+
+        if (current === 'dividir') {
+            const split = splitShare();
+            form.querySelector('[data-split-who]').textContent = `Pessoa ${split.person} de ${split.total}`;
+            form.querySelector('[data-split-share]').textContent = money(split.value);
+        }
+        const value = amountNow();
+        const itemsBox = form.querySelector('[data-items-total]');
+        if (itemsBox) itemsBox.textContent = money(itemsTotal());
+        form.querySelectorAll('[data-amount-text]').forEach((el) => { el.textContent = money(value); });
+
+        const given = toNumber(received.value);
+        change.textContent = kind === 'dinheiro' && given > value ? `Troco: ${money(given - value)}`
+            : kind === 'dinheiro' && received.value && given < value ? `Faltam ${money(value - given)}` : '';
+        change.classList.toggle('text-pimenta', kind === 'dinheiro' && received.value !== '' && given < value);
+        if (kind === 'dinheiro') renderBills(value);
+
+        form.querySelector('[data-submit-label]').textContent = value > 0
+            ? `Registrar ${money(value)} · ${methodLabel()}` : 'Escolha o que pagar';
+        form.querySelector('button[type=submit]').disabled = !(value > 0);
+
+        if (kind === 'pix' && value > 0) {
+            const key = value.toFixed(2);
+            if (key !== lastPix) {
+                clearTimeout(pixTimer);
+                pixTimer = setTimeout(() => {
+                    lastPix = key;
+                    htmx.ajax('GET', `${form.dataset.pixUrl}?valor=${key}`, { target: '#pixBox' });
+                }, 250);
+            }
+        }
+    }
+
+    form.addEventListener('change', refresh);
+    form.addEventListener('input', refresh);
+    form.querySelectorAll('[data-step]').forEach((button) => button.addEventListener('click', () => {
+        people.value = Math.max(2, Math.min(30, (Number(people.value) || 2) + Number(button.dataset.step)));
         refresh();
-        amount.focus();
+    }));
+    form.querySelectorAll('[data-item-step]').forEach((button) => button.addEventListener('click', () => {
+        const input = button.parentElement.querySelector('input');
+        input.value = Math.max(0, Math.min(Number(input.max), (Number(input.value) || 0) + Number(button.dataset.itemStep)));
+        refresh();
     }));
     refresh();
 }

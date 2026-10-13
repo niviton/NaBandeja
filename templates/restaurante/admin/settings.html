@@ -93,6 +93,9 @@
             <input type="checkbox" name="kitchen_auto_print" class="nb-check" {% if settings.kitchen_auto_print %}checked{% endif %}>
             <span class="font-semibold">Imprimir comanda automaticamente</span>
         </label>
+        <div><label class="nb-label" for="s-service">Taxa de serviço nas mesas (%)</label>
+            <input id="s-service" type="number" min="0" max="30" step="0.5" name="service_percent" value="{{ settings.service_percent|stringformat:'s' }}" class="nb-input tabular">
+            <p class="nb-help">0 = não cobra. Normalmente 10%. Entra na conta das mesas e o cliente pode recusar no fechamento.</p></div>
         <p class="sm:col-span-2 text-sm text-fumaca">Mesas e QR Codes das mesas ficam em <a href="{% url 'admin_tables' %}" class="underline font-semibold text-carvao">Mesas e QR Code</a>.</p>
     </section>
 

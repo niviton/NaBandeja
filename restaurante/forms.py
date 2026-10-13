@@ -83,7 +83,7 @@ SETTINGS_TABS = {
     'loja': ['store_name', 'slogan', 'logo', 'cnpj', 'phone', 'address', 'city',
              'primary_color', 'secondary_color', 'background_color', 'text_color'],
     'pagamento': ['pix_key', 'pix_key_type', 'pix_name', 'pix_city', 'show_pix_on_receipt'],
-    'salao': ['quick_notes', 'kitchen_late_minutes', 'kitchen_auto_print'],
+    'salao': ['quick_notes', 'kitchen_late_minutes', 'kitchen_auto_print', 'service_percent'],
     'cardapio': ['public_menu_enabled', 'wifi_ssid', 'wifi_password'],
     'delivery': ['online_orders_enabled', 'whatsapp_number', 'min_delivery_order'],
 }
@@ -113,6 +113,7 @@ class AppSettingsForm(forms.ModelForm):
             'quick_notes',
             'kitchen_late_minutes',
             'kitchen_auto_print',
+            'service_percent',
             'public_menu_enabled',
             'online_orders_enabled',
             'whatsapp_number',
@@ -141,6 +142,12 @@ class AppSettingsForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         if 'slogan' in self.fields:
             self.fields['slogan'].required = False
+
+    def clean_service_percent(self):
+        value = self.cleaned_data.get('service_percent') or 0
+        if value < 0 or value > 30:
+            raise forms.ValidationError('Use uma taxa de serviço entre 0 e 30%.')
+        return value
 
     def clean(self):
         cleaned = super().clean()

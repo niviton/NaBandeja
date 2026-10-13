@@ -181,6 +181,7 @@ class Order(models.Model):
         ('pix', 'PIX'),
         ('credito', 'Cartão de Crédito'),
         ('debito', 'Cartão de Débito'),
+        ('vale', 'Vale-refeição'),
         ('misto', 'Misto'),
     ]
 
@@ -196,6 +197,8 @@ class Order(models.Model):
     delivery_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name='Taxa de entrega')
     discount = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name='Desconto')
     discount_reason = models.CharField(max_length=200, blank=True, verbose_name='Motivo do desconto')
+    # Taxa de serviço (garçom) das mesas: copiada da loja ao abrir a conta; o cliente pode recusar.
+    service_percent = models.DecimalField(max_digits=5, decimal_places=2, default=0, verbose_name='Taxa de serviço (%)')
     bill_requested_at = models.DateTimeField(null=True, blank=True, verbose_name='Conta pedida em')
     served_at = models.DateTimeField(null=True, blank=True, verbose_name='Servido em')
     paid_at = models.DateTimeField(null=True, blank=True, verbose_name='Quitado em')
@@ -256,9 +259,20 @@ class Order(models.Model):
         return colors.get(self.status, 'secondary')
 
     @property
+    def subtotal_after_discount(self):
+        return max(self.total - self.discount, Decimal('0'))
+
+    @property
+    def service_fee(self):
+        """Taxa de serviço sobre os itens (já com desconto)."""
+        if not self.service_percent:
+            return Decimal('0')
+        return (self.subtotal_after_discount * self.service_percent / 100).quantize(Decimal('0.01'))
+
+    @property
     def amount_due(self):
-        """Valor a cobrar: itens - desconto + taxa de entrega."""
-        return max(self.total - self.discount, Decimal('0')) + self.delivery_fee
+        """Valor a cobrar: itens - desconto + serviço + taxa de entrega."""
+        return self.subtotal_after_discount + self.service_fee + self.delivery_fee
 
     @property
     def amount_paid(self):
@@ -355,6 +369,8 @@ class AppSettings(models.Model):
     wifi_ssid = models.CharField(max_length=64, blank=True, verbose_name='Nome do Wi-Fi dos clientes')
     wifi_password = models.CharField(max_length=64, blank=True, verbose_name='Senha do Wi-Fi dos clientes')
     min_delivery_order = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name='Pedido mínimo para delivery')
+    service_percent = models.DecimalField(max_digits=5, decimal_places=2, default=0,
+                                          verbose_name='Taxa de serviço nas mesas (%)')
 
     company_code = models.CharField(max_length=40, blank=True, verbose_name='Código da empresa (login)')
     modules = models.JSONField(default=dict, blank=True, verbose_name='Módulos ligados')
@@ -572,6 +588,12 @@ class Payment(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='payments', verbose_name='Pedido')
     method = models.CharField(max_length=20, choices=Order.PAYMENT_CHOICES, verbose_name='Forma de pagamento')
     amount = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Valor')
+    # Dinheiro: quanto o cliente entregou e o troco devolvido.
+    received = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name='Valor recebido')
+    change = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name='Troco')
+    # "Pessoa 2 de 3" ou os itens pagos ({id do item: quantidade}) quando cada um paga o seu.
+    label = models.CharField(max_length=120, blank=True, verbose_name='Quem pagou')
+    items = models.JSONField(default=dict, blank=True, verbose_name='Itens pagos')
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='+')
     created_at = models.DateTimeField(auto_now_add=True)
 

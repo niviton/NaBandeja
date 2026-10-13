@@ -44,6 +44,7 @@ urlpatterns = [
     path('order/<int:order_id>/close/', orders.close_order, name='close_order'),
     path('order/<int:order_id>/pagamento/', orders.add_payment, name='add_payment'),
     path('order/<int:order_id>/pix/', orders.pix_amount, name='pix_amount'),
+    path('order/<int:order_id>/servico/', orders.set_service, name='set_service'),
     path('order/<int:order_id>/pago/', orders.order_paid, name='order_paid'),
     path('order/<int:order_id>/entregar/', orders.handoff_order, name='handoff_order'),
     path('order/<int:order_id>/reabrir/', day.reopen_order, name='reopen_order'),

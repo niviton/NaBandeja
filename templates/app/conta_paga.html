@@ -12,7 +12,11 @@
     <p class="nb-subtitle mt-2">{{ order.display_name }} · <span class="tabular">R$ {{ order.amount_due|floatformat:2 }}</span></p>
     <ul class="mt-5 nb-card nb-divide text-sm">
         {% for payment in order.payments.all %}
-        <li class="px-4 py-3 flex justify-between"><span>{{ payment.get_method_display }}</span><span class="tabular font-semibold">R$ {{ payment.amount|floatformat:2 }}</span></li>
+        <li class="px-4 py-3 flex justify-between gap-3">
+            <span>{{ payment.get_method_display }}{% if payment.label %} <span class="text-fumaca">· {{ payment.label }}</span>{% endif %}
+                {% if payment.change %}<span class="block text-sm font-semibold text-manjericao">Recebeu R$ {{ payment.received|floatformat:2 }} · troco R$ {{ payment.change|floatformat:2 }}</span>{% endif %}</span>
+            <span class="tabular font-semibold">R$ {{ payment.amount|floatformat:2 }}</span>
+        </li>
         {% endfor %}
     </ul>
     <div class="mt-8 grid gap-2">

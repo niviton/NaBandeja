@@ -372,14 +372,38 @@
             <span>Subtotal ({{ order.items.count }} itens)</span>
             <span>R$ {{ order.total|floatformat:2 }}</span>
         </div>
+        {% if order.discount %}
+        <div class="subtotal-row">
+            <span>Desconto</span>
+            <span>- R$ {{ order.discount|floatformat:2 }}</span>
+        </div>
+        {% endif %}
+        {% if order.service_fee %}
+        <div class="subtotal-row">
+            <span>Servico ({{ order.service_percent|floatformat:"-2" }}%, opcional)</span>
+            <span>R$ {{ order.service_fee|floatformat:2 }}</span>
+        </div>
+        {% endif %}
+        {% if order.delivery_fee %}
+        <div class="subtotal-row">
+            <span>Taxa de entrega</span>
+            <span>R$ {{ order.delivery_fee|floatformat:2 }}</span>
+        </div>
+        {% endif %}
     </div>
-    
+
     <div class="total-row">
         <span>TOTAL</span>
-        <span>R$ {{ order.total|floatformat:2 }}</span>
+        <span>R$ {{ order.amount_due|floatformat:2 }}</span>
     </div>
-    
-    {% if order.payment_method %}
+
+    {% if order.payments.all %}
+    <div class="payment-box">
+        {% for payment in order.payments.all %}
+        <div>{{ payment.get_method_display|upper }}{% if payment.label %} ({{ payment.label }}){% endif %}: R$ {{ payment.amount|floatformat:2 }}{% if payment.change %} - RECEBIDO R$ {{ payment.received|floatformat:2 }}, TROCO R$ {{ payment.change|floatformat:2 }}{% endif %}</div>
+        {% endfor %}
+    </div>
+    {% elif order.payment_method %}
     <div class="payment-box">
         FORMA DE PAGAMENTO: {{ order.get_payment_method_display }}
     </div>
