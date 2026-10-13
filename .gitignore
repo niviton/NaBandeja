@@ -55,3 +55,8 @@ chave-backup.pub
 backups/remoto/
 master.sqlite3
 *.nbk
+
+# Fotos, logos e ícones de cada loja ficam no PC dela (e no backup criptografado), nunca no código
+media/*
+!media/.gitkeep
+deploy/windows/icons/
