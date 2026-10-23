@@ -18,10 +18,15 @@ jobs:
           cache: pip
       - run: pip install -r requirements-dev.txt
       - name: Lint
-        run: python -m pyflakes restaurante nabandeja_project scripts
+        run: python -m pyflakes restaurante central nabandeja_project scripts
       - name: Verificar configuracao e migracoes
         run: |
           python manage.py check
           python manage.py makemigrations --check --dry-run
+          NABANDEJA_MULTI_LOJA=1 python manage.py makemigrations --check --dry-run
       - name: Rodar testes
         run: coverage run manage.py test restaurante && coverage report --skip-covered --include="restaurante/*"
+      - name: Rodar testes do modo varias lojas
+        env:
+          NABANDEJA_MULTI_LOJA: "1"
+        run: python manage.py test central

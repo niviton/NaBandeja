@@ -12,16 +12,27 @@ from datetime import datetime
 from pathlib import Path
 
 from django.conf import settings
+from django.db import connections
 
 logger = logging.getLogger('nabandeja.backup')
 
 
 def backup_dir():
-    return Path(settings.DATA_DIR) / 'backups' / 'auto'
+    from central.tenancy import current_code
+
+    folder = Path(settings.DATA_DIR) / 'backups' / 'auto'
+    return folder / current_code() if current_code() else folder
+
+
+def database_settings():
+    """Banco atual: no modo várias lojas, o da loja ativa."""
+    from central.tenancy import enabled
+
+    return connections['default'].settings_dict if enabled() else settings.DATABASES['default']
 
 
 def is_sqlite():
-    return settings.DATABASES['default']['ENGINE'].endswith('sqlite3')
+    return database_settings()['ENGINE'].endswith('sqlite3')
 
 
 def run_backup(keep=None):
@@ -29,7 +40,7 @@ def run_backup(keep=None):
     if not is_sqlite():
         return None
     keep = keep or int(getattr(settings, 'BACKUP_KEEP', 48))
-    source_path = Path(settings.DATABASES['default']['NAME'])
+    source_path = Path(database_settings()['NAME'])
     if not source_path.exists():
         return None
 

@@ -1,0 +1,47 @@
+{% extends 'central/base.html' %}
+
+{% block title %}Nova loja · NaBandeja Central{% endblock %}
+
+{% block central_content %}
+{% url 'central_home' as back_url %}
+{% include 'restaurante/admin/_page_head.html' with back=back_url kicker='Central' title='Nova' emphasis='loja' subtitle='Cria o banco da loja e o primeiro gerente. O gerente completa o resto no assistente de primeiro uso.' %}
+
+<form method="post" class="nb-card nb-card-pad max-w-xl space-y-4" novalidate>
+    {% csrf_token %}
+    <div>
+        <label class="nb-label" for="n-name">Nome da loja</label>
+        <input id="n-name" name="name" required value="{{ data.name|default:'' }}" autocomplete="off" class="nb-input">
+    </div>
+    <div>
+        <label class="nb-label" for="n-code">Código (empresa no login)</label>
+        <input id="n-code" name="code" required value="{{ data.code|default:'' }}" autocomplete="off" autocapitalize="none" spellcheck="false"
+               pattern="[a-z0-9][a-z0-9\-]+" placeholder="ex.: billa-burguer" class="nb-input font-mono">
+        <p class="nb-help">Letras minúsculas, números e hífen. Vira o endereço: <span class="font-mono">/l/<b>código</b>/</span>. Não dá para mudar depois.</p>
+    </div>
+    <fieldset class="grid sm:grid-cols-2 gap-3 pt-2 border-t border-linha">
+        <legend class="nb-h2 pt-4 pb-2">Primeiro gerente</legend>
+        <div><label class="nb-label" for="n-first">Nome</label><input id="n-first" name="first_name" value="{{ data.first_name|default:'' }}" autocomplete="off" class="nb-input"></div>
+        <div><label class="nb-label" for="n-user">Usuário</label><input id="n-user" name="username" required value="{{ data.username|default:'gerente' }}" autocomplete="off" autocapitalize="none" spellcheck="false" class="nb-input"></div>
+        <div class="sm:col-span-2"><label class="nb-label" for="n-pass">Senha inicial</label><input id="n-pass" name="password" type="password" required autocomplete="new-password" class="nb-input">
+            <p class="nb-help">Mínimo de 8 caracteres, não só números. Peça ao gerente para trocar depois.</p></div>
+    </fieldset>
+    <div class="flex justify-end gap-2 pt-2">
+        <a href="{% url 'central_home' %}" class="nb-btn-secondary">Cancelar</a>
+        <button type="submit" class="nb-btn-primary">Criar loja</button>
+    </div>
+</form>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const name = document.getElementById('n-name');
+    const code = document.getElementById('n-code');
+    let touched = Boolean(code.value);
+    code.addEventListener('input', () => { touched = true; });
+    name.addEventListener('input', () => {
+        if (touched) return;
+        code.value = name.value.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 39);
+    });
+});
+</script>
+{% endblock %}

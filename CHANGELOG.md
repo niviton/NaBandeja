@@ -2,6 +2,21 @@
 
 Mudanças relevantes do NaBandeja. O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [3.2.0] - 2026-10-23
+
+### Adicionado
+- **Modo várias lojas** (`NABANDEJA_MULTI_LOJA=true`) para hospedar na internet (ex.: PythonAnywhere):
+  um banco SQLite por loja, endereços `/l/<código>/`, login pela Empresa e sessão que não vale
+  em outra loja. Veja `docs/deploy-pythonanywhere.md`.
+- **Painel central** (`/central/`, empresa `central`): listar, criar, desativar e entrar em
+  qualquer loja como suporte.
+- Comandos `migrar_lojas`, `criar_loja` e `backup_lojas`.
+
+### Alterado
+- A migração 0018 não mexe mais nos superusuários do banco central.
+- No modo várias lojas, as telas se atualizam a cada poucos segundos (sem WebSocket) e o login
+  com Google fica desligado. A instalação na loja não muda.
+
 ## [3.1.0] - 2026-10-11
 
 ### Fluxo reorganizado

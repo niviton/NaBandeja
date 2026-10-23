@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block body_class %}min-h-screen bg-creme{% endblock %}
+
+{% block navbar %}
+<header class="sticky top-0 z-40 bg-creme/95 backdrop-blur border-b border-linha">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center gap-3">
+        <a href="{% url 'central_home' %}" class="flex items-center gap-2.5 rounded-xl" aria-label="Painel central">
+            {% include 'brand/_mark.html' with class='w-8 h-8 shrink-0' %}
+            <span class="leading-tight">
+                <span class="block font-display font-semibold text-[17px]">NaBandeja</span>
+                <span class="block font-mono text-xs uppercase tracking-[0.12em] text-fumaca">Central</span>
+            </span>
+        </a>
+        <div class="flex-1"></div>
+        <span class="hidden sm:block text-sm font-semibold">{{ user.first_name|default:user.username }}</span>
+        <a href="{% url 'logout' %}" class="nb-icon-btn" aria-label="Sair"><i class="bi bi-box-arrow-right" aria-hidden="true"></i></a>
+    </div>
+</header>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
+    {% block central_content %}{% endblock %}
+</div>
+{% endblock %}

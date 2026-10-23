@@ -42,9 +42,10 @@ def settings_processor(request):
         'app_settings': store,
         'modules': modules,
         'license_status': license.status(store.license_key),
-        'google_login_enabled': settings.GOOGLE_LOGIN_ENABLED and modules['google'],
+        'google_login_enabled': settings.GOOGLE_LOGIN_ENABLED and modules['google'] and not settings.MULTI_TENANT,
         # Botão aparece mesmo sem credenciais; nesse caso explica o que falta.
-        'google_login_visible': modules['google'],
+        'google_login_visible': modules['google'] and not settings.MULTI_TENANT,
+        'realtime_ws': settings.ENABLE_REALTIME and settings.HAS_CHANNELS,
         'nabandeja_version': settings.NABANDEJA_VERSION,
         'admin_nav': [
             (title, [item[:4] for item in items if _visible(item[4], modules)]) for title, items in ADMIN_NAV

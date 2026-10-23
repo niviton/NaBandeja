@@ -19,6 +19,10 @@ ORDERS_GROUP = 'orders'
 
 
 def _send(payload):
+    from django.conf import settings
+
+    if not settings.ENABLE_REALTIME:
+        return
     try:
         from channels.layers import get_channel_layer
     except ImportError:

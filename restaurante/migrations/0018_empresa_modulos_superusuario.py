@@ -11,12 +11,15 @@ def setup_company_and_roles(apps, schema_editor):
     """
     from django.utils.text import slugify
 
+    db = schema_editor.connection.alias
+    if db == 'central':  # banco central do modo várias lojas: lá os superusuários são os donos do servidor
+        return
     AppSettings = apps.get_model('restaurante', 'AppSettings')
     User = apps.get_model('restaurante', 'User')
-    for store in AppSettings.objects.filter(company_code=''):
+    for store in AppSettings.objects.using(db).filter(company_code=''):
         store.company_code = slugify(store.store_name)[:40] or 'minha-loja'
-        store.save(update_fields=['company_code'])
-    User.objects.exclude(username='nabandeja').update(is_superuser=False, is_staff=False)
+        store.save(update_fields=['company_code'], using=db)
+    User.objects.using(db).exclude(username='nabandeja').update(is_superuser=False, is_staff=False)
 
 
 class Migration(migrations.Migration):

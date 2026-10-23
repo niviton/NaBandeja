@@ -65,6 +65,7 @@ O passo a passo completo está em [docs/clientes.md](docs/clientes.md).
 | [Instalação](docs/instalacao.md) | Rodar pelo código-fonte, primeiro acesso, problemas comuns |
 | [Clientes](docs/clientes.md) | Criar, atualizar e fazer backup de clientes |
 | [Implantação no Windows](docs/deploy-windows.md) | Executável `.exe`, rede local, firewall, HTTPS, atalho na Área de Trabalho |
+| [Servidor com várias lojas (PythonAnywhere)](docs/deploy-pythonanywhere.md) | Hospedar várias lojas na internet, com painel central para criar e acessar lojas |
 | [Backup](docs/backup.md) | Backups automáticos de SQLite e PostgreSQL |
 | [Tempo real](docs/tempo-real.md) | WebSocket, eventos e PWA |
 | [Login com Google](docs/login-google.md) | Entrar com a conta Google, sem depender de senha |

@@ -29,6 +29,10 @@ Thumbs.db
 
 db.sqlite3
 
+# Modo várias lojas (servidor): banco central e um banco por loja
+central.sqlite3
+lojas/
+
 # Static coletado e artefatos de teste
 staticfiles/
 tests/**/artifacts/

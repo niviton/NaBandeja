@@ -39,7 +39,7 @@ def _error_lines(limit=15):
 def system_status(request):
     store = AppSettings.get_settings()
     last_file, last_date = backup.last_backup()
-    db_path = Path(settings.DATABASES['default']['NAME']) if backup.is_sqlite() else None
+    db_path = Path(backup.database_settings()['NAME']) if backup.is_sqlite() else None
     port = request.get_port()
     scheme = 'https' if request.is_secure() else 'http'
     return render(request, 'restaurante/admin/system.html', {

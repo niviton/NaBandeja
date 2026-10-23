@@ -105,7 +105,13 @@ LOGIN_MAX_ATTEMPTS = int(os.getenv('LOGIN_MAX_ATTEMPTS', '5'))
 LOGIN_LOCKOUT_SECONDS = int(os.getenv('LOGIN_LOCKOUT_SECONDS', '300'))
 
 # ---------------------------------------------------------------- Aplicação
-ENABLE_REALTIME = env_bool('ENABLE_REALTIME', True)
+# Várias lojas no mesmo servidor (ex.: PythonAnywhere): veja docs/deploy-pythonanywhere.md.
+MULTI_TENANT = env_bool('NABANDEJA_MULTI_LOJA', False)
+# Código digitado no campo Empresa para entrar no painel central.
+CENTRAL_CODE = os.getenv('NABANDEJA_CENTRAL_CODIGO', 'central')
+
+# Sem WebSocket no modo várias lojas: as telas se atualizam a cada poucos segundos.
+ENABLE_REALTIME = env_bool('ENABLE_REALTIME', True) and not MULTI_TENANT
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -206,6 +212,23 @@ elif DB_ENGINE == 'sqlite':
 else:
     raise ImproperlyConfigured(f'DB_ENGINE inválido: {DB_ENGINE!r} (use sqlite ou postgres).')
 
+TENANTS_DIR = Path(os.getenv('NABANDEJA_LOJAS_DIR') or DATA_DIR / 'lojas')
+if MULTI_TENANT:
+    if DB_ENGINE != 'sqlite':
+        raise ImproperlyConfigured('O modo várias lojas usa um SQLite por loja (DB_ENGINE=sqlite).')
+    TENANTS_DIR.mkdir(parents=True, exist_ok=True)
+    INSTALLED_APPS.append('central')
+    _central = {
+        **DATABASES['default'],
+        'NAME': os.getenv('NABANDEJA_CENTRAL_DB') or DATA_DIR / 'central.sqlite3',
+        'ATOMIC_REQUESTS': False,
+    }
+    # "default" muda para o banco da loja a cada requisição (central/tenancy.py).
+    DATABASES = {'default': {**_central, 'ATOMIC_REQUESTS': True}, 'central': _central}
+    DATABASE_ROUTERS = ['central.tenancy.TenantRouter']
+    MIDDLEWARE.insert(MIDDLEWARE.index('django.contrib.sessions.middleware.SessionMiddleware') + 1,
+                      'central.tenancy.TenantMiddleware')
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'restaurante.User'
 
@@ -297,7 +320,7 @@ LOGGING = {
 }
 
 # ---------------------------------------------------------------- Produto
-NABANDEJA_VERSION = '3.1.0'
+NABANDEJA_VERSION = '3.2.0'
 BACKUP_KEEP = int(os.getenv('BACKUP_KEEP', '48'))
 # Endereço usado nos QR Codes impressos (ex.: https://cardapio.minhaloja.com.br).
 # Vazio: usa o endereço pelo qual o gerente acessou o sistema.

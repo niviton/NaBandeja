@@ -163,7 +163,7 @@
   NB.startRealtime = function () {
     if (!document.body.dataset.realtime) return;
     setStatus(false);
-    if ('WebSocket' in window) connect(); else startPolling();
+    if (document.body.dataset.ws !== '0' && 'WebSocket' in window) connect(); else startPolling();
   };
 
   // ------------------------------------------------------------ htmx

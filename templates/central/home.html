@@ -1,0 +1,48 @@
+{% extends 'central/base.html' %}
+
+{% block title %}Lojas · NaBandeja Central{% endblock %}
+
+{% block central_content %}
+<div class="nb-page-head">
+    <div>
+        <p class="nb-kicker">Central</p>
+        <h1 class="nb-title mt-1">Suas <em>lojas</em></h1>
+        <p class="nb-subtitle mt-1.5">Cada loja tem o próprio banco de dados. Entre como suporte para ligar módulos, ver relatórios ou ajudar o gerente.</p>
+    </div>
+    <a href="{% url 'central_new' %}" class="nb-btn-primary"><i class="bi bi-plus-lg" aria-hidden="true"></i>Nova loja</a>
+</div>
+
+{% if lojas %}
+<ul class="nb-card nb-divide">
+    {% for loja in lojas %}
+    <li class="flex flex-wrap items-center gap-4 px-4 sm:px-5 py-4">
+        <span class="flex-1 min-w-[14rem]">
+            <span class="block font-semibold">{{ loja.name }}
+                {% if loja.is_active %}<span class="nb-status-livre ms-1">Ativa</span>{% else %}<span class="nb-status-erro ms-1">Desativada</span>{% endif %}</span>
+            <span class="block text-sm text-fumaca">
+                Empresa <span class="font-mono text-carvao">{{ loja.code }}</span> ·
+                <span class="font-mono break-all">{{ base_url }}{{ loja.url }}</span>
+            </span>
+            <span class="block text-xs text-fumaca mt-0.5">Criada em {{ loja.created_at|date:"d/m/Y" }} · banco {{ loja.size_kb }} KB</span>
+        </span>
+        {% if loja.is_active %}
+        <form method="post" action="{% url 'central_enter' loja.code %}">
+            {% csrf_token %}<button class="nb-btn-dark nb-btn-sm"><i class="bi bi-box-arrow-in-right" aria-hidden="true"></i>Entrar como suporte</button>
+        </form>
+        {% endif %}
+        <form method="post" action="{% url 'central_toggle' loja.code %}"
+              data-confirm-message="{% if loja.is_active %}Desativar {{ loja.name }}? Ninguém da loja consegue entrar até reativar.{% else %}Reativar {{ loja.name }}?{% endif %}">
+            {% csrf_token %}<button class="{% if loja.is_active %}nb-btn-danger{% else %}nb-btn-secondary{% endif %} nb-btn-sm">{% if loja.is_active %}Desativar{% else %}Reativar{% endif %}</button>
+        </form>
+    </li>
+    {% endfor %}
+</ul>
+{% else %}
+<div class="nb-card nb-card-pad text-center py-12">
+    {% include 'brand/_mark.html' with class='w-12 h-12 mx-auto opacity-60' %}
+    <p class="nb-h2 mt-3">Nenhuma loja ainda</p>
+    <p class="nb-subtitle mt-1">Crie a primeira: em poucos segundos ela já está no ar.</p>
+    <a href="{% url 'central_new' %}" class="nb-btn-primary mt-4">Criar loja</a>
+</div>
+{% endif %}
+{% endblock %}

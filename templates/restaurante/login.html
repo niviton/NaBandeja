@@ -45,7 +45,7 @@
                 <div>
                     <label for="empresa" class="nb-label">Empresa</label>
                     <input id="empresa" name="empresa" class="nb-input" required autocomplete="organization"
-                        autocapitalize="none" spellcheck="false" placeholder="ex.: billa-burger" value="{{ request.POST.empresa|default:'' }}">
+                        autocapitalize="none" spellcheck="false" placeholder="ex.: billa-burger" value="{{ request.POST.empresa|default:empresa_fixa }}" {% if empresa_fixa %}readonly{% endif %}>
                 </div>
                 <div>
                     <label for="usuario" class="nb-label">Usuário</label>

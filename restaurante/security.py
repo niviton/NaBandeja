@@ -11,7 +11,9 @@ logger = logging.getLogger('nabandeja.security')
 
 
 def _key(request, username):
-    return f'login-fail:{client_ip(request)}:{(username or "").strip().lower()}'
+    from central.tenancy import current_code
+
+    return f'login-fail:{current_code()}:{client_ip(request)}:{(username or "").strip().lower()}'
 
 
 def is_locked(request, username):
