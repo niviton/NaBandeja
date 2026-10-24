@@ -11,6 +11,10 @@ Mudanças relevantes do NaBandeja. O formato segue o [Keep a Changelog](https://
 - **Painel central** (`/central/`, empresa `central`): listar, criar, desativar e entrar em
   qualquer loja como suporte.
 - Comandos `migrar_lojas`, `criar_loja` e `backup_lojas`.
+- **Nova logo NaBandeja** (bandeja com cloche) em todo o sistema: login, topo das telas, painel
+  central, rodapé do cardápio, favicon e ícone do app instalado.
+- `importar_cardapio`: carrega um cardápio de `cardapios/*.json` (Billá Burger e Dogão Canaã já prontos,
+  com as logos das lojas).
 
 ### Alterado
 - A migração 0018 não mexe mais nos superusuários do banco central.

@@ -11,6 +11,16 @@ Design system do NaBandeja. Toda tela nova segue este arquivo. Implementação: 
 - Títulos em serifa editorial (Fraunces) com **uma palavra em itálico tomate**. Rótulos pequenos em mono, caixa alta, espaçados (como etiqueta de comanda).
 - Operação primeiro: números grandes, toque fácil, nada decorativo atrapalhando.
 
+**Marca** (arquivos em `static/brand/`; use sempre os templates `brand/_mark.html` e `brand/_wordmark.html`):
+
+| Arquivo | Uso |
+|---|---|
+| `nabandeja-logo-horizontal(-escuro).svg` | Login, assistente, painel central, rodapé do cardápio |
+| `nabandeja-simbolo(-escuro).svg` | Topo das telas internas e espaços pequenos |
+| `nabandeja-icone-app-vermelho.svg` | Favicon; PNGs gerados em `static/pwa/` (app instalado) |
+
+Versões `-escuro` são para fundo carvão. Não redesenhe a marca em CSS ou com texto.
+
 ## 2. Paleta de cores e papéis
 
 | Token | Hex | Papel |

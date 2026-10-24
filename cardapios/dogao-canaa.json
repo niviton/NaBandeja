@@ -1,0 +1,62 @@
+{
+  "loja": {
+    "store_name": "Dogão Canaã",
+    "slogan": "Sabor sem limites",
+    "logo": "dogao-canaa-logo.png"
+  },
+  "estoque_padrao": 999,
+  "categorias": [
+    {
+      "nome": "Hot dog",
+      "icone": "🌭",
+      "produtos": [
+        {"nome": "Dog Paulista", "preco": "7.00", "descricao": "Pão, 2 salsichas, vinagrete, molho especial e batata palha."},
+        {"nome": "Dog Tradicional", "preco": "9.00", "descricao": "Pão, salsicha, carne moída, frango, vinagrete, molho especial e batata palha."},
+        {"nome": "Dogão Canaã", "preco": "10.00", "descricao": "Pão, salsicha, carne moída, frango, vinagrete, molho especial, batata palha e calabresa."}
+      ]
+    },
+    {
+      "nome": "Jantinha Express",
+      "icone": "🍲",
+      "produtos": [
+        {"nome": "Creme de galinha", "preco": "18.00", "descricao": "Arroz, creme de galinha e batata palha."},
+        {"nome": "Escondidinho", "preco": "18.00", "descricao": "Purê de macaxeira, carne de sol e queijo."},
+        {"nome": "Arroz de leite com carne de sol", "preco": "18.00", "descricao": ""},
+        {"nome": "Lasanha", "preco": "18.00", "descricao": "Carne ou frango."},
+        {"nome": "Empadão de frango", "preco": "18.00", "descricao": ""},
+        {"nome": "Sopa de carne", "preco": "12.00", "descricao": ""},
+        {"nome": "Pão (adicional)", "preco": "1.00", "descricao": ""}
+      ]
+    },
+    {
+      "nome": "Diversos",
+      "icone": "🍰",
+      "produtos": [
+        {"nome": "Empada doce", "preco": "6.00", "descricao": ""},
+        {"nome": "Bolo no pote", "preco": "10.00", "descricao": "Chocolate ou Hulk."},
+        {"nome": "Mousse de maracujá", "preco": "7.00", "descricao": ""}
+      ]
+    },
+    {
+      "nome": "Açaí",
+      "icone": "🍇",
+      "produtos": [
+        {"nome": "Açaí 300 ml", "preco": "14.00", "descricao": "3 complementos. Cremes: açaí, Ninho, Ovomaltine, morango ou Oreo. Complementos: leite condensado, gotas de chocolate, paçoca, granola, leite em pó, Ovomaltine, confete."},
+        {"nome": "Açaí 500 ml", "preco": "18.00", "descricao": "4 complementos."},
+        {"nome": "Complemento extra", "preco": "1.00", "descricao": ""}
+      ]
+    },
+    {
+      "nome": "Bebidas",
+      "icone": "🥤",
+      "produtos": [
+        {"nome": "Água sem gás", "preco": "3.00", "descricao": ""},
+        {"nome": "Água com gás", "preco": "3.50", "descricao": ""},
+        {"nome": "Refrigerante garrafinha", "preco": "4.00", "descricao": ""},
+        {"nome": "Refrigerante lata", "preco": "6.00", "descricao": ""},
+        {"nome": "Refrigerante 1 L", "preco": "10.00", "descricao": ""},
+        {"nome": "Garrafa de suco 300 ml", "preco": "6.00", "descricao": ""}
+      ]
+    }
+  ]
+}

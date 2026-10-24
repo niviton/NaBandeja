@@ -169,6 +169,21 @@ Também dá para criar loja pelo console:
 python manage.py criar_loja "Pizzaria do João" pizzaria-do-joao gerente SenhaInicialForte123
 ```
 
+### Importar um cardápio pronto
+
+A pasta `cardapios/` tem cardápios prontos (categorias, produtos, preços, descrições, nome e logo
+da loja). Para carregar um deles numa loja:
+
+```bash
+python manage.py importar_cardapio cardapios/billa-burger.json --loja billar
+python manage.py importar_cardapio cardapios/dogao-canaa.json --loja canaa
+```
+
+- Pode rodar de novo: atualiza preço e descrição pelo nome do produto e nunca apaga nada.
+- Os produtos entram com estoque 999. Ajuste em *Gestão → Produtos* o que precisar controlar
+  (ex.: bebidas).
+- Para um cliente novo, copie um dos arquivos, troque os itens e importe.
+
 ## 8. Backup diário
 
 Na aba **Tasks**, crie uma tarefa diária (o plano grátis permite uma) com o comando:

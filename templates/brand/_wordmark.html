@@ -1,4 +1,1 @@
-<span class="inline-flex items-center gap-2.5 {{ class|default:'' }}">
-  {% include 'brand/_mark.html' with class=mark_class|default:'w-9 h-9' tray=tray %}
-  <span class="font-display font-semibold tracking-[-0.01em] {{ text_class|default:'text-2xl text-carvao' }}"><em class="italic text-tomate">Na</em>Bandeja</span>
-</span>
+{% load static %}{# Logo horizontal NaBandeja. escuro=1 para fundos escuros. #}<img src="{% if escuro %}{% static 'brand/nabandeja-logo-horizontal-escuro.svg' %}{% else %}{% static 'brand/nabandeja-logo-horizontal.svg' %}{% endif %}" alt="NaBandeja" width="208" height="30" class="{{ class|default:'h-8' }} w-auto">

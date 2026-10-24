@@ -1,0 +1,81 @@
+{
+  "loja": {
+    "store_name": "Billá Burger",
+    "slogan": "Hambúrguer Artesanal",
+    "whatsapp_number": "84998919540",
+    "phone": "(84) 9 9891-9540",
+    "logo": "billa-burger-logo.png"
+  },
+  "estoque_padrao": 999,
+  "categorias": [
+    {
+      "nome": "Hambúrgueres",
+      "icone": "🍔",
+      "produtos": [
+        {"nome": "Billá Tradicional", "preco": "16.00", "descricao": "Pão australiano selado na manteiga, blend de carne, queijo cheddar, molho da casa, salada e batata cryspi."},
+        {"nome": "Billá Frango", "preco": "18.00", "descricao": "Pão australiano, blend crocante de frango empanado, queijo cheddar, fatia de bacon, molho barbecue, molho da casa, batata cryspi e salada."},
+        {"nome": "Billá Sertanejo", "preco": "20.00", "descricao": "Pão australiano, blend de carne, queijo coalho, queijo cheddar, cebola caramelizada na rapadura, salada, molho cheddar, molho da casa e batata cryspi."},
+        {"nome": "Billá Tropical", "preco": "22.00", "descricao": "Pão australiano, blend de carne e camarão, abacaxi com melaço de cana, cheddar, bacon, cream cheese, molho da casa, batata cryspi e salada."},
+        {"nome": "Billá Arretado", "preco": "22.00", "descricao": "Pão australiano, blend de carne, carne de sol na nata, cheddar, bacon, pimenta biquinho, geleia de pimenta, molho da casa, batata cryspi e salada."},
+        {"nome": "Billá Duplo", "preco": "24.00", "descricao": "Pão australiano, dois blends de carne, dois queijos cheddar, bacon, molho cheddar, molho da casa, batata cryspi e salada."},
+        {"nome": "Billá Triplo", "preco": "30.00", "descricao": "Pão australiano, três blends de carne, três queijos cheddar, três fatias de bacon, salada, cebola cryspi, molho cheddar e molho da casa."},
+        {"nome": "Billá Kids", "preco": "12.00", "descricao": "Pão de brioche, blend de carne, queijo cheddar, batata palha, fatia de bacon, molho cheddar e molho da casa."}
+      ]
+    },
+    {
+      "nome": "Combos",
+      "icone": "⭐",
+      "produtos": [
+        {"nome": "Combo Individual", "preco": "30.00", "descricao": "Billá Tradicional + batata recheada com bacon + refrigerante lata."},
+        {"nome": "Combo Kids Especial", "preco": "27.00", "descricao": "Billá Kids + batata recheada com bacon + refrigerante lata."},
+        {"nome": "Combo Premium", "preco": "39.90", "descricao": "Billá Tropical + batata recheada com bacon + açaí 250 ml."}
+      ]
+    },
+    {
+      "nome": "Porções",
+      "icone": "🍟",
+      "produtos": [
+        {"nome": "Batata com bacon 250 g", "preco": "12.00", "descricao": ""},
+        {"nome": "Batata com bacon 400 g", "preco": "18.00", "descricao": ""},
+        {"nome": "Batata simples 250 g", "preco": "10.00", "descricao": ""},
+        {"nome": "Batata simples 400 g", "preco": "15.00", "descricao": ""},
+        {"nome": "Anel de cebola", "preco": "10.00", "descricao": "Anel de cebola empanado com molho da casa."},
+        {"nome": "Mini coxinhas", "preco": "10.00", "descricao": "Mini coxinhas de frango e carne de sol com molho da casa."},
+        {"nome": "Adicional de salada", "preco": "3.00", "descricao": "Alface, tomate e cebola."}
+      ]
+    },
+    {
+      "nome": "Açaí",
+      "icone": "🍇",
+      "produtos": [
+        {"nome": "Açaí 250 ml", "preco": "10.00", "descricao": "2 acompanhamentos e 1 cobertura. Acompanhamentos: Ovomaltine, Chocoball, M&M, leite em pó. Coberturas: açaí, leite condensado, tutti-frutti, chocolate."},
+        {"nome": "Açaí com creme de Ninho 250 ml", "preco": "10.00", "descricao": "2 acompanhamentos e 1 cobertura."}
+      ]
+    },
+    {
+      "nome": "Bebidas",
+      "icone": "🥤",
+      "produtos": [
+        {"nome": "Refrigerante lata", "preco": "6.00", "descricao": "Coca zero, Coca original ou Guaraná."},
+        {"nome": "Refrigerante 250 ml", "preco": "3.00", "descricao": "Consultar sabor."},
+        {"nome": "Refrigerante litro Guaraná", "preco": "10.00", "descricao": ""},
+        {"nome": "Refrigerante litro Coca-Cola", "preco": "12.00", "descricao": ""},
+        {"nome": "H2O 500 ml", "preco": "7.00", "descricao": ""},
+        {"nome": "Energético Red Bull", "preco": "10.00", "descricao": ""}
+      ]
+    },
+    {
+      "nome": "Sucos e milk shakes",
+      "icone": "🧃",
+      "produtos": [
+        {"nome": "Suco de uva 300 ml", "preco": "7.00", "descricao": "Suco da polpa."},
+        {"nome": "Suco de cajá 300 ml", "preco": "7.00", "descricao": "Suco da polpa."},
+        {"nome": "Suco de manga 300 ml", "preco": "7.00", "descricao": "Suco da polpa."},
+        {"nome": "Suco de goiaba 300 ml", "preco": "7.00", "descricao": "Suco da polpa."},
+        {"nome": "Milk shake chocolate 300 ml", "preco": "14.00", "descricao": ""},
+        {"nome": "Milk shake morango 300 ml", "preco": "14.00", "descricao": ""},
+        {"nome": "Milk shake Ovomaltine 300 ml", "preco": "15.00", "descricao": ""}
+      ]
+    }
+  ]
+}

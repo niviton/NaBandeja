@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-1 35 120 71" width="2400" height="1420"><defs><mask id="holes-escuro" maskUnits="userSpaceOnUse" x="-20" y="0" width="160" height="140"><rect x="-20" y="0" width="160" height="140" fill="#fff"/><rect x="16.5" y="71" width="16" height="6" rx="3" fill="#000" transform="rotate(113 24.5 74)"/><rect x="95.5" y="71" width="16" height="6" rx="3" fill="#000" transform="rotate(67 103.5 74)"/></mask></defs>
+<g fill="none" stroke="#FBF6EF" stroke-width="6" stroke-linecap="round"><path d="M4 44 H22"/><path d="M0 56 H20"/><path d="M6 68 H20"/></g>
+<g transform="rotate(-8 64 78)">
+<path d="M13 86 V90 Q13 97 21 97 H107 Q115 97 115 90 V86 Z" fill="#CDBFB1"/>
+<path mask="url(#holes-escuro)" d="M32 58 H96 Q102 58 104 63 L113 84 Q115 90 108 90 H20 Q13 90 15 84 L24 63 Q26 58 32 58 Z" fill="#FBF6EF"/>
+<path d="M38 63 H90 Q94 63 95 66 L101 81 Q102 85 98 85 H30 Q26 85 27 81 L33 66 Q34 63 38 63 Z" fill="none" stroke="#D8CBBE" stroke-width="1.5"/>
+<path d="M38 78 A26 26 0 0 1 90 78 A26 6 0 0 1 38 78 Z" fill="#D9442B"/>
+<rect x="61.5" y="45" width="5" height="8" fill="#D9442B"/>
+<ellipse cx="64" cy="45" rx="6.5" ry="4" fill="#D9442B"/>
+<path d="M47 70 A19 19 0 0 1 56 60" fill="none" stroke="#FBF6EF" stroke-width="3.5" stroke-linecap="round" opacity="0.6"/>
+</g></svg>
