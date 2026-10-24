@@ -1,0 +1,596 @@
+<nav class="m-toc" aria-label="Índice do manual">
+  {% if logo_light %}<img class="m-logo m-logo-light" src="{{ logo_light }}" alt="NaBandeja" width="170" height="25"><img class="m-logo m-logo-dark" src="{{ logo_dark }}" alt="NaBandeja" width="170" height="25">{% endif %}
+  <p>Neste manual</p>
+  <ol>
+    <li><a href="#sobre">O que é o NaBandeja</a></li>
+    <li><a href="#acesso">Entrar e sair</a></li>
+    <li><a href="#primeiro-uso">Primeiro uso</a></li>
+    <li><a href="#rotina">A rotina do dia</a></li>
+    <li class="m-toc-group">Operação</li>
+    <li><a href="#hoje">Hoje</a></li>
+    <li><a href="#salao">Salão e mesas</a></li>
+    <li><a href="#pedido">Tela do pedido</a></li>
+    <li><a href="#balcao">Balcão</a></li>
+    <li><a href="#delivery">Delivery</a></li>
+    <li><a href="#cozinha">Cozinha</a></li>
+    <li><a href="#conta">Fechar a conta</a></li>
+    <li><a href="#caixa">Caixa</a></li>
+    <li class="m-toc-group">Clientes</li>
+    <li><a href="#qr-mesa">QR Code da mesa</a></li>
+    <li><a href="#suporte-molhos">Cartão do suporte de molhos</a></li>
+    <li><a href="#online">Pedido online</a></li>
+    <li class="m-toc-group">Gestão</li>
+    <li><a href="#relatorios">Relatórios</a></li>
+    <li><a href="#contas-pagar">Contas a pagar</a></li>
+    <li><a href="#produtos">Produtos e categorias</a></li>
+    <li><a href="#ingredientes">Ingredientes</a></li>
+    <li><a href="#mesas">Mesas e QR Code</a></li>
+    <li><a href="#equipe">Equipe</a></li>
+    <li><a href="#configuracoes">Configurações</a></li>
+    <li><a href="#backup">Backup e licença</a></li>
+    <li class="m-toc-group">Mais</li>
+    <li><a href="#impressao">Impressão</a></li>
+    <li><a href="#modulos">Módulos</a></li>
+    <li><a href="#suporte">Suporte NaBandeja</a></li>
+    <li><a href="#duvidas">Dúvidas comuns</a></li>
+    <li><a href="#glossario">Glossário</a></li>
+  </ol>
+</nav>
+
+<main>
+  <header id="sobre">
+    <p class="m-kicker">Manual de uso · versão {{ nabandeja_version }}</p>
+    <h1>Tudo o que o NaBandeja <em>faz</em>, e onde fica</h1>
+    <p class="m-lead">O NaBandeja organiza o restaurante inteiro num só lugar: mesas, balcão, delivery, cozinha, pagamento com PIX no valor exato, caixa do dia, estoque, contas a pagar e relatórios de lucro. Garçom, cozinha e gerente usam o mesmo sistema, cada um na sua tela, pelo celular, tablet ou computador.</p>
+
+    <h3>Quem usa o quê</h3>
+    <div class="m-scroll">
+      <table>
+        <thead><tr><th>Função</th><th>Áreas que vê</th><th>O que faz</th></tr></thead>
+        <tbody>
+          <tr><td>Gerente</td><td>Hoje · Salão · Delivery · Cozinha · Gestão</td><td>Abre e fecha o dia, cuida do caixa, dá descontos, cancela pedidos, reabre contas, monta o cardápio, cadastra a equipe e vê os relatórios.</td></tr>
+          <tr><td>Garçom</td><td>Salão · Delivery</td><td>Lança pedidos na mesa, no balcão e no delivery, atende os chamados das mesas e recebe as contas.</td></tr>
+          <tr><td>Cozinha</td><td>Cozinha</td><td>Vê a fila de preparo, imprime comandas e avisa quando o pedido fica pronto.</td></tr>
+          <tr><td>Suporte NaBandeja</td><td>Tudo, mais a página Suporte</td><td>Liga e desliga módulos, instala a licença, define o código da empresa e redefine senhas.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Onde o sistema roda</h3>
+    <ul>
+      <li><strong>No computador da loja:</strong> o sistema fica num computador da loja e os celulares acessam pelo Wi-Fi. Funciona mesmo sem internet. As telas se atualizam na hora.</li>
+      <li><strong>Na internet:</strong> a loja acessa por um endereço como <code>https://…/l/codigo-da-loja/</code>, de qualquer lugar. As telas se atualizam a cada poucos segundos.</li>
+    </ul>
+    <p>O botão <strong>Ajuda</strong>, no topo do sistema, abre este manual a qualquer momento.</p>
+  </header>
+
+  <section id="acesso">
+    <p class="m-kicker">Começo</p>
+    <h2>Entrar e <em>sair</em></h2>
+    <p>Na tela de entrada, preencha:</p>
+    <ul>
+      <li><strong>Empresa:</strong> o código da loja (ex.: <code>billar</code>). Acentos, espaços e maiúsculas não importam. O aparelho lembra o código para a próxima vez.</li>
+      <li><strong>Usuário</strong> e <strong>senha:</strong> os seus, criados pelo gerente. O ícone de olho mostra a senha enquanto você digita.</li>
+    </ul>
+    <ul>
+      <li>Cada pessoa deve ter o seu usuário: o sistema registra quem lançou cada pedido, quem recebeu, quem deu desconto e quem cancelou.</li>
+      <li>Depois de <strong>5 tentativas erradas</strong>, o acesso fica bloqueado por <strong>5 minutos</strong>.</li>
+      <li>Você continua conectado durante o turno (até 16 horas). Para sair, toque no ícone de saída, no canto de cima.</li>
+      <li><strong>Entrar com Google:</strong> na instalação no computador da loja, quem tem o e-mail cadastrado na equipe pode entrar com a conta Google, sem senha. O suporte liga essa opção.</li>
+    </ul>
+    <h3>Instalar no celular como aplicativo</h3>
+    <p>Abra o endereço da loja no navegador do celular e escolha <strong>Adicionar à tela inicial</strong> (no Chrome, fica no menu ⋮; no iPhone, no botão Compartilhar). O NaBandeja vira um ícone, como um aplicativo.</p>
+  </section>
+
+  <section id="primeiro-uso">
+    <p class="m-kicker">Começo</p>
+    <h2>Primeiro <em>uso</em></h2>
+    <p>Na primeira vez que o gerente entra, um assistente pede o básico, em quatro passos:</p>
+    <ol class="m-steps">
+      <li><div><b>Loja</b><span>Nome, telefone, cidade e endereço que saem no cupom.</span></div></li>
+      <li><div><b>PIX</b><span>A chave PIX e o nome do titular, para o QR Code com o valor exato.</span></div></li>
+      <li><div><b>Mesas</b><span>Quantas mesas a loja tem. Elas são criadas numeradas.</span></div></li>
+      <li><div><b>Cardápio</b><span>As categorias (ex.: Lanches, Bebidas). Os produtos são cadastrados depois, em Gestão → Produtos.</span></div></li>
+    </ol>
+    <p>Dá para tocar em <strong>Pular e configurar depois</strong>. Tudo fica em <span class="m-path"><span>Gestão</span><span>Configurações</span></span>.</p>
+  </section>
+
+  <section id="rotina">
+    <p class="m-kicker">Visão geral</p>
+    <h2>A rotina do <em>dia</em></h2>
+    <ol class="m-steps">
+      <li><div><b>O gerente abre o dia</b><span>Em Hoje, conta o troco da gaveta e toca em Abrir o dia. O caixa abre e a loja passa a aceitar pedidos.</span></div></li>
+      <li><div><b>O garçom lança os pedidos</b><span>Na mesa, no balcão ou no delivery. Os itens vão direto para a tela da cozinha.</span></div></li>
+      <li><div><b>A cozinha prepara</b><span>Toca em Pronto e o garçom recebe um aviso com som.</span></div></li>
+      <li><div><b>O garçom serve e recebe</b><span>Fecha a conta em dinheiro, cartão ou PIX, dividindo entre várias pessoas se precisar.</span></div></li>
+      <li><div><b>O gerente fecha o dia</b><span>Confere o que ficou aberto, conta a gaveta e vê se sobrou ou faltou dinheiro.</span></div></li>
+    </ol>
+  </section>
+
+  <section id="hoje">
+    <p class="m-kicker">Operação</p>
+    <h2>Hoje</h2>
+    <div class="m-roles"><span class="m-role">Gerente</span></div>
+    <p>A primeira tela do gerente. Mostra o dia como está agora e se atualiza sozinha.</p>
+    <h3>Abrir o dia</h3>
+    <p>Informe o <strong>troco na gaveta</strong> (e uma observação, se quiser) e toque em <strong>Abrir o dia</strong>. Isso abre o caixa e a loja juntos. Sem o módulo Caixa, só abre a loja.</p>
+    <h3>O que aparece durante o dia</h3>
+    <ul>
+      <li><strong>Avisos:</strong> pedidos online aguardando, mesas chamando, contas a pagar vencendo e ingredientes com estoque baixo. Toque no aviso para ir direto à tela certa.</li>
+      <li><strong>Números:</strong> vendas do dia, contas fechadas, ticket médio, pedidos em andamento e mesas ocupadas.</li>
+      <li><strong>Em andamento:</strong> todos os pedidos abertos (mesa, balcão e delivery), com a situação e o tempo de cada um.</li>
+      <li><strong>Contas fechadas hoje:</strong> as últimas contas pagas, com a hora e quem recebeu.</li>
+      <li><strong>Caixa:</strong> o total por forma de pagamento e quanto deve haver na gaveta agora.</li>
+      <li><strong>Mais vendidos hoje.</strong></li>
+    </ul>
+    <h3>Ações do gerente</h3>
+    <ul>
+      <li><strong>Sangria ou suprimento:</strong> registre quando tirar dinheiro da gaveta (sangria, ex.: pagar o gás) ou colocar mais troco (suprimento). O motivo é obrigatório.</li>
+      <li><strong>Reabrir uma conta:</strong> em "Contas fechadas hoje", toque em Reabrir e informe o motivo. Os pagamentos dela são estornados e a conta volta a ficar aberta. Só funciona enquanto o caixa em que ela foi paga estiver aberto.</li>
+      <li><strong>Pausar pedidos:</strong> fecha a loja para pedidos novos (no salão, no balcão, no delivery e online) sem fechar o caixa. As contas abertas continuam podendo ser fechadas. <strong>Retomar pedidos</strong> reabre.</li>
+    </ul>
+    <h3>Fechar o dia</h3>
+    <ol class="m-steps">
+      <li><div><b>Confira o que ficou aberto</b><span>O sistema lista mesas com conta aberta, pedidos de balcão, entregas não finalizadas e pedidos online aguardando. Toque em cada um para resolver.</span></div></li>
+      <li><div><b>Conte a gaveta</b><span>Veja quanto o sistema espera e digite o dinheiro contado.</span></div></li>
+      <li><div><b>Feche</b><span>Se ainda houver pedidos abertos, marque "Estou ciente". A loja fecha e aparece o resumo do caixa para imprimir.</span></div></li>
+    </ol>
+  </section>
+
+  <section id="salao">
+    <p class="m-kicker">Operação</p>
+    <h2>Salão e <em>mesas</em></h2>
+    <div class="m-roles"><span class="m-role">Garçom</span><span class="m-role">Gerente</span></div>
+    <p>O mapa mostra todas as mesas. A cor diz a situação:</p>
+    <div class="m-tables" role="list" aria-label="Cores das mesas">
+      <div class="m-table" role="listitem"><b>1</b><small>Livre</small></div>
+      <div class="m-table t-cozinha" role="listitem"><b>2</b><small>Na cozinha</small></div>
+      <div class="m-table t-pronto" role="listitem"><b>3</b><small>Pronto p/ servir</small></div>
+      <div class="m-table t-servida" role="listitem"><b>4</b><small>Servida</small></div>
+      <div class="m-table t-conta" role="listitem"><b>5</b><small>Pediu a conta</small></div>
+    </div>
+    <ul>
+      <li>Cada mesa ocupada mostra o valor da conta e há quanto tempo foi aberta.</li>
+      <li>Um ponto verde piscando indica comida pronta esperando o garçom.</li>
+      <li>Um sino na mesa indica que o cliente chamou pelo QR Code.</li>
+    </ul>
+    <h3>Chamados das mesas</h3>
+    <p>Quando o cliente toca em <strong>Chamar garçom</strong> ou <strong>Pedir a conta</strong> no QR Code da mesa, o aviso aparece no topo do salão, com som e o tempo de espera. Toque no aviso para marcar como atendido.</p>
+    <h3>Pedidos fora das mesas</h3>
+    <ul>
+      <li>O botão <strong>Balcão</strong> abre um pedido sem mesa (veja <a href="#balcao">Balcão</a>).</li>
+      <li>O botão <strong>Delivery</strong> abre um pedido de entrega (veja <a href="#delivery">Delivery</a>).</li>
+      <li>Os pedidos de balcão abertos ficam listados embaixo do mapa.</li>
+      <li>Se houver pedido online aguardando, aparece um aviso azul que leva ao quadro de Delivery.</li>
+    </ul>
+  </section>
+
+  <section id="pedido">
+    <p class="m-kicker">Operação</p>
+    <h2>Tela do <em>pedido</em></h2>
+    <div class="m-roles"><span class="m-role">Garçom</span><span class="m-role">Gerente</span></div>
+    <p>Abre ao tocar numa mesa, no Balcão ou no Delivery. À esquerda fica o cardápio; à direita, a conta aberta e o pedido novo.</p>
+    <h3>Montar o pedido</h3>
+    <ol>
+      <li>Toque nos produtos. Use a <strong>busca</strong> ou as <strong>categorias</strong> para achar mais rápido. Produtos sem estoque aparecem como <strong>Esgotado</strong> e não podem ser escolhidos; com 5 ou menos, aparece "resta N".</li>
+      <li>Ajuste a quantidade com <strong>−</strong> e <strong>+</strong>.</li>
+      <li>Toque em <strong>+ observação</strong> no item para anotar (ex.: "sem cebola"). As observações rápidas aparecem como botões.</li>
+      <li>Se quiser, escreva uma <strong>observação do pedido</strong> inteiro.</li>
+      <li>Toque em <strong>Enviar para a cozinha</strong>.</li>
+    </ol>
+    <ul>
+      <li>Cada mesa tem o seu próprio pedido em montagem: dá para começar a mesa 5, atender a mesa 2 e voltar sem perder nada.</li>
+      <li><strong>Limpar</strong> apaga o pedido em montagem (o que já foi enviado não muda).</li>
+      <li>As mesas <code>01</code> e <code>1</code> são a mesma mesa.</li>
+      <li>Para acrescentar itens, é só abrir a mesa de novo: eles entram na mesma conta e a cozinha recebe só o que é novo.</li>
+    </ul>
+    <h3>A conta aberta</h3>
+    <ul>
+      <li>Mostra cada item com a quantidade, as observações e quantos ainda estão na cozinha.</li>
+      <li><strong>− e +</strong> nos itens já enviados: o garçom só consegue tirar itens que a cozinha ainda não fez. O gerente pode tirar qualquer um.</li>
+      <li>Totais: itens, desconto, taxa de entrega, valor já pago e quanto falta pagar.</li>
+    </ul>
+    <h3>Ações da conta</h3>
+    <div class="m-scroll">
+      <table>
+        <thead><tr><th>Ação</th><th>O que faz</th><th>Quem</th></tr></thead>
+        <tbody>
+          <tr><td>Fechar conta</td><td>Abre a tela de pagamento.</td><td>Garçom e gerente</td></tr>
+          <tr><td>Servido</td><td>Marca que a comida chegou à mesa (aparece quando a cozinha termina).</td><td>Garçom e gerente</td></tr>
+          <tr><td>Pediu a conta</td><td>Deixa a mesa roxa no mapa, para ninguém esquecer.</td><td>Garçom e gerente</td></tr>
+          <tr><td>Imprimir</td><td>Imprime a conta para o cliente conferir.</td><td>Garçom e gerente</td></tr>
+          <tr><td>Transferir ou juntar mesa</td><td>Leva a conta para outra mesa. Se a outra já tiver conta aberta, os itens são juntados.</td><td>Garçom e gerente</td></tr>
+          <tr><td>Desconto ou cortesia</td><td>Desconto em reais ou em %, sempre com motivo. 100% vira cortesia. Pode ser removido.</td><td>Gerente</td></tr>
+          <tr><td>Cancelar pedido</td><td>Cancela a conta inteira. Os itens que a cozinha ainda não fez voltam para o estoque.</td><td>Gerente</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="balcao">
+    <p class="m-kicker">Operação</p>
+    <h2>Balcão: para quem <em>não está</em> numa mesa</h2>
+    <div class="m-roles"><span class="m-role">Garçom</span><span class="m-role">Gerente</span></div>
+    <p>Para o cliente que pede em pé e espera, ou que vai levar para viagem. Não ocupa nenhuma mesa.</p>
+    <div class="m-box">
+      <h3>Como fazer</h3>
+      <ol>
+        <li>No <span class="m-path"><span>Salão</span></span>, toque em <strong>Balcão</strong>.</li>
+        <li>Escolha os produtos e escreva o <strong>nome do cliente</strong> (opcional, mas ajuda a chamar na hora de entregar).</li>
+        <li>Escolha quando ele paga:
+          <ul>
+            <li><strong>Enviar para a cozinha:</strong> paga quando for buscar.</li>
+            <li><strong>Enviar e receber agora:</strong> a tela de pagamento abre na hora.</li>
+          </ul>
+        </li>
+        <li>O pedido aparece na lista <strong>Balcão</strong>, embaixo do mapa, com o tempo de espera e o selo <strong>Pago</strong> se já foi pago.</li>
+        <li>Quando ficar pronto, toque em <strong>Entregar ao cliente</strong> (se já pagou) ou em <strong>Receber</strong> (se ainda falta).</li>
+      </ol>
+    </div>
+    <p class="m-note">Se o balcão for pago depois que a cozinha já terminou, a conta fecha na hora do pagamento.</p>
+  </section>
+
+  <section id="delivery">
+    <p class="m-kicker">Operação</p>
+    <h2>Delivery</h2>
+    <div class="m-roles"><span class="m-role">Garçom</span><span class="m-role">Gerente</span></div>
+    <h3>Lançar um delivery (telefone, WhatsApp, iFood…)</h3>
+    <ol>
+      <li>Toque em <strong>Novo delivery</strong> (no quadro de Delivery ou no Salão).</li>
+      <li>Escolha os produtos.</li>
+      <li>Preencha <strong>cliente</strong>, <strong>telefone</strong>, <strong>origem</strong> (WhatsApp, iFood, Rappi, Telefone, Balcão ou Site), <strong>endereço</strong> e o <strong>bairro</strong>, que define a taxa de entrega.</li>
+      <li>Envie para a cozinha, ou envie e receba agora (pagamento antecipado).</li>
+    </ol>
+    <h3>O quadro de Delivery</h3>
+    <div class="m-scroll">
+      <table>
+        <thead><tr><th>Coluna</th><th>O que significa</th><th>O que fazer</th></tr></thead>
+        <tbody>
+          <tr><td>Aguardando confirmação</td><td>Pedido feito pelo cliente no link da loja</td><td>Aceitar e preparar, ou Recusar</td></tr>
+          <tr><td>Na cozinha</td><td>Sendo preparado</td><td>Esperar o aviso de pronto</td></tr>
+          <tr><td>Pronto para sair</td><td>Esperando o entregador</td><td>Saiu para entrega</td></tr>
+          <tr><td>Na rua</td><td>Com o entregador</td><td>Entregue</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <ul>
+      <li>Cada pedido mostra cliente, endereço, origem, valor, tempo e se está <strong>Pago</strong> ou <strong>A receber</strong>.</li>
+      <li>Ao tocar em <strong>Entregue</strong>: se já estava pago, o pedido encerra; se não, abre a tela de pagamento.</li>
+      <li>Pedido online novo toca um som e mostra um aviso.</li>
+      <li>O link para os clientes pedirem aparece no topo do quadro.</li>
+    </ul>
+  </section>
+
+  <section id="cozinha">
+    <p class="m-kicker">Operação</p>
+    <h2>Cozinha</h2>
+    <div class="m-roles"><span class="m-role">Cozinha</span><span class="m-role">Gerente</span></div>
+    <p>Tela escura, feita para ficar num tablet ou monitor na cozinha. Tem duas partes:</p>
+    <ul>
+      <li><strong>Preparar:</strong> os pedidos em ordem de chegada, com um cronômetro. Depois do tempo de atraso (configurável, ex.: 20 minutos), o pedido fica em destaque.</li>
+      <li><strong>Prontos aguardando garçom:</strong> o que já saiu e ainda não foi servido.</li>
+    </ul>
+    <ul>
+      <li>As <strong>observações</strong> dos itens ficam em destaque para não passarem despercebidas.</li>
+      <li>Quando a mesa pede mais itens, a cozinha recebe só os novos.</li>
+      <li><strong>Pronto:</strong> avisa o garçom (com som na tela do salão).</li>
+      <li><strong>Imprimir</strong> (ícone de impressora): imprime a comanda daquele pedido.</li>
+      <li><strong>Som:</strong> liga ou desliga o alerta de pedido novo.</li>
+      <li><strong>Imprimir automático:</strong> imprime a comanda sozinho quando um pedido chega.</li>
+    </ul>
+  </section>
+
+  <section id="conta">
+    <p class="m-kicker">Operação</p>
+    <h2>Fechar a <em>conta</em></h2>
+    <div class="m-roles"><span class="m-role">Garçom</span><span class="m-role">Gerente</span></div>
+    <p>A tela de pagamento mostra os itens, o total e quanto <strong>falta pagar</strong>.</p>
+    <ol>
+      <li>Se a conta for dividida, toque em <strong>2, 3, 4, 5 ou 6 pessoas</strong>: o valor de cada parte é preenchido sozinho, com os centavos distribuídos certinho.</li>
+      <li>Escolha a forma: <strong>Dinheiro</strong>, <strong>PIX</strong>, <strong>Cartão de crédito</strong> ou <strong>Cartão de débito</strong>.</li>
+      <li>Confira o <strong>valor recebido</strong>. O botão <strong>Tudo</strong> preenche o total que falta.</li>
+      <li>Toque em <strong>Registrar pagamento</strong>.</li>
+    </ol>
+    <ul>
+      <li><strong>Dinheiro:</strong> digite quanto o cliente entregou e o sistema mostra o troco.</li>
+      <li><strong>PIX:</strong> aparece um QR Code com o valor exato digitado, e o código "copia e cola". O cliente só confirma no app do banco. Confira no app da loja se o dinheiro entrou antes de registrar. Não precisa de maquininha nem de taxa.</li>
+      <li><strong>Várias formas:</strong> registre um pagamento de cada vez (ex.: metade no PIX, metade no cartão).</li>
+      <li>Quando o valor pago cobre a conta, ela fecha sozinha e aparece a tela <strong>Conta paga</strong>, com o botão <strong>Imprimir cupom</strong>.</li>
+      <li><strong>Estornar</strong> (gerente): desfaz um pagamento lançado errado, pela seta ao lado dele.</li>
+      <li><strong>Fechou errado?</strong> O gerente pode reabrir a conta na própria tela Conta paga ou em Hoje.</li>
+    </ul>
+    <p class="m-note">Balcão e delivery pagos antes da entrega ficam com o selo Pago e só encerram quando forem entregues.</p>
+  </section>
+
+  <section id="caixa">
+    <p class="m-kicker">Operação</p>
+    <h2>Caixa</h2>
+    <div class="m-roles"><span class="m-role">Gerente</span></div>
+    <p>O caixa confere só o <strong>dinheiro em espécie</strong> da gaveta. PIX e cartão aparecem nos totais, mas vão para o banco.</p>
+    <p><span class="m-path"><span>Troco inicial</span><span>+ dinheiro recebido</span><span>+ suprimentos</span><span>− sangrias</span><span>= deve haver na gaveta</span></span></p>
+    <ul>
+      <li><strong>Abrir:</strong> em Hoje → Abrir o dia.</li>
+      <li><strong>Sangria e suprimento:</strong> em Hoje, no cartão do Caixa, sempre com motivo.</li>
+      <li><strong>Fechar:</strong> em Hoje → Fechar o dia. O sistema mostra a diferença entre o esperado e o contado (positiva se sobrou, negativa se faltou).</li>
+      <li><strong>Histórico:</strong> em <span class="m-path"><span>Gestão</span><span>Caixas</span></span>, cada dia com abertura, fechamento, quem abriu e fechou, vendas por forma de pagamento, sangrias, suprimentos e observações. O resumo pode ser impresso.</li>
+    </ul>
+  </section>
+
+  <section id="qr-mesa">
+    <p class="m-kicker">Clientes</p>
+    <h2>QR Code da <em>mesa</em></h2>
+    <p>Cada mesa tem um QR Code próprio. O cliente lê com a câmera do celular e:</p>
+    <ul>
+      <li>vê o <strong>cardápio</strong> com fotos, descrições e preços, com busca e categorias;</li>
+      <li>toca em <strong>Chamar garçom</strong> ou <strong>Pedir a conta</strong>: o aviso aparece no salão.</li>
+    </ul>
+    <p>O cliente não faz pedido pelo QR da mesa: o pedido continua com o garçom. Isso evita pedidos de quem vai embora sem pagar. Cada mesa pode chamar no máximo 6 vezes em 10 minutos.</p>
+    <p class="m-note">Se um QR Code for copiado ou fotografado indevidamente, gere um novo em Gestão → Mesas e QR Code. O antigo para de funcionar.</p>
+  </section>
+
+  <section id="suporte-molhos">
+    <p class="m-kicker">Clientes</p>
+    <h2>Cartão do suporte de <em>molhos</em></h2>
+    <p>Um cartão para deixar na mesa ou no suporte de molhos, com dois QR Codes: um conecta o celular ao <strong>Wi-Fi</strong> da loja e o outro abre o <strong>cardápio</strong>. Só para consulta.</p>
+    <p>Imprima em <span class="m-path"><span>Gestão</span><span>Configurações</span><span>Cardápio digital</span><span>Cartões do suporte</span></span>. Dá para escolher quantas cópias por folha. O nome e a senha do Wi-Fi ficam na mesma aba.</p>
+  </section>
+
+  <section id="online">
+    <p class="m-kicker">Clientes</p>
+    <h2>Pedido <em>online</em></h2>
+    <p>Um link da loja onde o cliente faz o pedido de entrega pelo celular:</p>
+    <ol>
+      <li>Escolhe os produtos.</li>
+      <li>Preenche nome, telefone, bairro, endereço e a forma de pagamento na entrega (PIX, dinheiro, crédito ou débito), com observações se quiser.</li>
+      <li>Envia. A tela mostra o número do pedido e um botão para <strong>confirmar pelo WhatsApp</strong> da loja.</li>
+    </ol>
+    <ul>
+      <li>O pedido chega no quadro de Delivery como <strong>Aguardando confirmação</strong>. Só vai para a cozinha (e só baixa o estoque) depois que alguém da loja aceita.</li>
+      <li>Se a loja estiver pausada ou fechada, o link não aceita pedidos.</li>
+      <li>Abaixo do <strong>pedido mínimo</strong> configurado, o envio é recusado com o valor mínimo.</li>
+      <li>A taxa de entrega é somada conforme o bairro escolhido.</li>
+    </ul>
+  </section>
+
+  <section id="relatorios">
+    <p class="m-kicker">Gestão</p>
+    <h2>Relatórios</h2>
+    <div class="m-roles"><span class="m-role">Gerente</span></div>
+    <ul>
+      <li><strong>Período:</strong> por dia, mês, ano ou de uma data a outra.</li>
+      <li><strong>Produtos e lucro:</strong> quantidade vendida, faturamento, custo, lucro bruto e margem de cada produto. O custo vem da receita (ingredientes) ou do custo manual, e fica guardado no momento da venda: mudar o custo depois não altera o passado.</li>
+      <li><strong>Por forma de pagamento</strong> e <strong>por garçom</strong>.</li>
+      <li><strong>Histórico:</strong> cada pedido com data, mesa ou cliente, garçom, itens, total e forma de pagamento, com filtros e paginação.</li>
+      <li><strong>Exportar:</strong> Excel, PDF ou CSV.</li>
+    </ul>
+  </section>
+
+  <section id="contas-pagar">
+    <p class="m-kicker">Gestão</p>
+    <h2>Contas a <em>pagar</em></h2>
+    <div class="m-roles"><span class="m-role">Gerente</span></div>
+    <ul>
+      <li>Cadastre cada despesa com descrição, categoria, valor, vencimento e observações. Categorias: Fornecedor / insumos, Aluguel, Água, luz, gás e internet, Funcionários, Impostos e taxas, Manutenção e Outros.</li>
+      <li><strong>Pagar</strong> marca a data de pagamento.</li>
+      <li>Navegue mês a mês e filtre por pagas ou em aberto.</li>
+      <li>Contas vencidas ou vencendo aparecem como aviso em Hoje.</li>
+      <li>O <strong>saldo do mês</strong> mostra as vendas menos as contas pagas.</li>
+    </ul>
+  </section>
+
+  <section id="produtos">
+    <p class="m-kicker">Gestão</p>
+    <h2>Produtos e <em>categorias</em></h2>
+    <div class="m-roles"><span class="m-role">Gerente</span></div>
+    <h3>Categorias</h3>
+    <p>Nome, emoji e a <strong>ordem</strong> em que aparecem no cardápio. Uma categoria desativada some do cardápio.</p>
+    <h3>Produto</h3>
+    <div class="m-scroll">
+      <table>
+        <thead><tr><th>Campo</th><th>Para que serve</th></tr></thead>
+        <tbody>
+          <tr><td>Nome e categoria</td><td>Como aparece no cardápio, no pedido e na comanda.</td></tr>
+          <tr><td>Preço de venda</td><td>Mudar o preço não altera contas já lançadas.</td></tr>
+          <tr><td>Descrição</td><td>Aparece no cardápio digital e no pedido online.</td></tr>
+          <tr><td>Foto ou emoji</td><td>A foto aparece no cardápio digital; sem foto, usa o emoji.</td></tr>
+          <tr><td>Estoque</td><td>Manual (em unidades) ou pela receita de ingredientes. Sem estoque, o produto aparece como Esgotado até ser reposto.</td></tr>
+          <tr><td>Receita</td><td>Ingredientes e quantidades usados em cada unidade. A cada venda, os ingredientes baixam sozinhos.</td></tr>
+          <tr><td>Custo</td><td>Usado no cálculo de lucro. Com receita, vem dos ingredientes.</td></tr>
+          <tr><td>Ativo</td><td>Desative para tirar do cardápio sem apagar.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="m-note">Produto que já foi vendido não pode ser apagado: ao excluir, ele é só desativado, para o histórico continuar certo.</p>
+  </section>
+
+  <section id="ingredientes">
+    <p class="m-kicker">Gestão</p>
+    <h2>Ingredientes</h2>
+    <div class="m-roles"><span class="m-role">Gerente</span></div>
+    <ul>
+      <li>Cada ingrediente tem nome, <strong>unidade</strong> (ex.: g, ml, unidade), estoque atual, <strong>custo por unidade</strong> e o nível de <strong>aviso de estoque baixo</strong>.</li>
+      <li>As vendas baixam os ingredientes pela receita; um cancelamento devolve. Cada entrada e saída fica registrada.</li>
+      <li>Ingredientes abaixo do aviso aparecem em Hoje.</li>
+    </ul>
+  </section>
+
+  <section id="mesas">
+    <p class="m-kicker">Gestão</p>
+    <h2>Mesas e <em>QR Code</em></h2>
+    <div class="m-roles"><span class="m-role">Gerente</span></div>
+    <ul>
+      <li><strong>Criar mesas:</strong> várias de uma vez, informando a quantidade e o número inicial.</li>
+      <li>Cada mesa tem nome ou número, quantidade de <strong>lugares</strong>, <strong>área</strong> (ex.: Varanda), e pode ser desativada.</li>
+      <li><strong>Imprimir QR Codes:</strong> folha com o QR de todas as mesas.</li>
+      <li><strong>Novo QR:</strong> troca o código de uma mesa; o anterior para de funcionar.</li>
+    </ul>
+  </section>
+
+  <section id="equipe">
+    <p class="m-kicker">Gestão</p>
+    <h2>Equipe</h2>
+    <div class="m-roles"><span class="m-role">Gerente</span></div>
+    <ul>
+      <li><strong>Novo membro:</strong> nome, usuário, e-mail (para entrar com Google), função (garçom, cozinha ou gerente) e senha.</li>
+      <li><strong>Editar:</strong> muda dados, função ou senha.</li>
+      <li><strong>Desativar:</strong> quem saiu da loja não entra mais, mas o histórico de vendas dele continua.</li>
+    </ul>
+  </section>
+
+  <section id="configuracoes">
+    <p class="m-kicker">Gestão</p>
+    <h2>Configurações</h2>
+    <div class="m-roles"><span class="m-role">Gerente</span></div>
+    <p>Organizadas em abas. Cada aba salva só o que está nela.</p>
+    <div class="m-scroll">
+      <table>
+        <thead><tr><th>Aba</th><th>O que tem</th></tr></thead>
+        <tbody>
+          <tr><td>Loja</td><td>Logo, nome, telefone, slogan, CNPJ/CPF, cidade e endereço (saem no cupom) e as cores das páginas do cliente.</td></tr>
+          <tr><td>Pagamento</td><td>Chave PIX, tipo da chave, nome e cidade do titular, PIX no cupom impresso e um QR de teste de R$ 0,01 para conferir os dados no app do banco.</td></tr>
+          <tr><td>Salão e cozinha</td><td>Observações rápidas (uma por linha), minutos para considerar um pedido atrasado e impressão automática da comanda.</td></tr>
+          <tr><td>Cardápio digital</td><td>Ligar o cardápio, nome e senha do Wi-Fi, imprimir os cartões do suporte e os QR das mesas.</td></tr>
+          <tr><td>Delivery</td><td>Aceitar pedidos online, WhatsApp da loja, pedido mínimo e os bairros com a taxa de entrega.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Ao lado, o quadro <strong>Como acessar</strong> mostra os endereços do sistema (neste computador e nos celulares) e o código da empresa.</p>
+  </section>
+
+  <section id="backup">
+    <p class="m-kicker">Gestão</p>
+    <h2>Backup e <em>licença</em></h2>
+    <div class="m-roles"><span class="m-role">Gerente</span></div>
+    <ul>
+      <li><strong>Backup automático:</strong> uma cópia dos dados é feita regularmente e as mais antigas são apagadas sozinhas.</li>
+      <li><strong>Fazer backup agora</strong> e <strong>Baixar</strong> a cópia mais recente (guarde num pendrive ou na nuvem).</li>
+      <li><strong>Visão geral:</strong> versão, endereços de acesso, espaço em disco e os últimos erros registrados.</li>
+    </ul>
+    <h3>Situação da licença</h3>
+    <div class="m-scroll">
+      <table>
+        <thead><tr><th>Situação</th><th>O que acontece</th></tr></thead>
+        <tbody>
+          <tr><td>Válida</td><td>Tudo normal.</td></tr>
+          <tr><td>Vencendo</td><td>Faltam 10 dias ou menos: aviso para o gerente.</td></tr>
+          <tr><td>Tolerância</td><td>Vencida há até 7 dias: aviso em vermelho, tudo ainda funciona.</td></tr>
+          <tr><td>Bloqueada</td><td>Vencida há mais de 7 dias: pedidos novos ficam bloqueados. Contas abertas ainda podem ser fechadas.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="impressao">
+    <p class="m-kicker">Mais</p>
+    <h2>Impressão</h2>
+    <div class="m-scroll">
+      <table>
+        <thead><tr><th>O quê</th><th>Onde</th><th>Para quê</th></tr></thead>
+        <tbody>
+          <tr><td>Comanda</td><td>Cozinha (automática ou pelo ícone)</td><td>Itens e observações para preparar.</td></tr>
+          <tr><td>Conta</td><td>Tela do pedido → Imprimir</td><td>O cliente confere antes de pagar.</td></tr>
+          <tr><td>Cupom</td><td>Conta paga → Imprimir cupom</td><td>Comprovante com os dados da loja e o QR do PIX, se ligado. Não é nota fiscal.</td></tr>
+          <tr><td>Resumo do caixa</td><td>Gestão → Caixas → Ver</td><td>Conferência do dia.</td></tr>
+          <tr><td>QR Codes</td><td>Mesas e QR Code / Cardápio digital</td><td>Mesas e cartões do suporte de molhos.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="m-note">Para a cozinha imprimir sem a janela de confirmação, abra o Chrome do computador da cozinha no modo quiosque de impressão (o suporte configura).</p>
+  </section>
+
+  <section id="modulos">
+    <p class="m-kicker">Mais</p>
+    <h2>Módulos</h2>
+    <p>Cada loja liga só o que usa. O suporte NaBandeja liga e desliga; o que estiver desligado some das telas.</p>
+    <div class="m-scroll">
+      <table>
+        <thead><tr><th>Módulo</th><th>O que libera</th></tr></thead>
+        <tbody>
+          <tr><td>Caixa</td><td>Abertura e fechamento com conferência da gaveta, sangria, suprimento e histórico de caixas</td></tr>
+          <tr><td>PIX</td><td>QR Code com o valor exato na conta e no cupom</td></tr>
+          <tr><td>Delivery</td><td>Pedidos de entrega lançados pela equipe e taxas por bairro</td></tr>
+          <tr><td>Pedidos online</td><td>Link para o cliente pedir entrega pelo celular</td></tr>
+          <tr><td>Cardápio digital</td><td>QR Code das mesas e cartão do suporte de molhos</td></tr>
+          <tr><td>Ingredientes</td><td>Estoque por receita</td></tr>
+          <tr><td>Financeiro</td><td>Contas a pagar</td></tr>
+          <tr><td>Login com Google</td><td>Entrar sem senha, pela conta Google (instalação na loja)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="suporte">
+    <p class="m-kicker">Mais</p>
+    <h2>Suporte <em>NaBandeja</em></h2>
+    <p>Área do suporte, em <span class="m-path"><span>Gestão</span><span>Suporte NaBandeja</span></span> (só para o usuário de suporte):</p>
+    <ul>
+      <li><strong>Código da empresa:</strong> o que a equipe digita no campo Empresa.</li>
+      <li><strong>Módulos:</strong> ligar e desligar cada um.</li>
+      <li><strong>Licença:</strong> instalar a licença nova.</li>
+      <li><strong>Senhas da equipe:</strong> redefinir a senha de qualquer pessoa, inclusive do gerente.</li>
+      <li><strong>Login com Google:</strong> instruções para ativar.</li>
+    </ul>
+    <p>Na versão na internet, o dono do sistema tem ainda o <strong>Painel central</strong> (Empresa <code>central</code>): lista todas as lojas, cria loja nova com o primeiro gerente, entra em qualquer loja como suporte e desativa ou reativa lojas.</p>
+  </section>
+
+  <section id="duvidas">
+    <p class="m-kicker">Ajuda</p>
+    <h2>Dúvidas <em>comuns</em></h2>
+    <details><summary>Como faço um pedido para quem não está numa mesa?</summary>
+      <p>Use o Balcão: Salão → Balcão. O passo a passo está em <a href="#balcao">Balcão</a>.</p></details>
+    <details><summary>Fechei uma conta errada. E agora?</summary>
+      <p>O gerente toca em Reabrir na tela Conta paga ou em Hoje → Contas fechadas hoje, informando o motivo. Os pagamentos são estornados e a conta volta a ficar aberta. Depois que o caixa do dia é fechado, não dá mais para reabrir.</p></details>
+    <details><summary>Lancei um pagamento errado.</summary>
+      <p>O gerente estorna pela seta ao lado do pagamento, na tela de fechar a conta, e lança de novo.</p></details>
+    <details><summary>O cliente foi embora sem pagar.</summary>
+      <p>O gerente cancela o pedido ou aplica uma cortesia (desconto de 100%), sempre com o motivo. Tudo fica registrado.</p></details>
+    <details><summary>Um produto está Esgotado ou sumiu do cardápio.</summary>
+      <p>Se aparece como Esgotado, o estoque chegou a zero. Se não aparece, ele ou a categoria estão desativados. O gerente ajusta em Gestão → Produtos (ou em Ingredientes, se o produto usa receita).</p></details>
+    <details><summary>O garçom não consegue tirar um item da conta.</summary>
+      <p>O item já foi preparado pela cozinha. Só o gerente pode tirá-lo.</p></details>
+    <details><summary>Mudei o preço. As contas antigas mudam?</summary>
+      <p>Não. O preço e o custo ficam guardados no momento da venda.</p></details>
+    <details><summary>Não consigo lançar pedido: "Loja fechada".</summary>
+      <p>A loja está pausada ou o dia não foi aberto. O gerente abre em Hoje (Abrir o dia ou Retomar pedidos).</p></details>
+    <details><summary>O pedido online não chegou.</summary>
+      <p>Confira se a loja está aberta (não pausada) em Hoje e se "Aceitar pedidos online" está ligado em Configurações → Delivery.</p></details>
+    <details><summary>O QR Code do PIX não aparece.</summary>
+      <p>Cadastre a chave PIX em Configurações → Pagamento e confira com o QR de teste de R$ 0,01.</p></details>
+    <details><summary>A tela não atualizou sozinha.</summary>
+      <p>As telas se atualizam sozinhas. Se o Wi-Fi ou a internet caírem, recarregue a página quando a conexão voltar.</p></details>
+    <details><summary>O som dos avisos não toca.</summary>
+      <p>O navegador só libera som depois que alguém toca na tela uma vez. Toque em qualquer lugar ao abrir a tela. Na cozinha, confira se o botão Som está ligado.</p></details>
+    <details><summary>O celular não abre o sistema.</summary>
+      <p>Na instalação na loja, o celular precisa estar no mesmo Wi-Fi do computador do sistema. Use o endereço mostrado em Configurações → Como acessar.</p></details>
+    <details><summary>Esqueci a minha senha.</summary>
+      <p>Peça ao gerente: ele troca em Gestão → Equipe → Editar. Se o gerente esqueceu a dele, fale com o suporte NaBandeja.</p></details>
+    <details><summary>A internet caiu. O sistema para?</summary>
+      <p>Na instalação no computador da loja, não: tudo funciona pela rede da loja, sem internet. Na versão na internet, é preciso estar conectado.</p></details>
+    <details><summary>O sistema emite nota fiscal?</summary>
+      <p>Não. O cupom impresso é um comprovante do pedido, sem valor fiscal.</p></details>
+  </section>
+
+  <section id="glossario">
+    <p class="m-kicker">Ajuda</p>
+    <h2>Glossário</h2>
+    <div class="m-scroll">
+      <table>
+        <tbody>
+          <tr><td>Balcão</td><td>Pedido de quem não está numa mesa (em pé esperando ou para viagem).</td></tr>
+          <tr><td>Comanda</td><td>Papel que vai para a cozinha com os itens a preparar.</td></tr>
+          <tr><td>Cortesia</td><td>Desconto de 100%: o cliente não paga.</td></tr>
+          <tr><td>Sangria</td><td>Dinheiro tirado da gaveta durante o dia.</td></tr>
+          <tr><td>Suprimento</td><td>Dinheiro colocado na gaveta durante o dia (ex.: mais troco).</td></tr>
+          <tr><td>Ticket médio</td><td>Vendas do dia divididas pelo número de contas fechadas.</td></tr>
+          <tr><td>Estorno</td><td>Desfazer um pagamento registrado.</td></tr>
+          <tr><td>Empresa</td><td>Código da loja, digitado no login.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer class="m-footer">
+    <span>NaBandeja · sistema para restaurantes</span>
+    <span>Manual da versão {{ nabandeja_version }}</span>
+  </footer>
+</main>

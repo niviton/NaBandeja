@@ -50,6 +50,7 @@
                 <span class="block text-sm font-semibold">{{ user.first_name|default:user.username }}</span>
                 <span class="block font-mono text-xs uppercase tracking-[0.12em] text-fumaca">{% if user.is_superuser %}Suporte{% else %}{{ user.get_role_display }}{% endif %}</span>
             </span>
+            <a href="{% url 'help_page' %}" class="nb-icon-btn {% if active_tab == 'ajuda' %}bg-carvao text-white{% endif %}" aria-label="Ajuda: manual do sistema" title="Ajuda" {% if active_tab == 'ajuda' %}aria-current="page"{% endif %}><i class="bi bi-question-circle" aria-hidden="true"></i></a>
             <a href="{% url 'logout' %}" class="nb-icon-btn" aria-label="Sair"><i class="bi bi-box-arrow-right" aria-hidden="true"></i></a>
         </div>
     </div>

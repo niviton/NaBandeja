@@ -1,0 +1,98 @@
+/* Manual do NaBandeja: estilo compartilhado pela página Ajuda do sistema e pela versão para compartilhar (exportar_manual).
+   Layout: índice fixo à esquerda no computador, coluna única no celular; os caminhos das telas aparecem como etiquetas de comanda. */
+.manual {
+  --m-creme: #FAF6EF; --m-papel: #FFFFFF; --m-linha: #E9E1D4; --m-carvao: #1F1A17; --m-fumaca: #6E655C;
+  --m-tomate: #D9442B; --m-tomate-suave: #FBEAE6;
+  --m-mostarda: #E9A23B; --m-mostarda-suave: #FDF3E1;
+  --m-manjericao: #2E7D57; --m-manjericao-suave: #E4F2EA;
+  --m-cebola: #2563A8; --m-cebola-suave: #E7EFF8;
+  --m-uva: #6D3B8C; --m-uva-suave: #F2EAF7;
+  --m-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --m-body: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --m-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  color: var(--m-carvao); font-family: var(--m-body); font-size: 16px; line-height: 1.6;
+  max-width: 1160px; margin: 0 auto;
+  display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 56px; padding-block: 32px 80px;
+}
+.manual * { box-sizing: border-box; }
+.manual a { color: var(--m-tomate); text-underline-offset: 3px; }
+.manual a:focus-visible, .manual summary:focus-visible { outline: 3px solid var(--m-tomate); outline-offset: 3px; border-radius: 4px; }
+.manual code { font-family: var(--m-mono); font-size: .9em; background: var(--m-papel); border: 1px solid var(--m-linha); border-radius: 5px; padding: 1px 5px; }
+
+.manual .m-toc { position: sticky; top: calc(88px + env(safe-area-inset-top, 0px)); align-self: start; max-height: calc(100vh - 110px); overflow-y: auto; padding-right: 4px; }
+.manual .m-toc p { font-family: var(--m-mono); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--m-fumaca); margin: 0 0 8px; }
+.manual .m-toc ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 1px; }
+.manual .m-toc a { display: block; padding: 5px 10px; border-radius: 8px; color: var(--m-carvao); text-decoration: none; font-size: 14px; }
+.manual .m-toc a:hover { background: var(--m-linha); }
+.manual .m-toc .m-toc-group { margin-top: 14px; font-family: var(--m-mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--m-tomate); padding: 0 10px; }
+
+.manual main { min-width: 0; }
+.manual .m-kicker { font-family: var(--m-mono); font-size: 12px; letter-spacing: .16em; text-transform: uppercase; color: var(--m-tomate); margin: 0; }
+.manual h1, .manual h2, .manual h3 { font-family: var(--m-display); font-weight: 600; text-wrap: balance; line-height: 1.12; letter-spacing: -0.01em; margin: 0; color: var(--m-carvao); }
+.manual h1 { font-size: clamp(2.2rem, 5vw, 3.3rem); margin-top: 10px; }
+.manual h1 em, .manual h2 em { font-style: italic; color: var(--m-tomate); }
+.manual h2 { font-size: clamp(1.55rem, 3vw, 2.05rem); margin-top: 6px; }
+.manual h3 { font-size: 1.18rem; margin-top: 30px; }
+.manual p, .manual li { max-width: 68ch; }
+.manual .m-lead { font-size: 1.12rem; color: var(--m-fumaca); margin-top: 14px; }
+.manual section { padding-top: 52px; margin-top: 52px; border-top: 1px solid var(--m-linha); }
+.manual section > p, .manual section > ul, .manual section > ol { margin-block: 14px; }
+.manual ul, .manual ol { padding-left: 1.25em; }
+.manual li + li { margin-top: 6px; }
+.manual strong { font-weight: 600; }
+.manual .m-note { font-size: 14px; color: var(--m-fumaca); }
+
+.manual .m-path { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; font-family: var(--m-mono); font-size: 13px; font-weight: 500;
+  background: var(--m-papel); border: 1px dashed var(--m-linha); padding: 2px 9px; border-radius: 6px; color: var(--m-carvao); vertical-align: baseline; }
+.manual .m-path span + span::before { content: "→"; color: var(--m-tomate); margin-right: 6px; }
+
+.manual .m-roles { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.manual .m-role { font-family: var(--m-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; padding: 3px 9px; border-radius: 999px; background: var(--m-carvao); color: var(--m-creme); }
+
+.manual .m-steps { list-style: none; padding: 0; margin: 20px 0 0; counter-reset: passo; }
+.manual .m-steps > li { counter-increment: passo; display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 12px; padding: 12px 0; border-bottom: 1px dashed var(--m-linha); max-width: none; margin: 0; }
+.manual .m-steps > li::before { content: counter(passo); font-family: var(--m-display); font-size: 1.5rem; color: var(--m-tomate); line-height: 1.1; }
+.manual .m-steps b { display: block; }
+.manual .m-steps span { color: var(--m-fumaca); }
+
+.manual .m-box { background: var(--m-papel); border: 1px solid var(--m-linha); border-left: 4px solid var(--m-tomate); border-radius: 4px 12px 12px 4px; padding: 18px 22px; margin-top: 20px; }
+.manual .m-box h3 { margin-top: 0; }
+.manual .m-box > :last-child { margin-bottom: 0; }
+
+.manual .m-tables { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-top: 18px; }
+.manual .m-table { border: 2px solid var(--m-linha); border-radius: 14px; padding: 12px; background: var(--m-papel); aspect-ratio: 1.3; display: flex; flex-direction: column; justify-content: space-between; }
+.manual .m-table b { font-family: var(--m-display); font-size: 1.8rem; line-height: 1; }
+.manual .m-table small { font-family: var(--m-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; }
+.manual .t-cozinha { border-color: var(--m-mostarda); background: var(--m-mostarda-suave); }
+.manual .t-pronto { border-color: var(--m-manjericao); background: var(--m-manjericao-suave); }
+.manual .t-servida { border-color: var(--m-cebola); background: var(--m-cebola-suave); }
+.manual .t-conta { border-color: var(--m-uva); background: var(--m-uva-suave); }
+
+.manual .m-scroll { overflow-x: auto; margin-top: 16px; }
+.manual table { border-collapse: collapse; width: 100%; min-width: 520px; font-size: 15px; }
+.manual th, .manual td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--m-linha); vertical-align: top; }
+.manual th { font-family: var(--m-mono); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--m-fumaca); font-weight: 500; }
+.manual td:first-child { font-weight: 600; }
+
+.manual details { border-bottom: 1px solid var(--m-linha); padding: 14px 0; }
+.manual summary { cursor: pointer; font-weight: 600; list-style: none; display: flex; justify-content: space-between; gap: 16px; }
+.manual summary::-webkit-details-marker { display: none; }
+.manual summary::after { content: "+"; font-family: var(--m-mono); color: var(--m-tomate); }
+.manual details[open] summary::after { content: "−"; }
+.manual details p { margin: 10px 0 0; color: var(--m-fumaca); }
+
+.manual .m-footer { margin-top: 64px; padding-top: 24px; border-top: 1px solid var(--m-linha); font-size: 14px; color: var(--m-fumaca); display: flex; flex-wrap: wrap; gap: 8px 24px; }
+
+@media (max-width: 900px) {
+  .manual { grid-template-columns: minmax(0, 1fr); gap: 20px; padding-block: 20px 64px; }
+  .manual .m-toc { position: static; max-height: none; overflow: visible; margin-inline: -4px; }
+  .manual .m-toc ol { display: flex; gap: 6px; overflow-x: auto; padding: 2px 4px 10px; scrollbar-width: thin; }
+  .manual .m-toc .m-toc-group { display: none; }
+  .manual .m-toc a { white-space: nowrap; border: 1px solid var(--m-linha); background: var(--m-papel); border-radius: 999px; padding: 7px 13px; }
+}
+@media print {
+  .manual { display: block; }
+  .manual .m-toc { display: none; }
+  .manual details { break-inside: avoid; }
+  .manual details p { display: block; }
+}

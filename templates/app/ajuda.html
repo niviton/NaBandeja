@@ -1,0 +1,12 @@
+{% extends 'app/base_app.html' %}
+
+{% block title %}Ajuda · {{ app_settings.store_name }}{% endblock %}
+{% block extra_css %}<style>{% include 'ajuda/_estilo.html' %}</style>{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-6">
+    <div class="manual">
+        {% include 'ajuda/_conteudo.html' %}
+    </div>
+</div>
+{% endblock %}

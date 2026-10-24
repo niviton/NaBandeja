@@ -25,3 +25,25 @@ class ImportMenuTests(TestCase):
         dog = Product.objects.get(name='Dogão Canaã')
         self.assertEqual(str(dog.price), '10.00')
         self.assertEqual(dog.stock, 999)
+
+
+class ManualTests(TestCase):
+    def test_ajuda_abre_para_toda_a_equipe(self):
+        from restaurante.tests import factories as f
+
+        for role in ('garcom', 'cozinha', 'gerente'):
+            self.client.force_login(f.user(f'u-{role}', role=role))
+            response = self.client.get('/ajuda/')
+            self.assertContains(response, 'Balcão: para quem')
+        self.client.logout()
+        self.assertEqual(self.client.get('/ajuda/').status_code, 302)
+
+    def test_exporta_manual(self):
+        import os
+
+        target = os.path.join(tempfile.mkdtemp(), 'manual.html')
+        call_command('exportar_manual', target, stdout=StringIO())
+        with open(target, encoding='utf-8') as handle:
+            html = handle.read()
+        self.assertIn('<title>Manual do NaBandeja</title>', html)
+        self.assertIn('data:image/svg+xml;base64,', html)

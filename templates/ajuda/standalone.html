@@ -1,0 +1,33 @@
+<title>Manual do NaBandeja</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;1,9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+{% include 'ajuda/_estilo.html' %}
+/* Versão para compartilhar: tema claro e escuro. Gerada por "manage.py exportar_manual". */
+:root { --pagina: #FAF6EF; --logo-claro: block; --logo-escuro: none; }
+body { margin: 0; background: var(--pagina); padding-inline: 20px; }
+.manual .m-logo { width: 170px; height: auto; margin-bottom: 28px; }
+.manual .m-logo-light { display: var(--logo-claro); }
+.manual .m-logo-dark { display: var(--logo-escuro); }
+.manual .m-toc { top: calc(24px + env(safe-area-inset-top, 0px)); max-height: calc(100vh - 48px); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { color-scheme: dark; --pagina: #1A1613; --logo-claro: none; --logo-escuro: block; }
+  :root:not([data-theme="light"]) .manual {
+    --m-creme: #1A1613; --m-papel: #24201C; --m-linha: #3A322C; --m-carvao: #F3ECE2; --m-fumaca: #B3A89C;
+    --m-tomate: #EE6A52; --m-tomate-suave: #3A211B;
+    --m-mostarda: #F0B55E; --m-mostarda-suave: #3A2E19; --m-manjericao: #5DB88A; --m-manjericao-suave: #1C3127;
+    --m-cebola: #6EA2DD; --m-cebola-suave: #1A2A3D; --m-uva: #B58AD3; --m-uva-suave: #2D2135;
+  }
+}
+:root[data-theme="dark"] { color-scheme: dark; --pagina: #1A1613; --logo-claro: none; --logo-escuro: block; }
+:root[data-theme="dark"] .manual {
+  --m-creme: #1A1613; --m-papel: #24201C; --m-linha: #3A322C; --m-carvao: #F3ECE2; --m-fumaca: #B3A89C;
+  --m-tomate: #EE6A52; --m-tomate-suave: #3A211B;
+  --m-mostarda: #F0B55E; --m-mostarda-suave: #3A2E19; --m-manjericao: #5DB88A; --m-manjericao-suave: #1C3127;
+  --m-cebola: #6EA2DD; --m-cebola-suave: #1A2A3D; --m-uva: #B58AD3; --m-uva-suave: #2D2135;
+}
+</style>
+<div class="manual">
+{% include 'ajuda/_conteudo.html' %}
+</div>

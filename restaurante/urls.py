@@ -2,7 +2,7 @@ from django.urls import path
 from django.views.generic import RedirectView
 
 from .views import (
-    auth, catalog, day, delivery, finance, manager, operations, orders, public, pwa, reports, support, system,
+    ajuda, auth, catalog, day, delivery, finance, manager, operations, orders, public, pwa, reports, support, system,
 )
 
 urlpatterns = [
@@ -16,6 +16,7 @@ urlpatterns = [
     path('login/', RedirectView.as_view(pattern_name='login', permanent=False)),
     path('logout/', auth.logout_view, name='logout'),
     path('dashboard/', auth.dashboard, name='dashboard'),
+    path('ajuda/', ajuda.help_page, name='help_page'),
 
     # Salão e pedidos (garçom/gerente)
     path('garcom/', orders.waiter_view, name='waiter_view'),
